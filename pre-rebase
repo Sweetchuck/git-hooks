@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+##
+# The "pre-rebase" hook is run just before "git rebase" starts doing its job,
+# and can prevent the command from running by exiting with non-zero status.
+#
+# The hook is called with the following parameters:
+#   - $1 The upstream the series was forked from.
+#   - $2 The branch being rebased (or empty when rebasing the current branch).
+#
+# Standard input format:
+#   NULL
+##
+
+. "$(dirname $0)/_common"

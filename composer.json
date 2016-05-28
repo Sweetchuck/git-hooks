@@ -1,0 +1,9 @@
+{
+    "name": "cheppers/git-hooks-robo",
+    "description": "Provide a bridge between Git hooks and Robo tasks.",
+    "type": "git-hook",
+    "license": "GPL-2.0",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {}
+}

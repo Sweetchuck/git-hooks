@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+##
+# The hook should exit with non-zero status after issuing an appropriate message
+# if it wants to stop the commit.
+# The hook is allowed to edit the commit message file.
+#
+# This hook is called with the following parameters:
+#   No parameters.
+#
+# Standard input format:
+#   NULL
+##
+
+. "$(dirname $0)/_common"

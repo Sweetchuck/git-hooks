@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+##
+# Called by "git receive-pack"
+#
+# This hook is called with the following parameters:
+#   - $1 refname
+#   - $2 sha1-old
+#   - $3 sha1-new
+##
+
+. "$(dirname $0)/_common"
