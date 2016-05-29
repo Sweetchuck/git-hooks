@@ -1,0 +1,15 @@
+default:
+  formatters:
+    pretty:
+      output_styles:
+        passed:        ['green']
+        passed_param:  [null,     null,  ]
+        undefined:     ['yellow', null,  ['bold']]
+        pending:       ['yellow', null,  [      ]]
+        pending_param: ['yellow', null,  ['bold']]
+        failed:        ['white',  'red']
+        failed_param:  ['white',  'red', ['bold']]
+        skipped:       ['cyan']
+        skipped_param: ['cyan',   null,  ['bold']]
+        comment:       ['cyan',   null]
+        tag:           ['magenta']

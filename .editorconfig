@@ -4,7 +4,43 @@ root = true
 [*]
 end_of_line = LF
 indent_style = space
-indent_size = 4
+indent_size = 2
 charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
+
+[_common]
+indent_size = 4
+
+[applypatch-msg]
+indent_size = 4
+
+[commit-msg]
+indent_size = 4
+
+[composer.json]
+indent_size = 4
+
+[post-receive]
+indent_size = 4
+
+[post-update]
+indent_size = 4
+
+[pre-applypatch]
+indent_size = 4
+
+[pre-commit]
+indent_size = 4
+
+[pre-push]
+indent_size = 4
+
+[pre-rebase]
+indent_size = 4
+
+[prepare-commit-msg]
+indent_size = 4
+
+[update]
+indent_size = 4

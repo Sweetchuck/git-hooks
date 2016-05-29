@@ -1,0 +1,12 @@
+{
+    "name": "cheppers/git-hooks-robo-helper",
+    "description": "Helper peroject for cheppers/git-hooks-robo",
+    "license": "proprietary",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {},
+    "require-dev": {
+        "codegyre/robo": "1.0.0-beta1",
+        "symfony/event-dispatcher": "~3.0"
+    }
+}

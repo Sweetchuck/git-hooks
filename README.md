@@ -9,9 +9,10 @@ teammates then this is the tool you are looking for.
 
 # How to use
 
-1. Run `composer require 'bernardosilva/git-hooks-installer-plugin:~1.0'`
-1. Run `composer require 'cheppers/git-hooks-robo'`
-1. Run `composer require 'codegyre/robo:~0.7'`
+1. Run <pre><code>composer require --dev \
+  'bernardosilva/git-hooks-installer-plugin:~1.0' \
+  'cheppers/git-hooks-robo' \
+  'codegyre/robo:~0.7'</code></pre>
 1. Create a `RoboFile.php` with the following content:
 ```php
 <?php
