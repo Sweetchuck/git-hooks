@@ -4,9 +4,9 @@ hook=$(basename "${0}")
 # @todo Better detection for executables: php, composer.phar and robo.
 robo="$(composer config 'bin-dir')/robo"
 
-# Exit without error if "robo" doesn't exists or it has not corresponding task.
+# Exit without error if "robo" doesn't exists or it has no corresponding task.
 test -x "$robo" || exit 0
-"$robo" list --raw | grep -P "^githook:$hook($|\s)" || exit 0
+"$robo" help "githook:$hook" 1> /dev/null 2>&1 || exit 0
 
 hasInput='0'
 input=''
