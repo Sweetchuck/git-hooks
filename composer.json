@@ -21,5 +21,11 @@
             ".gitignore",
             "behat.yml"
         ]
+    },
+    "scripts": {
+        "test": [
+            "@test-behat"
+        ],
+        "test-behat": "./vendor/bin/behat --strict --colors"
     }
 }
