@@ -11,5 +11,8 @@ cache:
     - 'vendor'
     - '$HOME/.composer/cache'
 
+install:
+  - 'composer install'
+
 script:
   - 'composer run test'

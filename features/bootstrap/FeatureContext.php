@@ -204,7 +204,24 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
   }
 
   /**
-   * @Given I Create a :type project in :dir directory
+   * @Given I run git add remote :name :uri
+   *
+   * @param string $name
+   * @param string $uri
+   */
+  public function doGitRemoteAdd($name, $uri) {
+    $cmd_pattern = '%s remote add %s %s';
+    $cmd_args = [
+      escapeshellcmd(static::$gitExecutable),
+      escapeshellarg($name),
+      escapeshellarg($uri),
+    ];
+
+    $this->process = $this->doExec(vsprintf($cmd_pattern, $cmd_args));
+  }
+
+  /**
+   * @Given I create a :type project in :dir directory
    *
    * @param string $dir
    * @param string $type
@@ -222,7 +239,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
   }
 
   /**
-   * @Given I am in the :dir path
+   * @Given I am in the :dir directory
    *
    * @param string $dir
    *
@@ -269,6 +286,20 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
    */
   public function doGitInitBare($dir) {
     $this->doGitInit($dir, TRUE);
+
+    $src = static::$projectRootDir . '/' . static::$fixturesDir . '/' . 'project-template/basic';
+
+    $files = [
+      '.gitignore',
+      'composer.json',
+      'composer.lock',
+      'RoboFile.php',
+    ];
+    foreach ($files as $file) {
+      static::$fs->copy("$src/$file", "./$file");
+    }
+
+    $this->doExec('composer install');
   }
 
   /**
@@ -311,12 +342,42 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
   }
 
   /**
-   * @Given /^I wait for "(?P<amount>\d+)" seconds$/
+   * @Given I run git push :name :uri
+   *
+   * @param string $name
+   * @param string $uri
+   */
+  public function doGitPush($name, $uri) {
+    $cmd = vsprintf('%s push %s %s', [
+      escapeshellcmd(static::$gitExecutable),
+      escapeshellarg($name),
+      escapeshellarg($uri)
+    ]);
+
+    $this->process = $this->doExec(
+      $cmd,
+      [
+        'exitCode' => FALSE,
+      ]
+    );
+  }
+
+  /**
+   * @Given /^I wait for (?P<amount>\d+) seconds$/
    *
    * @param int $amount
    */
   public function doWait($amount) {
     sleep(intval($amount));
+  }
+
+  /**
+   * @Then /^the exit code should be (?P<exit_code>\d+)$/
+   *
+   * @param int $exit_code
+   */
+  public function assertExitCodeEquals($exit_code) {
+    $this->assertEquals($exit_code, $this->process->getExitCode());
   }
 
   /**

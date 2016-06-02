@@ -26,6 +26,45 @@ class RoboFile extends Robo\Tasks {
       ->run();
   }
 
+  /**
+   * @param string $remote_name
+   * @param string $remote_uri
+   */
+  public function githookPrePush($remote_name, $remote_uri) {
+    $this->say(__METHOD__ . ' is called');
+    $this->say("Remote name: $remote_name");
+    $this->say("Remote URI: $remote_uri");
+
+    $git_log_pattern = 'git log --format=%s -n 1 %s';
+    $valid = TRUE;
+    while ($valid && $line = fgets(STDIN)) {
+      list($local_ref, $local_sha) = explode(' ', $line);
+      if ($this->gitRefIsBranch($local_ref)) {
+        $commit_message = $this->_exec(sprintf(
+          $git_log_pattern,
+          escapeshellarg('%B'),
+          escapeshellarg($local_sha)
+        ));
+
+        $valid = (trim($commit_message->getMessage()) != 'Invalid');
+      }
+    }
+
+    $this->stopOnFail(TRUE);
+    $this
+      ->taskPredestined($valid)
+      ->run();
+  }
+
+  /**
+   * @param string $ref
+   *
+   * @return bool
+   */
+  protected function gitRefIsBranch($ref) {
+    return strpos($ref, 'refs/heads/') === 0;
+  }
+
 }
 
 /**
