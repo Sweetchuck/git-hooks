@@ -204,7 +204,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
   }
 
   /**
-   * @Given I Create a :type project in :dir
+   * @Given I Create a :type project in :dir directory
    *
    * @param string $dir
    * @param string $type
