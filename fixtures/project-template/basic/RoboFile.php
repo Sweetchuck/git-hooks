@@ -37,18 +37,28 @@ class RoboFile extends Robo\Tasks {
 
     $git_log_pattern = 'git log --format=%s -n 1 %s';
     $valid = TRUE;
-    while ($valid && $line = fgets(STDIN)) {
+    $num_of_lines = 0;
+    while ($line = fgets(STDIN)) {
+      $num_of_lines++;
       list($local_ref, $local_sha) = explode(' ', $line);
-      if ($this->gitRefIsBranch($local_ref)) {
-        $commit_message = $this->_exec(sprintf(
+      if ($valid && $this->gitRefIsBranch($local_ref)) {
+        $cmd = sprintf(
           $git_log_pattern,
           escapeshellarg('%B'),
           escapeshellarg($local_sha)
-        ));
+        );
 
-        $valid = (trim($commit_message->getMessage()) != 'Invalid');
+        $commit_message = $this
+          ->taskExec($cmd)
+          ->printed(FALSE)
+          ->run()
+          ->getMessage();
+
+        $valid = (trim($commit_message) != 'Invalid');
       }
     }
+
+    $this->say("Lines in stdInput: $num_of_lines");
 
     $this->stopOnFail(TRUE);
     $this
