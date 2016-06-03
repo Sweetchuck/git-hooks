@@ -8,25 +8,8 @@ robo="$(composer config 'bin-dir')/robo"
 test -x "$robo" || exit 0
 "$robo" help "githook:$hook" 1> /dev/null 2>&1 || exit 0
 
-hasInput='0'
-input=''
-
-case "$(stat -L -c %t /dev/fd/0)" in
-    0)
-        # echo 'pipe'
-        hasInput='1'
-        input=$(</dev/stdin)
-        ;;
-    88)
-        # echo 'stdin'
-        ;;
-    *)
-        # echo 'unknown'
-        ;;
-esac
-
-if [ "$hasInput" -eq '1' ]; then
-    "$robo" "githook:$hook" $@ <<< "$input" || exit $?
+if [ "$hasInput" = 'true' ]; then
+    "$robo" "githook:$hook" $@ <<< $(</dev/stdin) || exit $?
 else
     "$robo" "githook:$hook" $@ || exit $?
 fi

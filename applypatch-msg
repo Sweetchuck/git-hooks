@@ -11,4 +11,5 @@
 #   NULL
 ##
 
+hasInput='false'
 . "$(dirname $0)/_common"
