@@ -17,6 +17,7 @@ Feature: Test for pre-push hook.
     ➜  RoboFile::githookPrePush is called
     ➜  Remote name: origin
     ➜  Remote URI: ../b-01
+    ➜  Lines in stdInput: 1
     """
     Examples:
       | commit_msg | exit_code |
