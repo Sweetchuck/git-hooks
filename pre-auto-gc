@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+##
+# The hook is called with the following parameters:
+#   No parameters.
+#
+# Standard input format:
+#   NULL
+##
+
+hasInput='false'
+. "$(dirname $0)/_common"

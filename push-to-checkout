@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+##
+# This hook is called with the following parameters:
+#   - $1 The hook receives the commit with which the tip of the current branch
+#        is going to be updated.
+#
+# Standard input format:
+#   NULL
+##
+
+hasInput='false'
+. "$(dirname $0)/_common"
+

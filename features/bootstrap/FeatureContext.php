@@ -52,13 +52,21 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
   protected static $gitHooks = [
     'applypatch-msg',
     'commit-msg',
+    'post-applypatch',
+    'post-checkout',
+    'post-commit',
+    'post-merge',
     'post-receive',
+    'post-rewrite',
     'post-update',
     'pre-applypatch',
+    'pre-auto-gc',
     'pre-commit',
     'pre-push',
     'pre-rebase',
+    'pre-receive',
     'prepare-commit-msg',
+    'push-to-checkout',
     'update',
   ];
 
