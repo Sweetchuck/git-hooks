@@ -11,5 +11,5 @@ default:
         failed_param:  ['white',  'red', ['bold']]
         skipped:       ['cyan']
         skipped_param: ['cyan',   null,  ['bold']]
-        comment:       ['cyan',   null]
+        comment:       ['blue',   null]
         tag:           ['magenta']

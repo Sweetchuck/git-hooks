@@ -8,10 +8,15 @@
     "require": {},
     "require-dev": {
         "behat/behat": "^3.1",
-        "codegyre/robo": "1.0.0-beta1",
+        "codegyre/robo": "dev-master#a605efd",
         "symfony/filesystem": "^3.0",
         "symfony/process": "^3.0",
         "phpunit/phpunit": "~4.5"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Cheppers\\": "src-dev"
+        }
     },
     "archive": {
         "exclude": [
@@ -23,9 +28,6 @@
         ]
     },
     "scripts": {
-        "test": [
-            "@test-behat"
-        ],
-        "test-behat": "./vendor/bin/behat --strict --colors"
+        "post-install-cmd": "robo deploy:git-hooks"
     }
 }

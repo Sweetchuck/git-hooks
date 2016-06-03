@@ -15,4 +15,4 @@ install:
   - 'composer install'
 
 script:
-  - 'composer run test'
+  - './vendor/bin/robo test'
