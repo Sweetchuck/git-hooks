@@ -4,10 +4,11 @@
 # if it wants to stop the commit.
 #
 # This hook is called with the following parameters:
-#   ?
+#   It takes no parameter.
 #
 # Standard input format:
-#   ?
+#   NULL
 ##
 
+hasInput='false'
 . "$(dirname $0)/_common"

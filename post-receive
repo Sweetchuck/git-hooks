@@ -9,4 +9,5 @@
 #   - Ref name
 ##
 
+hasInput='true'
 . "$(dirname $0)/_common"

@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 ##
 # Called by "git receive-pack"
+# A zero exit from the update hook allows the ref to be updated.
+# Exiting with a non-zero status prevents git-receive-pack from updating that
+# ref.
 #
 # This hook is called with the following parameters:
 #   - $1 refname
@@ -8,4 +11,5 @@
 #   - $3 sha1-new
 ##
 
+hasInput='false'
 . "$(dirname $0)/_common"

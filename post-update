@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 ##
 # This hook is called with the following parameters:
-#   ?
+#   - $... It takes a variable number of parameters,
+#          each of which is the name of ref that was actually updated.
 #
 # Standard input format:
-#   ?
+#   NULL
 ##
 
+hasInput='false'
 . "$(dirname $0)/_common"
