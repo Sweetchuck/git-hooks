@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+##
+# The hook is called with the following parameters:
+#   - $1 Denotes the command it was invoked by: currently one of amend or rebase.
+#
+# Standard input format:
+#   <old-sha1> SP <new-sha1> [ SP <extra-info> ] LF
+##
+
+hasInput='true'
+. "$(dirname $0)/_common"
