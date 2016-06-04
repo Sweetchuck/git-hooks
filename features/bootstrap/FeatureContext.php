@@ -125,9 +125,11 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
     $files = static::$gitHooks;
     $files[] = '_common';
     foreach ($files as $file) {
-      $src = static::$projectRootDir . "/$file";
-      $dst = "$git_template_dir/hooks/$file";
-      static::$fs->copy($src, $dst, TRUE);
+      static::$fs->copy(
+        static::$projectRootDir . "/$file",
+        "$git_template_dir/hooks/$file",
+        TRUE
+      );
     }
   }
 
@@ -368,6 +370,80 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
         'exitCode' => FALSE,
       ]
     );
+  }
+
+  /**
+   * @Given I commit a new :file_name file with message :message and content:
+   *
+   * @param string $file_name
+   * @param string $message
+   * @param \Behat\Gherkin\Node\PyStringNode $content
+   */
+  public function doGitCommitNewFileWithMessageAndContent($file_name, $message, PyStringNode $content) {
+    $this->doCreateFile($file_name);
+    static::$fs->dumpFile($file_name, $content);
+    $this->doGitAdd($file_name);
+    $this->doGitCommit($message);
+  }
+
+  /**
+   * @Given I run git checkout -b :branch
+   *
+   * @param string $branch
+   */
+  public function doGitCheckoutNewBranch($branch) {
+    $cmd = sprintf(
+      '%s checkout -b %s',
+      escapeshellcmd(static::$gitExecutable),
+      escapeshellarg($branch)
+    );
+    $this->process = $this->doExec($cmd);
+  }
+
+  /**
+   * @Given I run git checkout :branch
+   *
+   * @param string $branch
+   */
+  public function doRunGitCheckout($branch) {
+    $cmd = sprintf(
+      '%s checkout %s',
+      escapeshellcmd(static::$gitExecutable),
+      escapeshellarg($branch)
+    );
+    $this->process = $this->doExec($cmd);
+  }
+
+  /**
+   * @Given I run git merge :branch -m :message
+   *
+   * @param string $branch
+   * @param string $message
+   */
+  public function doGitMerge($branch, $message) {
+    $cmd = sprintf(
+      '%s merge %s -m %s',
+      escapeshellcmd(static::$gitExecutable),
+      escapeshellarg($branch),
+      escapeshellarg($message)
+    );
+    $this->process = $this->doExec($cmd);
+  }
+
+  /**
+   * @Given I run git merge :branch --squash -m :message
+   *
+   * @param string $branch
+   * @param string $message
+   */
+  public function doGitMergeSquash($branch, $message) {
+    $cmd = sprintf(
+      '%s merge %s --ff --squash -m %s',
+      escapeshellcmd(static::$gitExecutable),
+      escapeshellarg($branch),
+      escapeshellarg($message)
+    );
+    $this->process = $this->doExec($cmd);
   }
 
   /**

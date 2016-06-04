@@ -67,6 +67,14 @@ class RoboFile extends Robo\Tasks {
   }
 
   /**
+   * @param string $is_squash
+   */
+  public function githookPostMerge($is_squash) {
+    $this->say(__METHOD__ . ' is called');
+    $this->say("Squash: $is_squash");
+  }
+
+  /**
    * @param string $ref
    *
    * @return bool
