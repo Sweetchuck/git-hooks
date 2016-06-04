@@ -8,13 +8,13 @@ and the [Robo](http://robo.li) tasks in your Git repository.
 [![Total Downloads](https://poser.pugx.org/cheppers/git-hooks-robo/downloads.png)](https://packagist.org/packages/cheppers/git-hooks-robo)
 
 
-# When to use
+## When to use
 
 If you want to put your Git hook scripts under VCS to share them with your
 teammates then this is the tool you are looking for.
 
 
-# How to use
+## How to use
 
 1. Step into you existing package's directory (or create a new one with `git init && composer init`)
 1. Run <pre><code>composer require --dev \
@@ -24,7 +24,7 @@ teammates then this is the tool you are looking for.
 1. Create a `RoboFile.php`. See the example bellow.
 
 
-# Example RoboFile.php
+## Example RoboFile.php
 
 ```php
 <?php
@@ -45,6 +45,8 @@ class RoboFile extends Robo\Tasks {
 }
 ```
 
-**Links**
+
+## Links
+
 * https://github.com/BernardoSilva/git-hooks-installer-plugin
 * https://github.com/Codegyre/Robo/blob/master/docs/index.md

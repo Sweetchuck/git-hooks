@@ -517,8 +517,9 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
     $cmd = vsprintf($cmd_pattern, $cmd_args);
 
     $git_init = $this->doExec($cmd);
+    $cwd_real = realpath($this->cwd);
     $this->assertEquals(
-      "Initialized empty Git repository in {$this->cwd}/$git_dir\n",
+      "Initialized empty Git repository in $cwd_real/$git_dir\n",
       $git_init->getOutput()
     );
   }
