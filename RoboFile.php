@@ -49,8 +49,8 @@ class RoboFile extends Tasks {
       ->taskExec('composer validate')
       ->run();
   }
-  
-  public function githooksPreCommit() {
+
+  public function githookPreCommit() {
     $this->composerValidate();
   }
 

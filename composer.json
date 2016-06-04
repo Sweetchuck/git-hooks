@@ -24,7 +24,8 @@
             "fixtures/",
             ".editorconfig",
             ".gitignore",
-            "behat.yml"
+            "behat.yml",
+            "RoboFile.php"
         ]
     },
     "scripts": {
