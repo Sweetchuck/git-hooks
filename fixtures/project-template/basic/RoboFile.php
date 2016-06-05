@@ -26,6 +26,10 @@ class RoboFile extends Robo\Tasks {
       ->run();
   }
 
+  public function githookPostCommit() {
+    $this->say(__METHOD__ . ' is called');
+  }
+
   /**
    * @param string $remote_name
    * @param string $remote_uri
