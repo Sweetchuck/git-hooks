@@ -18,6 +18,33 @@
             "Cheppers\\": "src-dev/Cheppers"
         }
     },
+    "archive": {
+        "exclude": [
+            "/*",
+            "/.*",
+            "!/composer.json",
+            "!/_common",
+            "!/applypatch-msg",
+            "!/commit-msg",
+            "!/post-applypatch",
+            "!/post-checkout",
+            "!/post-commit",
+            "!/post-merge",
+            "!/post-receive",
+            "!/post-rewrite",
+            "!/post-update",
+            "!/pre-applypatch",
+            "!/pre-auto-gc",
+            "!/pre-commit",
+            "!/pre-push",
+            "!/pre-rebase",
+            "!/pre-receive",
+            "!/prepare-commit-msg",
+            "!/push-to-checkout",
+            "!/update",
+            "!/README.md"
+        ]
+    },
     "scripts": {
         "post-install-cmd": "robo deploy:git-hooks"
     }
