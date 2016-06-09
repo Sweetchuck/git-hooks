@@ -6,7 +6,8 @@ use Robo\Common\Timer;
 use Robo\Config;
 use Robo\Result;
 use Robo\Task\BaseTask;
-use Robo\Task\Filesystem\loadShortcuts;
+use Robo\Task\Base\loadTasks as BaseLoadTasks;
+use Symfony\Component\Process\Process;
 
 /**
  * Class TaskPhpcsLint.
@@ -16,7 +17,7 @@ use Robo\Task\Filesystem\loadShortcuts;
 class DeployTask extends BaseTask {
 
   use Timer;
-  use loadShortcuts;
+  use BaseLoadTasks;
 
   /**
    * @var string[]
@@ -56,26 +57,53 @@ class DeployTask extends BaseTask {
   public function run() {
     $this->printTaskInfo('Deploying Git hooks');
 
-    $git_dir = rtrim(`git rev-parse --git-dir`, "\n");
+    $current_dir = realpath(getcwd());
+    $repo_type = $this->getGitRepoType();
+    if ($repo_type === NULL) {
+      return Result::cancelled('This directory is not tracked by Git', ['directory' => $current_dir]);
+    }
 
-    $result = NULL;
-    $this->startTimer();
+    $git_dir = $this->getGitDir();
+    if (!($repo_type === 'bare' && strpos($current_dir, $git_dir) === 0)
+      && !($repo_type === 'not-bare' && file_exists("$current_dir/.git"))
+    ) {
+      return Result::cancelled('Git directory cannot be detected 100%.');
+    }
+
+    /** @var \Robo\Task\Filesystem\FilesystemStack $fsStack */
+    $fsStack = $this->getContainer()->get('taskFilesystemStack');
+    $git_dir = preg_replace('@^' . preg_quote("$current_dir/", '@') . '@', './', $git_dir);
     foreach ($this->fileNames as $file_name) {
-      $r = $this->_copy("./$file_name", "$git_dir/hooks/$file_name");
-      if (!$r->wasSuccessful()) {
-        $result = $r;
-
-        break;
-      }
-    }
-    $this->stopTimer();
-
-    if (!$result) {
-      $result = Result::success($this, 'Git hooks in the house', ['time' => $this->getExecutionTime()]);
+      $fsStack->copy("./$file_name", "$git_dir/hooks/$file_name");
     }
 
-    return $result;
+    return $fsStack->run();
+  }
 
+  /**
+   * @return string|null
+   */
+  protected function getGitRepoType() {
+    $process = new Process('git rev-parse --is-bare-repository');
+    $exit_code = $process->run();
+    if ($exit_code) {
+      return NULL;
+    }
+
+    return trim($process->getOutput()) === 'true' ? 'bare' : 'not-bare';
+  }
+
+  /**
+   * @return string|null
+   */
+  protected function getGitDir() {
+    $process = new Process('git rev-parse --git-dir');
+    $exit_code = $process->run();
+    if ($exit_code !== 0) {
+      return NULL;
+    }
+
+    return realpath(rtrim($process->getOutput(), "\n"));
   }
 
 }
