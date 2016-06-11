@@ -1,6 +1,5 @@
 Feature: Test for pre-commit hook.
 
-  @hook-pre-commit
   Scenario Outline: Positive & negative.
     Given I create a "basic" project in "p-01" directory
     And I create a <file_name> file

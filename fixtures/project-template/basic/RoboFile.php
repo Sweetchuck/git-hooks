@@ -31,6 +31,27 @@ class RoboFile extends Robo\Tasks {
   }
 
   /**
+   * @param string $base_branch
+   * @param string|null $subject_branch
+   */
+  public function githookPreRebase($base_branch, $subject_branch = NULL) {
+    $current_branch = $this->gitCurrentBranch();
+    $this->say(__METHOD__ . ' is called');
+    $this->say(sprintf('Base: "%s"', $base_branch));
+    $this->say(sprintf('Subject branch: "%s"', $subject_branch));
+    $this->say(sprintf('Current branch: "%s"', $current_branch));
+
+    if (!$subject_branch) {
+      $subject_branch = $current_branch;
+    }
+
+    $this->stopOnFail(TRUE);
+    $this
+      ->taskPredestined(($subject_branch !== 'protected'))
+      ->run();
+  }
+
+  /**
    * @param string $remote_name
    * @param string $remote_uri
    */
@@ -85,6 +106,18 @@ class RoboFile extends Robo\Tasks {
    */
   protected function gitRefIsBranch($ref) {
     return strpos($ref, 'refs/heads/') === 0;
+  }
+
+  /**
+   * @return string
+   */
+  protected function gitCurrentBranch() {
+    $result = $this
+      ->taskExec('git rev-parse --abbrev-ref HEAD')
+      ->printed(FALSE)
+      ->run();
+
+    return trim($result->getMessage());
   }
 
 }

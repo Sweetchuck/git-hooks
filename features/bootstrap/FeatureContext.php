@@ -404,6 +404,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
    * @Given I run git checkout :branch
    *
    * @param string $branch
+   *   Branch name to checkout.
    */
   public function doRunGitCheckout($branch) {
     $cmd = sprintf(
@@ -412,6 +413,36 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
       escapeshellarg($branch)
     );
     $this->process = $this->doExec($cmd);
+  }
+
+  /**
+   * @Given I run git branch :branch
+   *
+   * @param string $branch
+   *   Name of the new branch.
+   */
+  public function doGitBranchCreate($branch) {
+    $cmd = sprintf(
+      '%s branch %s',
+      escapeshellcmd(static::$gitExecutable),
+      escapeshellarg($branch)
+    );
+    $this->process = $this->doExec($cmd);
+  }
+
+  /**
+   * @Given I run git rebase :branch
+   *
+   * @param string $branch
+   *   Name of the base branch.
+   */
+  public function doRunGitRebase($branch) {
+    $cmd = sprintf(
+      '%s rebase %s',
+      escapeshellcmd(static::$gitExecutable),
+      escapeshellarg($branch)
+    );
+    $this->process = $this->doExec($cmd, ['exitCode' => FALSE]);
   }
 
   /**

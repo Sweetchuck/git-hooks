@@ -1,6 +1,5 @@
 Feature: Test for pre-push hook.
 
-  @hook-pre-push
   Scenario Outline: Single branch - Positive & Negative
     Given I initialize a bare Git repo in directory "b-01"
     And I am in the ".." directory
