@@ -87,7 +87,7 @@ class RoboFile extends Tasks
 
     public function lint()
     {
-        //$this->stopOnFail(true);
+        $this->stopOnFail(true);
 
         /** @var \Robo\Collection\Collection $c */
         $c = $this->collection();
