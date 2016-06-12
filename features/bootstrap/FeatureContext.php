@@ -431,18 +431,27 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context {
   }
 
   /**
-   * @Given I run git rebase :branch
+   * @Given I run git rebase :upstream
+   * @Given I run git rebase :upstream :branch
    *
+   * @param string $upstream
+   *   Upstream branch to compare against.
    * @param string $branch
    *   Name of the base branch.
    */
-  public function doRunGitRebase($branch) {
-    $cmd = sprintf(
-      '%s rebase %s',
+  public function doRunGitRebase($upstream, $branch = NULL) {
+    $cmd_pattern = '%s rebase %s';
+    $cmd_args = [
       escapeshellcmd(static::$gitExecutable),
-      escapeshellarg($branch)
-    );
-    $this->process = $this->doExec($cmd, ['exitCode' => FALSE]);
+      escapeshellarg($upstream),
+    ];
+
+    if ($branch) {
+      $cmd_pattern .= ' %s';
+      $cmd_args[] = escapeshellarg($branch);
+    }
+
+    $this->process = $this->doExec(vsprintf($cmd_pattern, $cmd_args), ['exitCode' => FALSE]);
   }
 
   /**

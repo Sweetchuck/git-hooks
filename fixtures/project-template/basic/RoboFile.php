@@ -37,9 +37,9 @@ class RoboFile extends Robo\Tasks {
   public function githookPreRebase($base_branch, $subject_branch = NULL) {
     $current_branch = $this->gitCurrentBranch();
     $this->say(__METHOD__ . ' is called');
-    $this->say(sprintf('Base: "%s"', $base_branch));
-    $this->say(sprintf('Subject branch: "%s"', $subject_branch));
     $this->say(sprintf('Current branch: "%s"', $current_branch));
+    $this->say(sprintf('Upstream: "%s"', $base_branch));
+    $this->say(sprintf('Subject branch: "%s"', $subject_branch));
 
     if (!$subject_branch) {
       $subject_branch = $current_branch;
