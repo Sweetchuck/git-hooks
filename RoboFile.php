@@ -106,7 +106,7 @@ class RoboFile extends Tasks
 
     public function githookPreCommit()
     {
-        $this->composerValidate();
+        $this->lint();
     }
 
     /**
