@@ -72,8 +72,9 @@ class RoboFile extends Tasks
     public function behat()
     {
         $this->stopOnFail(true);
+
         $this
-            ->taskExec('./vendor/bin/behat --colors --strict')
+            ->getTaskBehatRun()
             ->run();
     }
 
@@ -166,6 +167,19 @@ class RoboFile extends Tasks
         }
 
         return $fsStack;
+    }
+
+    /**
+     * @return \Robo\Task\Base\Exec
+     */
+    protected function getTaskBehatRun()
+    {
+        $cmd = sprintf(
+            '%s --colors --strict',
+            escapeshellcmd("{$this->binDir}/behat")
+        );
+
+        return  $this->taskExec($cmd);
     }
 
     /**
