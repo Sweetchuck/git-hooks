@@ -34,4 +34,5 @@ install:
   - 'src-dev/scripts/travis/install.sh'
 
 script:
+  - './vendor/bin/robo lint'
   - './vendor/bin/robo test'

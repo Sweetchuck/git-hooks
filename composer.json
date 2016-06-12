@@ -9,14 +9,10 @@
     "require-dev": {
         "behat/behat": "^3.1",
         "codegyre/robo": "dev-master#a605efd",
+        "phpunit/phpunit": "~4.5",
+        "squizlabs/php_codesniffer": "2.6.1",
         "symfony/filesystem": "^3.0",
-        "symfony/process": "^3.0",
-        "phpunit/phpunit": "~4.5"
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Cheppers\\": "src-dev/Cheppers"
-        }
+        "symfony/process": "^3.0"
     },
     "archive": {
         "exclude": [
