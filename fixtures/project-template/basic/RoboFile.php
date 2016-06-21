@@ -36,6 +36,24 @@ class RoboFile extends Tasks
     }
 
     /**
+     * @param string $ref_old
+     * @param string $ref_new
+     * @param string $is_branch
+     */
+    public function githookPostCheckout($ref_old, $ref_new, $is_branch)
+    {
+        $pattern = '/^[a-z0-9]{40}$/i';
+        $ref_old_label = (preg_match($pattern, $ref_old) ? 'OLD_REF' : $ref_old);
+        $ref_new_label = (preg_match($pattern, $ref_new) ? 'NEW_REF' : $ref_new);
+        $is_branch_label = ($is_branch ? 'yes' : 'no');
+
+        $this->say(__METHOD__ . ' is called');
+        $this->say(sprintf('Old ref: "%s"', $ref_old_label));
+        $this->say(sprintf('New ref: "%s"', $ref_new_label));
+        $this->say(sprintf('Branch checkout: "%s"', $is_branch_label));
+    }
+
+    /**
      * @param string $base_branch
      * @param string|null $subject_branch
      */
