@@ -7,7 +7,7 @@ Feature: Test for pre-push hook.
     And I run git add remote "origin" "../b-01"
     And I create a "README.md" file
     And I run git add "README.md"
-    And I run git commit -m <commit_msg>
+    And I run git commit -m "<commit_msg>"
     And the number of commits is 1
     And I run git push "origin" "master"
     Then the exit code should be <exit_code>
@@ -19,6 +19,6 @@ Feature: Test for pre-push hook.
     ➜  Lines in stdInput: 1
     """
     Examples:
-      | commit_msg | exit_code |
-      | Valid      | 0         |
-      | Invalid    | 1         |
+      | commit_msg       | exit_code |
+      | Valid            | 0         |
+      | Invalid pre-push | 1         |

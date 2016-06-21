@@ -104,7 +104,7 @@ class RoboFile extends Tasks
                     ->run()
                     ->getMessage();
 
-                $valid = (trim($commit_message) != 'Invalid');
+                $valid = !preg_match('/^Invalid pre-push(\n|$)/', trim($commit_message));
             }
         }
 
@@ -138,9 +138,30 @@ class RoboFile extends Tasks
         $this->say("Description: '$description'");
 
         if (!$description) {
-            $message = "This line added by the 'prepare-commit-msg' callback\n\n" . file_get_contents($file_name);
-            file_put_contents($file_name, $message);
+            $fh = fopen($file_name, 'a');
+            fwrite($fh, "This line added by the 'prepare-commit-msg' callback\n\n");
+            fclose($fh);
         }
+    }
+
+    /**
+     * @param string $file_name
+     *   The name of the file that has the commit message.
+     */
+    public function githookCommitMsg($file_name)
+    {
+        $this->say(__METHOD__ . ' is called');
+        $this->say("File name: '$file_name'");
+
+        $fh = fopen($file_name, 'a');
+        fwrite($fh, "This line added by the 'commit-msg' callback\n\n");
+        fclose($fh);
+
+        $msg = file_get_contents($file_name);
+        $this->stopOnFail(true);
+        $this
+            ->taskPredestined(!preg_match('/^Invalid commit-msg(\n|$)/', $msg))
+            ->run();
     }
 
     /**

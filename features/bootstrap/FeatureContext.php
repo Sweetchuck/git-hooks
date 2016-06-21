@@ -357,7 +357,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     /**
      * @Given I run git commit
-     * @Given I run git commit -m :message
+     * @Given /^I run git commit -m "(?P<message>[^"]+)"$/
      *
      * @param string $message
      */
