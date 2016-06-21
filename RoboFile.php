@@ -72,8 +72,9 @@ class RoboFile extends Tasks
     public function behat()
     {
         $this->stopOnFail(true);
+
         $this
-            ->taskExec('./vendor/bin/behat --colors --strict')
+            ->getTaskBehatRun()
             ->run();
     }
 
@@ -114,11 +115,12 @@ class RoboFile extends Tasks
      */
     protected function getTaskPhpcsLint()
     {
-        $cmd_pattern = '%s --standard=%s --ignore=%s %s %s';
+        $cmd_pattern = '%s --standard=%s --ignore=%s %s %s %s';
         $cmd_args = [
             escapeshellcmd("{$this->binDir}/phpcs"),
             escapeshellarg('PSR2'),
             escapeshellarg('fixtures/project-template/*/vendor/'),
+            escapeshellarg('features/bootstrap/'),
             escapeshellarg('fixtures/project-template/'),
             escapeshellarg('RoboFile.php'),
         ];
@@ -166,6 +168,19 @@ class RoboFile extends Tasks
         }
 
         return $fsStack;
+    }
+
+    /**
+     * @return \Robo\Task\Base\Exec
+     */
+    protected function getTaskBehatRun()
+    {
+        $cmd = sprintf(
+            '%s --colors --strict',
+            escapeshellcmd("{$this->binDir}/behat")
+        );
+
+        return  $this->taskExec($cmd);
     }
 
     /**

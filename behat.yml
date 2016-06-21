@@ -1,4 +1,7 @@
 default:
+  autoload:
+    '': '%paths.base%/features/bootstrap'
+    composer: '%paths.base%/vendor/autoload.php'
   formatters:
     pretty:
       output_styles:
