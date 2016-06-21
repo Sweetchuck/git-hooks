@@ -356,17 +356,22 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     }
 
     /**
+     * @Given I run git commit
      * @Given I run git commit -m :message
      *
      * @param string $message
      */
-    public function doGitCommit($message)
+    public function doGitCommit($message = null)
     {
-        $cmd_pattern = '%s commit -m %s';
+        $cmd_pattern = '%s commit';
         $cmd_args = [
             escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($message)
         ];
+
+        if ($message) {
+            $cmd_pattern .= ' -m %s';
+            $cmd_args[] = escapeshellarg($message);
+        }
 
         $this->process = $this->doExec(
             vsprintf($cmd_pattern, $cmd_args),
@@ -405,11 +410,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      * @param string $message
      * @param \Behat\Gherkin\Node\PyStringNode $content
      */
-    public function doGitCommitNewFileWithMessageAndContent(
-        $file_name,
-        $message,
-        PyStringNode $content
-    ) {
+    public function doGitCommitNewFileWithMessageAndContent($file_name, $message, PyStringNode $content)
+    {
         $this->doCreateFile($file_name);
         static::$fs->dumpFile($file_name, $content);
         $this->doGitAdd($file_name);
@@ -542,6 +544,16 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
             escapeshellarg($message)
         );
         $this->process = $this->doExec($cmd);
+    }
+
+    /**
+     * @Given /^I run git config core.editor (?P<editor>true|false)$/
+     *
+     * @param string $editor
+     */
+    public function doGitConfigSetCoreEditor($editor)
+    {
+        $this->doGitConfigSet('core.editor', $editor);
     }
 
     /**
@@ -713,6 +725,21 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
             "Initialized empty Git repository in $cwd_real/$git_dir\n",
             $git_init->getOutput()
         );
+    }
+
+    /**
+     * @param string $name
+     * @param string $value
+     */
+    protected function doGitConfigSet($name, $value)
+    {
+        $cmd = sprintf(
+            '%s config %s %s',
+            escapeshellcmd(static::$gitExecutable),
+            escapeshellarg($name),
+            escapeshellarg($value)
+        );
+        $this->process = $this->doExec($cmd);
     }
 
     /**

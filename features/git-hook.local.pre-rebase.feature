@@ -1,10 +1,7 @@
 Feature: Test for pre-rebase hook.
 
   Background:
-    Given I initialize a bare Git repo in directory "b-01"
-    And I am in the ".." directory
-    And I create a "basic" project in "p-01" directory
-    And I run git add remote "origin" "../b-01"
+    Given I create a "basic" project in "p-01" directory
     And I commit a new "README.md" file with message "Initial commit" and content:
     """
     @todo
