@@ -126,6 +126,24 @@ class RoboFile extends Tasks
     }
 
     /**
+     * @param string $file_name
+     *   The name of the file that has the commit message.
+     * @param string $description
+     *   The description of the commit message's source.
+     */
+    public function githookPrepareCommitMsg($file_name, $description = null)
+    {
+        $this->say(__METHOD__ . ' is called');
+        $this->say("File name: '$file_name'");
+        $this->say("Description: '$description'");
+
+        if (!$description) {
+            $message = "This line added by the 'prepare-commit-msg' callback\n\n" . file_get_contents($file_name);
+            file_put_contents($file_name, $message);
+        }
+    }
+
+    /**
      * @param string $ref
      *
      * @return bool
