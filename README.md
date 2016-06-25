@@ -17,11 +17,48 @@ teammates then this is the tool you are looking for.
 ## How to use
 
 1. Step into you existing package's directory (or create a new one with `git init && composer init`)
+1. See the example `composer.json` below and copy the `repositories` part to 
+   your `composer.json`.
 1. Run <pre><code>composer require --dev \
-  'bernardosilva/git-hooks-installer-plugin' \
-  'cheppers/git-hooks-robo' \
+  'bernardosilva/git-hooks-installer-plugin'
   'codegyre/robo'</code></pre>
+1. Run <pre><code>composer require --dev 'cheppers/git-hooks-robo'</code></pre>
 1. Create a `RoboFile.php`. See the example bellow.
+
+
+## Example composer.json
+
+```JSON
+{
+    "name": "my/package-01",
+    "description": "My description.",
+    "type": "library",
+    "license": "GPL-2.0",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "require": {},
+    "require-dev": {},
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "cheppers/git-hooks-robo",
+                "version": "0.0.4",
+                "type": "git-hook",
+                "dist": {
+                    "type": "tar",
+                    "url": "https://github.com/Cheppers/git-hooks-robo/releases/download/v0.0.4/v0.0.4.tar.gz"
+                },
+                "source": {
+                    "type": "git",
+                    "url": "https://github.com/Cheppers/git-hooks-robo.git",
+                    "reference": "v0.0.4"
+                }
+            }
+        }
+    ]
+}
+```
 
 
 ## Example RoboFile.php
@@ -33,15 +70,16 @@ teammates then this is the tool you are looking for.
  * Git hook tasks have to be started with 'githook' prefix.
  * So the method name format is: githook<GitHookNameInCamelCaseFormat>
  */
-class RoboFile extends Robo\Tasks {
+class RoboFile extends \Robo\Tasks
+{
 
     /**
      * Demo pre-commit callback.
      */
-    public function githookPreCommit() {
+    public function githookPreCommit()
+    {
         $this->say('The Git pre-commit hook is running');
     }
-
 }
 ```
 
