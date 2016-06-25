@@ -144,8 +144,13 @@ class RoboFile extends Tasks
 
     public function test()
     {
-        $this->composerValidate();
-        $this->behat();
+        $this->stopOnFail(true);
+
+        /** @var \Robo\Collection\Collection $c */
+        $c = $this->collection();
+        $c
+            ->add($this->getTaskBehatRun())
+            ->run();
     }
 
     public function behat()

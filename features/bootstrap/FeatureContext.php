@@ -83,7 +83,6 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         static::initFilesystem();
         static::cleanGitTemplate();
         static::initGitTemplate();
-        static::cleanTmpDirRoot();
     }
 
     /**
@@ -91,7 +90,6 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public static function hookAfterSuite()
     {
-        static::cleanTmpDirRoot();
         static::cleanGitTemplate();
     }
 
@@ -111,18 +109,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     protected static function initTmpDirRoot()
     {
-        static::$suitRootDir = sys_get_temp_dir() . '/'
-            . static::$composer['name'];
-    }
-
-    /**
-     * Cleans test folders in the temporary directory.
-     */
-    protected static function cleanTmpDirRoot()
-    {
-        if (static::$fs->exists(static::$suitRootDir)) {
-            static::$fs->remove(static::$suitRootDir);
-        }
+        static::$suitRootDir = sys_get_temp_dir() . '/' . static::$composer['name'];
     }
 
     protected static function initGitTemplate()
@@ -213,8 +200,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function initWorkingDir()
     {
-        $this->scenarioRootDir = static::$suitRootDir . '/' . md5(microtime()
-                * rand(0, 10000));
+        $this->scenarioRootDir = static::$suitRootDir . '/' . md5(microtime() * rand(0, 10000));
         static::$fs->mkdir($this->scenarioRootDir);
         $this->cwd = "{$this->scenarioRootDir}/workspace";
     }
@@ -587,10 +573,10 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdOutContains(PyStringNode $string)
     {
-        $this->assertContains(
-            $string->getRaw(),
-            $this->trimTrailingWhitespaces($this->process->getOutput())
-        );
+        $output = $this->trimTrailingWhitespaces($this->process->getOutput());
+        $output = $this->removeColorCodes($output);
+
+        $this->assertContains($string->getRaw(), $output);
     }
 
     /**
@@ -600,10 +586,10 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdErrContains(PyStringNode $string)
     {
-        $this->assertContains(
-            $string->getRaw(),
-            $this->trimTrailingWhitespaces($this->process->getErrorOutput())
-        );
+        $output = $this->trimTrailingWhitespaces($this->process->getErrorOutput());
+        $output = $this->removeColorCodes($output);
+
+        $this->assertContains($string->getRaw(), $output);
     }
 
     /**
@@ -813,5 +799,15 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     protected function trimTrailingWhitespaces($string)
     {
         return preg_replace('/[ \t]+\n/', "\n", rtrim($string, " \t"));
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return string
+     */
+    protected function removeColorCodes($string)
+    {
+        return preg_replace('/\x1B\[[0-9;]*[JKmsu]/', '', $string);
     }
 }
