@@ -587,7 +587,9 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdOutContains(PyStringNode $string)
     {
-        $this->assertContains($string->getRaw(), $this->trimTrailingWhitespaces($this->process->getOutput()));
+        $output = $this->trimTrailingWhitespaces($this->process->getOutput());
+        $output = $this->removeNonPrintableChars($output);
+        $this->assertContains($string->getRaw(), $output);
     }
 
     /**
@@ -597,7 +599,9 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdErrContains(PyStringNode $string)
     {
-        $this->assertContains($string->getRaw(), $this->trimTrailingWhitespaces($this->process->getErrorOutput()));
+        $output = $this->trimTrailingWhitespaces($this->process->getErrorOutput());
+        $output = $this->removeNonPrintableChars($output);
+        $this->assertContains($string->getRaw(), $output);
     }
 
     /**
@@ -806,6 +810,16 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     protected function trimTrailingWhitespaces($string)
     {
-        return preg_replace('/([ \t]+)(\n|$)/', '$2', $string);
+        return preg_replace('/[ \t]+\n/', "\n", rtrim($string, " \t"));
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return string
+     */
+    protected function removeNonPrintableChars($string)
+    {
+        return preg_replace('/[^[:print:]\s]/u', '', $string);
     }
 }
