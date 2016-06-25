@@ -13,10 +13,10 @@ Feature: Test for pre-push hook.
     Then the exit code should be <exit_code>
     And the stdOut should contains the following text:
     """
-    ➜  RoboFile::githookPrePush is called
-    ➜  Remote name: origin
-    ➜  Remote URI: ../b-01
-    ➜  Lines in stdInput: 1
+    >  RoboFile::githookPrePush is called
+    >  Remote name: origin
+    >  Remote URI: ../b-01
+    >  Lines in stdInput: 1
     """
     Examples:
       | commit_msg       | exit_code |

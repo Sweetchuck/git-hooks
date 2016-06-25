@@ -17,6 +17,42 @@ class RoboFile extends Tasks
 {
     use \PredestinedLoadTasks;
 
+    /**
+     * @var string
+     */
+    protected $sayPrefix = '>  ';
+
+    /**
+     * @var string
+     */
+    protected $yellPrefix = '>  ';
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function say($text)
+    {
+        $this->getOutput()->writeln("{$this->sayPrefix}$text");
+    }
+
+    /**
+     * @param string $text
+     * @param int $length
+     * @param string $color
+     */
+    protected function yell($text, $length = 40, $color = 'green')
+    {
+
+        $format = "%s<fg=white;bg=$color;options=bold> %s </fg=white;bg=$color;options=bold>";
+        $text = str_pad($text, $length, ' ', STR_PAD_BOTH);
+        $delimiter = sprintf($format, $this->yellPrefix, str_repeat(' ', $length));
+
+        $o = $this->getOutput();
+        $o->writeln($delimiter);
+        $o->writeln(sprintf($format, $this->yellPrefix, $text));
+        $o->writeln($delimiter);
+    }
+
     public function githookPreCommit()
     {
         $this->say(__METHOD__ . ' is called');

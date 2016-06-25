@@ -8,5 +8,5 @@ Feature: Test for post-commit hook.
     """
     Then the stdErr should contains the following text:
     """
-    RoboFile::githookPostCommit is called
+    >  RoboFile::githookPostCommit is called
     """

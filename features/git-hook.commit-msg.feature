@@ -10,8 +10,8 @@ Feature: Test for commit-msg hook.
     Then the exit code should be <exit_code>
     And the stdErr should contains the following text:
     """
-    ➜  RoboFile::githookCommitMsg is called
-    ➜  File name: '.git/COMMIT_EDITMSG'
+    >  RoboFile::githookCommitMsg is called
+    >  File name: '.git/COMMIT_EDITMSG'
     """
     Examples:
       | message            | exit_code |

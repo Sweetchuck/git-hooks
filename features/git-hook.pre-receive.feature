@@ -13,9 +13,9 @@ Feature: Test for pre-receive hook.
     Then the exit code should be <exit_code>
     And the stdErr should contains the following text:
     """
-    remote: ➜  RoboFile::githookPreReceive is called
-    remote: ➜  Ref: 'refs/heads/<remote_branch>'
-    remote: ➜  Lines in stdInput: '1'
+    remote: >  RoboFile::githookPreReceive is called
+    remote: >  Ref: 'refs/heads/<remote_branch>'
+    remote: >  Lines in stdInput: '1'
     """
     Examples:
       | remote_branch       | exit_code |

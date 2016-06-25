@@ -19,10 +19,10 @@ Feature: Test for pre-rebase hook.
     Then the exit code should be <exit_code>
     And the stdOut should contains the following text:
     """
-    ➜  RoboFile::githookPreRebase is called
-    ➜  Current branch: "<current_branch>"
-    ➜  Upstream: "<upstream>"
-    ➜  Subject branch: ""
+    >  RoboFile::githookPreRebase is called
+    >  Current branch: "<current_branch>"
+    >  Upstream: "<upstream>"
+    >  Subject branch: ""
     """
     Examples:
       | current_branch | upstream  | exit_code |
@@ -41,10 +41,10 @@ Feature: Test for pre-rebase hook.
     Then the exit code should be <exit_code>
     And the stdOut should contains the following text:
     """
-    ➜  RoboFile::githookPreRebase is called
-    ➜  Current branch: "master"
-    ➜  Upstream: "<upstream>"
-    ➜  Subject branch: "<subject_branch>"
+    >  RoboFile::githookPreRebase is called
+    >  Current branch: "master"
+    >  Upstream: "<upstream>"
+    >  Subject branch: "<subject_branch>"
     """
     Examples:
       | subject_branch | upstream  | exit_code |

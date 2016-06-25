@@ -7,7 +7,7 @@ Feature: Test for pre-commit hook.
     And I run git commit -m "Initial commit"
     Then the stdErr should contains the following text:
     """
-    RoboFile::githookPreCommit is called
+    >  RoboFile::githookPreCommit is called
     """
     And the number of commits is <commits>
     Examples:
