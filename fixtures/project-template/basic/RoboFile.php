@@ -162,6 +162,40 @@ class RoboFile extends Tasks
             ->run();
     }
 
+    public function githookPostReceive()
+    {
+        $this->say(__METHOD__ . ' is called');
+
+        $pattern = '/^[a-z0-9]{40}$/i';
+        $num_of_lines = 0;
+        while ($line = fgets(STDIN)) {
+            $line = rtrim($line, "\n");
+
+            $num_of_lines++;
+            if (!$line) {
+                continue;
+            }
+
+            list($old_rev, $new_rev, $ref_name) = explode(' ', $line);
+            $old_rev_label = (preg_match($pattern, $old_rev) ? 'OLD_REV' : $old_rev);
+            $new_rev_label = (preg_match($pattern, $new_rev) ? 'NEW_REV' : $new_rev);
+
+            $this->say(sprintf(
+                'stdInput line %d: "%s" "%s" "%s"',
+                $num_of_lines,
+                $old_rev_label,
+                $new_rev_label,
+                $ref_name
+            ));
+        }
+        $this->say(sprintf('Lines in stdInput: "%d"', $num_of_lines));
+
+        $this->stopOnFail(true);
+        $this
+            ->taskPredestined(true)
+            ->run();
+    }
+
     /**
      * @param string $is_squash
      */
