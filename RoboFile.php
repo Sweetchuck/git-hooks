@@ -126,7 +126,7 @@ class RoboFile extends Tasks
 
         foreach (['tar.gz', 'zip'] as $extension) {
             $collection->add($this
-                ->taskPack("release/v{$version}.$extension")
+                ->taskPack("release/{$this->packageVendor}-{$this->packageName}-{$version}.$extension")
                 ->addDir("{$this->packageName}-{$version}", "release/{$this->packageName}-{$version}"));
         }
 
