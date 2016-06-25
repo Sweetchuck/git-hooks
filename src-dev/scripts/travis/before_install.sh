@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+if [[ "${TRAVIS_OS_NAME}" == 'linux' ]]; then
+    phpenv config-rm xdebug.ini
+fi
+
 if [[ "${TRAVIS_OS_NAME}" == 'osx' ]]; then
   echo "Here's the OSX environment:"
   sw_vers
