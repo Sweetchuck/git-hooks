@@ -2,6 +2,7 @@
 /fixtures/git-template/hooks/
 /fixtures/project-template/*/vendor/
 
+/release/
 /vendor/
 
 /cheppers-git-hooks-robo-*.tar

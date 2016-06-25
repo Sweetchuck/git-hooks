@@ -12,10 +12,10 @@ Feature: Test for post-checkout
     And I run git checkout "feature-1"
     Then the stdErr should contains the following text:
     """
-    ➜  RoboFile::githookPostCheckout is called
-    ➜  Old ref: "OLD_REF"
-    ➜  New ref: "NEW_REF"
-    ➜  Branch checkout: "yes"
+    >  RoboFile::githookPostCheckout is called
+    >  Old ref: "OLD_REF"
+    >  New ref: "NEW_REF"
+    >  Branch checkout: "yes"
     """
 
   Scenario: File checkout.
@@ -27,8 +27,8 @@ Feature: Test for post-checkout
     And I run git checkout "master" -- "CONTRIBUTE.md"
     Then the stdErr should contains the following text:
     """
-    ➜  RoboFile::githookPostCheckout is called
-    ➜  Old ref: "OLD_REF"
-    ➜  New ref: "NEW_REF"
-    ➜  Branch checkout: "no"
+    >  RoboFile::githookPostCheckout is called
+    >  Old ref: "OLD_REF"
+    >  New ref: "NEW_REF"
+    >  Branch checkout: "no"
     """

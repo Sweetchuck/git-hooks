@@ -17,14 +17,14 @@ Feature: Test for post-merge hook.
     Given I run git merge "feature-01" -m "Merge feature-01 into master"
     Then the stdErr should contains the following text:
     """
-    ➜  RoboFile::githookPostMerge is called
-    ➜  Squash: 0
+    >  RoboFile::githookPostMerge is called
+    >  Squash: 0
     """
 
   Scenario: Squash merge
     Given I run git merge "feature-01" --squash -m "Merge feature-01 into master"
     Then the stdErr should contains the following text:
     """
-    ➜  RoboFile::githookPostMerge is called
-    ➜  Squash: 1
+    >  RoboFile::githookPostMerge is called
+    >  Squash: 1
     """

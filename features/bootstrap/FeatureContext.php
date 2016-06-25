@@ -43,7 +43,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     protected static $suitRootDir = '';
 
     /**
-     * @var Filesystem
+     * @var \Symfony\Component\Filesystem\Filesystem
      */
     protected static $fs = null;
 
@@ -83,7 +83,6 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         static::initFilesystem();
         static::cleanGitTemplate();
         static::initGitTemplate();
-        static::cleanTmpDirRoot();
     }
 
     /**
@@ -91,7 +90,6 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public static function hookAfterSuite()
     {
-        static::cleanTmpDirRoot();
         static::cleanGitTemplate();
     }
 
@@ -111,18 +109,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     protected static function initTmpDirRoot()
     {
-        static::$suitRootDir = sys_get_temp_dir() . '/'
-            . static::$composer['name'];
-    }
-
-    /**
-     * Cleans test folders in the temporary directory.
-     */
-    protected static function cleanTmpDirRoot()
-    {
-        if (static::$fs->exists(static::$suitRootDir)) {
-            static::$fs->remove(static::$suitRootDir);
-        }
+        static::$suitRootDir = sys_get_temp_dir() . '/' . static::$composer['name'];
     }
 
     protected static function initGitTemplate()
@@ -131,14 +118,14 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         $dir = "$git_template_dir/branches";
         static::$fs->mkdir($dir);
 
-        $files = static::$gitHooks;
-        $files[] = '_common';
-        foreach ($files as $file) {
-            static::$fs->copy(
-                static::$projectRootDir . "/$file",
-                "$git_template_dir/hooks/$file",
-                true
-            );
+        $files = array_fill_keys(static::$gitHooks, 0777);
+        $files['_common'] = 0666;
+        $mask = umask();
+        foreach ($files as $file => $mode) {
+            $src = static::$projectRootDir . "/$file";
+            $dst = "$git_template_dir/hooks/$file";
+            static::$fs->copy($src, $dst, true);
+            static::$fs->chmod($dst, $mode, $mask);
         }
     }
 
@@ -213,8 +200,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function initWorkingDir()
     {
-        $this->scenarioRootDir = static::$suitRootDir . '/' . md5(microtime()
-                * rand(0, 10000));
+        $this->scenarioRootDir = static::$suitRootDir . '/' . md5(microtime() * rand(0, 10000));
         static::$fs->mkdir($this->scenarioRootDir);
         $this->cwd = "{$this->scenarioRootDir}/workspace";
     }
@@ -382,17 +368,17 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     }
 
     /**
-     * @Given I run git push :name :uri
+     * @Given I run git push :remote :branch
      *
-     * @param string $name
-     * @param string $uri
+     * @param string $remote
+     * @param string $branch
      */
-    public function doGitPush($name, $uri)
+    public function doGitPush($remote, $branch)
     {
         $cmd = vsprintf('%s push %s %s', [
             escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($name),
-            escapeshellarg($uri)
+            escapeshellarg($remote),
+            escapeshellarg($branch)
         ]);
 
         $this->process = $this->doExec(
@@ -573,7 +559,11 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertExitCodeEquals($exit_code)
     {
-        $this->assertEquals($exit_code, $this->process->getExitCode());
+        $this->assertEquals(
+            $exit_code,
+            $this->process->getExitCode(),
+            "Exit codes don't match"
+        );
     }
 
     /**
@@ -583,7 +573,10 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdOutContains(PyStringNode $string)
     {
-        $this->assertContains($string->getRaw(), $this->process->getOutput());
+        $output = $this->trimTrailingWhitespaces($this->process->getOutput());
+        $output = $this->removeColorCodes($output);
+
+        $this->assertContains($string->getRaw(), $output);
     }
 
     /**
@@ -593,7 +586,10 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdErrContains(PyStringNode $string)
     {
-        $this->assertContains($string->getRaw(), $this->process->getErrorOutput());
+        $output = $this->trimTrailingWhitespaces($this->process->getErrorOutput());
+        $output = $this->removeColorCodes($output);
+
+        $this->assertContains($string->getRaw(), $output);
     }
 
     /**
@@ -793,5 +789,25 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     protected function getProjectCacheDir($type)
     {
         return "{$this->scenarioRootDir}/project-cache/$type";
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return string mixed
+     */
+    protected function trimTrailingWhitespaces($string)
+    {
+        return preg_replace('/[ \t]+\n/', "\n", rtrim($string, " \t"));
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return string
+     */
+    protected function removeColorCodes($string)
+    {
+        return preg_replace('/\x1B\[[0-9;]*[JKmsu]/', '', $string);
     }
 }

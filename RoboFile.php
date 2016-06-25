@@ -16,9 +16,17 @@ class RoboFile extends Tasks
 {
 
     /**
+     * @var string
+     */
+    protected $packageVendor = '';
+
+    /**
+     * @var string
+     */
+    protected $packageName = '';
+
+    /**
      * The "bin-dir" configured in composer.json.
-     *
-     * @todo This could be dynamic with `composer config bin-dir`.
      *
      * @var string
      */
@@ -33,26 +41,97 @@ class RoboFile extends Tasks
      * @var string[]
      */
     protected $filesToDeploy = [
-        '_common',
-        'applypatch-msg',
-        'commit-msg',
-        'post-applypatch',
-        'post-checkout',
-        'post-commit',
-        'post-merge',
-        'post-receive',
-        'post-rewrite',
-        'post-update',
-        'pre-applypatch',
-        'pre-auto-gc',
-        'pre-commit',
-        'pre-push',
-        'pre-rebase',
-        'pre-receive',
-        'prepare-commit-msg',
-        'push-to-checkout',
-        'update',
+        '_common' => ['base_mask' => 0666],
+        'applypatch-msg' => ['base_mask' => 0777],
+        'commit-msg' => ['base_mask' => 0777],
+        'post-applypatch' => ['base_mask' => 0777],
+        'post-checkout' => ['base_mask' => 0777],
+        'post-commit' => ['base_mask' => 0777],
+        'post-merge' => ['base_mask' => 0777],
+        'post-receive' => ['base_mask' => 0777],
+        'post-rewrite' => ['base_mask' => 0777],
+        'post-update' => ['base_mask' => 0777],
+        'pre-applypatch' => ['base_mask' => 0777],
+        'pre-auto-gc' => ['base_mask' => 0777],
+        'pre-commit' => ['base_mask' => 0777],
+        'pre-push' => ['base_mask' => 0777],
+        'pre-rebase' => ['base_mask' => 0777],
+        'pre-receive' => ['base_mask' => 0777],
+        'prepare-commit-msg' => ['base_mask' => 0777],
+        'push-to-checkout' => ['base_mask' => 0777],
+        'update' => ['base_mask' => 0777],
     ];
+
+    /**
+     * RoboFile constructor.
+     */
+    public function __construct()
+    {
+        $package = json_decode(file_get_contents(__DIR__ . '/composer.json'), true);
+        list($this->packageVendor, $this->packageName) = explode('/', $package['name']);
+
+        if (!empty($package['config']['bin-dir'])) {
+            $this->binDir = $package['config']['bin-dir'];
+        }
+    }
+
+    /**
+     * Create release tar balls.
+     *
+     * @param string $version
+     *   Example: 1.0.0
+     *
+     * @throws \Exception
+     */
+    public function releaseCreate($version)
+    {
+        if (!$this->isValidVersionNumber($version)) {
+            throw new \Exception('Invalid version number', 1);
+        }
+
+        $this->stopOnFail(true);
+
+        /** @var \Robo\Collection\Collection $collection */
+        $collection = $this->collection();
+
+        $collection->add($this
+            ->taskFilesystemStack()
+            ->remove('release'));
+
+        $cmd = sprintf(
+            'composer archive --format=%s --dir=%s --file=%s',
+            escapeshellarg('zip'),
+            escapeshellarg('release'),
+            escapeshellarg("v{$version}")
+        );
+        $collection->add($this->taskExec($cmd));
+
+        $collection->add($this
+            ->taskExtract("release/v{$version}.zip")
+            ->to("release/{$this->packageName}-{$version}"));
+
+        $collection->add($this
+            ->taskFilesystemStack()
+            ->remove("release/v{$version}.zip"));
+
+        $fs_stack_chmod = $this->taskFilesystemStack();
+        foreach ($this->filesToDeploy as $file_name => $file_meta) {
+            $fs_stack_chmod->chmod(
+                "release/{$this->packageName}-{$version}/$file_name",
+                $file_meta['base_mask'],
+                0022
+            );
+        }
+        $collection->add($fs_stack_chmod);
+
+        foreach (['tar.gz', 'zip'] as $extension) {
+            $collection->add($this
+                ->taskPack("release/v{$version}.$extension")
+                ->addDir("{$this->packageName}-{$version}", "release/{$this->packageName}-{$version}"));
+        }
+
+        $collection->run();
+    }
 
     public function deployGitHooks()
     {
@@ -65,8 +144,13 @@ class RoboFile extends Tasks
 
     public function test()
     {
-        $this->composerValidate();
-        $this->behat();
+        $this->stopOnFail(true);
+
+        /** @var \Robo\Collection\Collection $c */
+        $c = $this->collection();
+        $c
+            ->add($this->getTaskBehatRun())
+            ->run();
     }
 
     public function behat()
@@ -163,8 +247,10 @@ class RoboFile extends Tasks
         $fsStack = $container->get('taskFilesystemStack');
 
         $git_dir = preg_replace('@^' . preg_quote("$current_dir/", '@') . '@', './', $git_dir);
-        foreach ($this->filesToDeploy as $file_name) {
-            $fsStack->copy("./$file_name", "$git_dir/hooks/$file_name");
+        foreach ($this->filesToDeploy as $file_name => $file_meta) {
+            $dst = "$git_dir/hooks/$file_name";
+            $fsStack->copy($file_name, $dst);
+            $fsStack->chmod($dst, $file_meta['base_mask'], umask());
         }
 
         return $fsStack;
@@ -219,5 +305,15 @@ class RoboFile extends Tasks
         }
 
         return realpath(rtrim($process->getOutput(), "\n"));
+    }
+
+    /**
+     * @param string $version
+     *
+     * @return bool
+     */
+    protected function isValidVersionNumber($version)
+    {
+        return preg_match('/^\d+\.\d+\.\d+(-(alpha|beta|rc)\d+){0,1}$/', $version);
     }
 }

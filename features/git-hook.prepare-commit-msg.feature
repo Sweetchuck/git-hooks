@@ -10,9 +10,9 @@ Feature: Test for prepare-commit-msg hook.
     Then the exit code should be 0
     And the stdErr should contains the following text:
     """
-    ➜  RoboFile::githookPrepareCommitMsg is called
-    ➜  File name: '.git/COMMIT_EDITMSG'
-    ➜  Description: 'message'
+    >  RoboFile::githookPrepareCommitMsg is called
+    >  File name: '.git/COMMIT_EDITMSG'
+    >  Description: 'message'
     """
 
   Scenario Outline: Commit without commit message.
@@ -21,9 +21,9 @@ Feature: Test for prepare-commit-msg hook.
     Then the exit code should be <exit_code>
     And the stdErr should contains the following text:
     """
-    ➜  RoboFile::githookPrepareCommitMsg is called
-    ➜  File name: '.git/COMMIT_EDITMSG'
-    ➜  Description: ''
+    >  RoboFile::githookPrepareCommitMsg is called
+    >  File name: '.git/COMMIT_EDITMSG'
+    >  Description: ''
     """
     Examples:
       | editor | exit_code |

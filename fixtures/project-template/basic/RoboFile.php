@@ -17,6 +17,16 @@ class RoboFile extends Tasks
 {
     use \PredestinedLoadTasks;
 
+    /**
+     * @var string
+     */
+    protected $sayPrefix = '>  ';
+
+    /**
+     * @var string
+     */
+    protected $yellPrefix = '>  ';
+
     public function githookPreCommit()
     {
         $this->say(__METHOD__ . ' is called');
@@ -89,7 +99,13 @@ class RoboFile extends Tasks
         $valid = true;
         $num_of_lines = 0;
         while ($line = fgets(STDIN)) {
+            $line = rtrim($line, "\n");
+
             $num_of_lines++;
+            if (!$line) {
+                continue;
+            }
+
             list($local_ref, $local_sha) = explode(' ', $line);
             if ($valid && $this->gitRefIsBranch($local_ref)) {
                 $cmd = sprintf(
@@ -109,6 +125,36 @@ class RoboFile extends Tasks
         }
 
         $this->say("Lines in stdInput: $num_of_lines");
+
+        $this->stopOnFail(true);
+        $this
+            ->taskPredestined($valid)
+            ->run();
+    }
+
+    public function githookPreReceive()
+    {
+        $this->say(__METHOD__ . ' is called');
+
+        $num_of_lines = 0;
+        $valid = true;
+        while ($line = fgets(STDIN)) {
+            $line = rtrim($line, "\n");
+
+            $num_of_lines++;
+            if (!$line) {
+                continue;
+            }
+
+            list(, , $ref_name) = explode(' ', $line);
+
+            if ($valid) {
+                $valid = !preg_match('@^refs/heads/invalid-pre-receive$@', $ref_name);
+            }
+
+            $this->say("Ref: '$ref_name'");
+        }
+        $this->say("Lines in stdInput: '$num_of_lines'");
 
         $this->stopOnFail(true);
         $this
@@ -185,6 +231,28 @@ class RoboFile extends Tasks
             ->run();
 
         return trim($result->getMessage());
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function say($text)
+    {
+        $this->getOutput()->writeln("{$this->sayPrefix}$text");
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    protected function yell($text, $length = 40, $color = 'green')
+    {
+        $format = "%s<fg=white;bg=$color;options=bold> %s </fg=white;bg=$color;options=bold>";
+        $delimiter = sprintf($format, $this->yellPrefix, str_repeat(' ', $length));
+        $o = $this->getOutput();
+
+        $o->writeln($delimiter);
+        $o->writeln(sprintf($format, $this->yellPrefix, str_pad($text, $length, ' ', STR_PAD_BOTH)));
+        $o->writeln($delimiter);
     }
 }
 
