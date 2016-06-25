@@ -18,17 +18,15 @@ class RoboFile extends Tasks
     /**
      * @var string
      */
-    protected $projectVendor = 'cheppers';
+    protected $packageVendor = '';
 
     /**
      * @var string
      */
-    protected $projectName = 'git-hooks-robo';
+    protected $packageName = '';
 
     /**
      * The "bin-dir" configured in composer.json.
-     *
-     * @todo This could be dynamic with `composer config bin-dir`.
      *
      * @var string
      */
@@ -65,6 +63,19 @@ class RoboFile extends Tasks
     ];
 
     /**
+     * RoboFile constructor.
+     */
+    public function __construct()
+    {
+        $package = json_decode(file_get_contents(__DIR__ . '/composer.json'), true);
+        list($this->packageVendor, $this->packageName) = explode('/', $package['name']);
+
+        if (!empty($package['config']['bin-dir'])) {
+            $this->binDir = $package['config']['bin-dir'];
+        }
+    }
+
+    /**
      * Create release tar balls.
      *
      * @param string $version
@@ -87,7 +98,6 @@ class RoboFile extends Tasks
             ->taskFilesystemStack()
             ->remove('release'));
 
-        $version = '0.0.4';
         $cmd = sprintf(
             'composer archive --format=%s --dir=%s --file=%s',
             escapeshellarg('zip'),
@@ -98,7 +108,7 @@ class RoboFile extends Tasks
 
         $collection->add($this
             ->taskExtract("release/v{$version}.zip")
-            ->to("release/{$this->projectName}-{$version}"));
+            ->to("release/{$this->packageName}-{$version}"));
 
         $collection->add($this
             ->taskFilesystemStack()
@@ -107,7 +117,7 @@ class RoboFile extends Tasks
         $fs_stack_chmod = $this->taskFilesystemStack();
         foreach ($this->filesToDeploy as $file_name => $file_meta) {
             $fs_stack_chmod->chmod(
-                "release/{$this->projectName}-{$version}/$file_name",
+                "release/{$this->packageName}-{$version}/$file_name",
                 $file_meta['base_mask'],
                 0022
             );
@@ -117,7 +127,7 @@ class RoboFile extends Tasks
         foreach (['tar.gz', 'zip'] as $extension) {
             $collection->add($this
                 ->taskPack("release/v{$version}.$extension")
-                ->addDir("{$this->projectName}-{$version}", "release/{$this->projectName}-{$version}"));
+                ->addDir("{$this->packageName}-{$version}", "release/{$this->packageName}-{$version}"));
         }
 
         $collection->run();

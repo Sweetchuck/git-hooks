@@ -43,7 +43,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     protected static $suitRootDir = '';
 
     /**
-     * @var Filesystem
+     * @var \Symfony\Component\Filesystem\Filesystem
      */
     protected static $fs = null;
 
@@ -587,9 +587,10 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdOutContains(PyStringNode $string)
     {
-        $output = $this->trimTrailingWhitespaces($this->process->getOutput());
-        $output = $this->removeNonPrintableChars($output);
-        $this->assertContains($string->getRaw(), $output);
+        $this->assertContains(
+            $string->getRaw(),
+            $this->trimTrailingWhitespaces($this->process->getOutput())
+        );
     }
 
     /**
@@ -599,9 +600,10 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdErrContains(PyStringNode $string)
     {
-        $output = $this->trimTrailingWhitespaces($this->process->getErrorOutput());
-        $output = $this->removeNonPrintableChars($output);
-        $this->assertContains($string->getRaw(), $output);
+        $this->assertContains(
+            $string->getRaw(),
+            $this->trimTrailingWhitespaces($this->process->getErrorOutput())
+        );
     }
 
     /**
@@ -811,15 +813,5 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     protected function trimTrailingWhitespaces($string)
     {
         return preg_replace('/[ \t]+\n/', "\n", rtrim($string, " \t"));
-    }
-
-    /**
-     * @param string $string
-     *
-     * @return string
-     */
-    protected function removeNonPrintableChars($string)
-    {
-        return preg_replace('/[^[:print:]\s]/u', '', $string);
     }
 }
