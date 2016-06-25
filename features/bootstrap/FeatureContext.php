@@ -382,17 +382,17 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     }
 
     /**
-     * @Given I run git push :name :uri
+     * @Given I run git push :remote :branch
      *
-     * @param string $name
-     * @param string $uri
+     * @param string $remote
+     * @param string $branch
      */
-    public function doGitPush($name, $uri)
+    public function doGitPush($remote, $branch)
     {
         $cmd = vsprintf('%s push %s %s', [
             escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($name),
-            escapeshellarg($uri)
+            escapeshellarg($remote),
+            escapeshellarg($branch)
         ]);
 
         $this->process = $this->doExec(
@@ -573,7 +573,11 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertExitCodeEquals($exit_code)
     {
-        $this->assertEquals($exit_code, $this->process->getExitCode());
+        $this->assertEquals(
+            $exit_code,
+            $this->process->getExitCode(),
+            "Exit codes don't match"
+        );
     }
 
     /**
@@ -583,7 +587,12 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdOutContains(PyStringNode $string)
     {
-        $this->assertContains($string->getRaw(), $this->process->getOutput());
+        $output = explode("\n", $this->process->getOutput());
+        for ($i = 0; $i < count($output); $i++) {
+            $output[$i] = rtrim($output[$i]);
+        }
+
+        $this->assertContains($string->getRaw(), implode("\n", $output));
     }
 
     /**
@@ -593,7 +602,12 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdErrContains(PyStringNode $string)
     {
-        $this->assertContains($string->getRaw(), $this->process->getErrorOutput());
+        $output = explode("\n", $this->process->getErrorOutput());
+        for ($i = 0; $i < count($output); $i++) {
+            $output[$i] = rtrim($output[$i]);
+        }
+
+        $this->assertContains($string->getRaw(), implode("\n", $output));
     }
 
     /**
