@@ -587,12 +587,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdOutContains(PyStringNode $string)
     {
-        $output = explode("\n", $this->process->getOutput());
-        for ($i = 0; $i < count($output); $i++) {
-            $output[$i] = rtrim($output[$i]);
-        }
-
-        $this->assertContains($string->getRaw(), implode("\n", $output));
+        $this->assertContains($string->getRaw(), $this->trimTrailingWhitespaces($this->process->getOutput()));
     }
 
     /**
@@ -602,12 +597,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertStdErrContains(PyStringNode $string)
     {
-        $output = explode("\n", $this->process->getErrorOutput());
-        for ($i = 0; $i < count($output); $i++) {
-            $output[$i] = rtrim($output[$i]);
-        }
-
-        $this->assertContains($string->getRaw(), implode("\n", $output));
+        $this->assertContains($string->getRaw(), $this->trimTrailingWhitespaces($this->process->getErrorOutput()));
     }
 
     /**
@@ -807,5 +797,15 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     protected function getProjectCacheDir($type)
     {
         return "{$this->scenarioRootDir}/project-cache/$type";
+    }
+
+    /**
+     * @param string $string
+     *
+     * @return string mixed
+     */
+    protected function trimTrailingWhitespaces($string)
+    {
+        return preg_replace('/([ \t]+)(\n|$)/', '$2', $string);
     }
 }
