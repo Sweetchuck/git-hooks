@@ -131,14 +131,14 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         $dir = "$git_template_dir/branches";
         static::$fs->mkdir($dir);
 
-        $files = static::$gitHooks;
-        $files[] = '_common';
-        foreach ($files as $file) {
-            static::$fs->copy(
-                static::$projectRootDir . "/$file",
-                "$git_template_dir/hooks/$file",
-                true
-            );
+        $files = array_fill_keys(static::$gitHooks, 0777);
+        $files['_common'] = 0666;
+        $mask = umask();
+        foreach ($files as $file => $mode) {
+            $src = static::$projectRootDir . "/$file";
+            $dst = "$git_template_dir/hooks/$file";
+            static::$fs->copy($src, $dst, true);
+            static::$fs->chmod($dst, $mode, $mask);
         }
     }
 
