@@ -86,6 +86,50 @@ class RoboFile extends Tasks
     }
 
     /**
+     * @param string $trigger
+     */
+    public function githookPostRewrite($trigger)
+    {
+        $this->say(__METHOD__ . ' is called');
+        $this->say(sprintf('Trigger: "%s"', $trigger));
+
+        $pattern = '/^[a-z0-9]{40}$/i';
+        $num_of_lines = 0;
+        while ($line = fgets(STDIN)) {
+            $line = rtrim($line, "\n");
+
+            $num_of_lines++;
+            if (!$line) {
+                continue;
+            }
+
+            $keys = [
+                'old_rev',
+                'new_rev',
+                'extra',
+            ];
+            $input = array_combine($keys, explode(' ', $line) + [2 => null]);
+
+            $old_rev_label = (preg_match($pattern, $input['old_rev']) ? 'OLD_REV' : $input['old_rev']);
+            $new_rev_label = (preg_match($pattern, $input['new_rev']) ? 'NEW_REV' : $input['new_rev']);
+
+            $this->say(sprintf(
+                'stdInput line %d: "%s" "%s" "%s"',
+                $num_of_lines,
+                $old_rev_label,
+                $new_rev_label,
+                $input['extra']
+            ));
+        }
+        $this->say(sprintf('Lines in stdInput: "%d"', $num_of_lines));
+
+        $this->stopOnFail(true);
+        $this
+            ->taskPredestined(true)
+            ->run();
+    }
+
+    /**
      * @param string $remote_name
      * @param string $remote_uri
      */
