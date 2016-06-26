@@ -20,7 +20,7 @@ teammates then this is the tool you are looking for.
 1. See the example `composer.json` below and copy the `repositories` part to 
    your `composer.json`.
 1. Run <pre><code>composer require --dev \
-  'bernardosilva/git-hooks-installer-plugin'
+  'bernardosilva/git-hooks-installer-plugin' \
   'codegyre/robo'</code></pre>
 1. Run <pre><code>composer require --dev 'cheppers/git-hooks-robo'</code></pre>
 1. Create a `RoboFile.php`. See the example bellow.
