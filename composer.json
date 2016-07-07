@@ -20,7 +20,6 @@
             "/*",
             "/.*",
             "!/composer.json",
-            "!/_common",
             "!/applypatch-msg",
             "!/commit-msg",
             "!/post-applypatch",

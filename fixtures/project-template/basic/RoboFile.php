@@ -34,10 +34,10 @@ class RoboFile extends Tasks
         $output = [];
         $exit_code = null;
         exec('git diff --cached --name-only', $output, $exit_code);
-        $this->stopOnFail(true);
         $this
             ->taskPredestined(!$exit_code && !in_array('false.txt', $output))
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     public function githookPostCommit()
@@ -79,10 +79,10 @@ class RoboFile extends Tasks
             $subject_branch = $current_branch;
         }
 
-        $this->stopOnFail(true);
         $this
             ->taskPredestined(($subject_branch !== 'protected'))
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     /**
@@ -123,10 +123,10 @@ class RoboFile extends Tasks
         }
         $this->say(sprintf('Lines in stdInput: "%d"', $num_of_lines));
 
-        $this->stopOnFail(true);
         $this
             ->taskPredestined(true)
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     /**
@@ -170,10 +170,10 @@ class RoboFile extends Tasks
 
         $this->say("Lines in stdInput: $num_of_lines");
 
-        $this->stopOnFail(true);
         $this
             ->taskPredestined($valid)
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     public function githookPreReceive()
@@ -200,10 +200,10 @@ class RoboFile extends Tasks
         }
         $this->say("Lines in stdInput: '$num_of_lines'");
 
-        $this->stopOnFail(true);
         $this
             ->taskPredestined($valid)
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     public function githookPostReceive()
@@ -234,10 +234,10 @@ class RoboFile extends Tasks
         }
         $this->say(sprintf('Lines in stdInput: "%d"', $num_of_lines));
 
-        $this->stopOnFail(true);
         $this
             ->taskPredestined(true)
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     /**
@@ -282,10 +282,10 @@ class RoboFile extends Tasks
         fclose($fh);
 
         $msg = file_get_contents($file_name);
-        $this->stopOnFail(true);
         $this
             ->taskPredestined(!preg_match('/^Invalid commit-msg(\n|$)/', $msg))
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     /**

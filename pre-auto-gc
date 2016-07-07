@@ -7,5 +7,15 @@
 #   NULL
 ##
 
-hasInput='false'
-. "$(dirname $0)/_common"
+hasInput='true'
+if [ "$(git rev-parse --is-bare-repository)" = 'true' ]; then
+    gitHooksBridge='./.git-hooks'
+else
+    gitHooksBridge="$(git rev-parse --show-toplevel)/.git-hooks"
+fi
+
+if [ -s "${gitHooksBridge}" ]; then
+    . "${gitHooksBridge}" || exit $?
+fi
+
+exit 0

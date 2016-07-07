@@ -51,24 +51,24 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      * @var string[]
      */
     protected static $gitHooks = [
-        'applypatch-msg',
-        'commit-msg',
-        'post-applypatch',
-        'post-checkout',
-        'post-commit',
-        'post-merge',
-        'post-receive',
-        'post-rewrite',
-        'post-update',
-        'pre-applypatch',
-        'pre-auto-gc',
-        'pre-commit',
-        'pre-push',
-        'pre-rebase',
-        'pre-receive',
-        'prepare-commit-msg',
-        'push-to-checkout',
-        'update',
+        'applypatch-msg' => 0777,
+        'commit-msg' => 0777,
+        'post-applypatch' => 0777,
+        'post-checkout' => 0777,
+        'post-commit' => 0777,
+        'post-merge' => 0777,
+        'post-receive' => 0666,
+        'post-rewrite' => 0666,
+        'post-update' => 0777,
+        'pre-applypatch' => 0777,
+        'pre-auto-gc' => 0777,
+        'pre-commit' => 0777,
+        'pre-push' => 0777,
+        'pre-rebase' => 0777,
+        'pre-receive' => 0666,
+        'prepare-commit-msg' => 0777,
+        'push-to-checkout' => 0777,
+        'update' => 0777,
     ];
 
     /**
@@ -118,10 +118,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         $dir = "$git_template_dir/branches";
         static::$fs->mkdir($dir);
 
-        $files = array_fill_keys(static::$gitHooks, 0777);
-        $files['_common'] = 0666;
         $mask = umask();
-        foreach ($files as $file => $mode) {
+        foreach (static::$gitHooks as $file => $mode) {
             $src = static::$projectRootDir . "/$file";
             $dst = "$git_template_dir/hooks/$file";
             static::$fs->copy($src, $dst, true);

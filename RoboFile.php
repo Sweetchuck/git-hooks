@@ -41,22 +41,21 @@ class RoboFile extends Tasks
      * @var string[]
      */
     protected $filesToDeploy = [
-        '_common' => ['base_mask' => 0666],
         'applypatch-msg' => ['base_mask' => 0777],
         'commit-msg' => ['base_mask' => 0777],
         'post-applypatch' => ['base_mask' => 0777],
         'post-checkout' => ['base_mask' => 0777],
         'post-commit' => ['base_mask' => 0777],
         'post-merge' => ['base_mask' => 0777],
-        'post-receive' => ['base_mask' => 0777],
-        'post-rewrite' => ['base_mask' => 0777],
+        'post-receive' => ['base_mask' => 0666],
+        'post-rewrite' => ['base_mask' => 0666],
         'post-update' => ['base_mask' => 0777],
         'pre-applypatch' => ['base_mask' => 0777],
         'pre-auto-gc' => ['base_mask' => 0777],
         'pre-commit' => ['base_mask' => 0777],
         'pre-push' => ['base_mask' => 0777],
         'pre-rebase' => ['base_mask' => 0777],
-        'pre-receive' => ['base_mask' => 0777],
+        'pre-receive' => ['base_mask' => 0666],
         'prepare-commit-msg' => ['base_mask' => 0777],
         'push-to-checkout' => ['base_mask' => 0777],
         'update' => ['base_mask' => 0777],
@@ -88,8 +87,6 @@ class RoboFile extends Tasks
         if (!$this->isValidVersionNumber($version)) {
             throw new \Exception('Invalid version number', 1);
         }
-
-        $this->stopOnFail(true);
 
         /** @var \Robo\Collection\Collection $collection */
         $collection = $this->collection();
@@ -135,17 +132,16 @@ class RoboFile extends Tasks
 
     public function deployGitHooks()
     {
-        $this->stopOnFail(true);
         $task = $this->getTaskDeployGitHooks();
         if ($task) {
-            $task->run();
+            $task
+                ->run()
+                ->stopOnFail();
         }
     }
 
     public function test()
     {
-        $this->stopOnFail(true);
-
         /** @var \Robo\Collection\Collection $c */
         $c = $this->collection();
         $c
@@ -155,25 +151,22 @@ class RoboFile extends Tasks
 
     public function behat()
     {
-        $this->stopOnFail(true);
-
         $this
             ->getTaskBehatRun()
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     public function composerValidate()
     {
-        $this->stopOnFail(true);
         $this
             ->getTaskComposerValidate()
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     public function lint()
     {
-        $this->stopOnFail(true);
-
         /** @var \Robo\Collection\Collection $c */
         $c = $this->collection();
         $c
@@ -186,7 +179,8 @@ class RoboFile extends Tasks
     {
         $this
             ->getTaskPhpcsLint()
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     public function githookPreCommit()
