@@ -1,6 +1,6 @@
 {
-    "name": "cheppers/git-hooks-robo",
-    "description": "Provide a bridge between Git hooks and Robo tasks.",
+    "name": "cheppers/git-hooks",
+    "description": "Provide a bridge between Git hooks and scripts under VCS.",
     "type": "git-hook",
     "license": "GPL-2.0",
     "minimum-stability": "dev",
