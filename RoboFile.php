@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Robo task definitions for cheppers/git-hooks-robo.
+ * Robo task definitions for cheppers/git-hooks.
  */
 
 use Robo\Tasks;

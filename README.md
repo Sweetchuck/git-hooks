@@ -1,11 +1,11 @@
 
-# Trigger Robo tasks from Git hooks
+# Trigger custom scripts from Git hooks
 
 This package provides a bridge between the un-versioned `.git/hooks/*` scripts
 and scripts in your Git repository.
 
-[![Build Status](https://travis-ci.org/Cheppers/git-hooks-robo.svg?branch=master)](https://travis-ci.org/Cheppers/git-hooks-robo)
-[![Total Downloads](https://poser.pugx.org/cheppers/git-hooks-robo/downloads.png)](https://packagist.org/packages/cheppers/git-hooks-robo)
+[![Build Status](https://travis-ci.org/Cheppers/git-hooks.svg?branch=master)](https://travis-ci.org/Cheppers/git-hooks)
+[![Total Downloads](https://poser.pugx.org/cheppers/git-hooks/downloads.png)](https://packagist.org/packages/cheppers/git-hooks)
 
 
 ## When to use
@@ -43,16 +43,16 @@ teammates then this is the tool you are looking for.
         {
             "type": "package",
             "package": {
-                "name": "cheppers/git-hooks-robo",
+                "name": "cheppers/git-hooks",
                 "version": "0.0.5",
                 "type": "git-hook",
                 "dist": {
                     "type": "tar",
-                    "url": "https://github.com/Cheppers/git-hooks-robo/releases/download/v0.0.5/v0.0.5.tar.gz"
+                    "url": "https://github.com/Cheppers/git-hooks/releases/download/v0.0.5/v0.0.5.tar.gz"
                 },
                 "source": {
                     "type": "git",
-                    "url": "https://github.com/Cheppers/git-hooks-robo.git",
+                    "url": "https://github.com/Cheppers/git-hooks.git",
                     "reference": "v0.0.5"
                 }
             }

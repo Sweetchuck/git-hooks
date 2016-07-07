@@ -1,6 +1,6 @@
 {
-    "name": "cheppers/git-hooks-robo-helper",
-    "description": "Helper project for cheppers/git-hooks-robo",
+    "name": "cheppers/git-hooks-helper",
+    "description": "Helper project for cheppers/git-hooks",
     "license": "proprietary",
     "minimum-stability": "dev",
     "prefer-stable": true,
