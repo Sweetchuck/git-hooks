@@ -99,7 +99,9 @@ class RoboFile extends Tasks
 
         $fs_stack
             ->remove("release/$name")
-            ->remove("release/$name.tar.gz");
+            ->remove("release/$name.tar.gz")
+            ->copy('composer.json', "release/$name/composer.json")
+            ->copy('README.md', "release/$name/README.md");
 
         foreach ($this->filesToDeploy as $file_name => $file_meta) {
             $fs_stack->copy(
