@@ -119,7 +119,6 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         static::$fs->mkdir($dir);
 
         $files = array_fill_keys(static::$gitHooks, 0777);
-        $files['_common'] = 0666;
         $mask = umask();
         foreach ($files as $file => $mode) {
             $src = static::$projectRootDir . "/$file";

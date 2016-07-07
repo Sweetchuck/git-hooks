@@ -41,14 +41,13 @@ class RoboFile extends Tasks
      * @var string[]
      */
     protected $filesToDeploy = [
-        '_common' => ['base_mask' => 0666],
         'applypatch-msg' => ['base_mask' => 0777],
         'commit-msg' => ['base_mask' => 0777],
         'post-applypatch' => ['base_mask' => 0777],
         'post-checkout' => ['base_mask' => 0777],
         'post-commit' => ['base_mask' => 0777],
         'post-merge' => ['base_mask' => 0777],
-        'post-receive' => ['base_mask' => 0777],
+        'post-receive' => ['base_mask' => 0666],
         'post-rewrite' => ['base_mask' => 0777],
         'post-update' => ['base_mask' => 0777],
         'pre-applypatch' => ['base_mask' => 0777],
@@ -56,7 +55,7 @@ class RoboFile extends Tasks
         'pre-commit' => ['base_mask' => 0777],
         'pre-push' => ['base_mask' => 0777],
         'pre-rebase' => ['base_mask' => 0777],
-        'pre-receive' => ['base_mask' => 0777],
+        'pre-receive' => ['base_mask' => 0666],
         'prepare-commit-msg' => ['base_mask' => 0777],
         'push-to-checkout' => ['base_mask' => 0777],
         'update' => ['base_mask' => 0777],
