@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Robo task definitions for cheppers/git-hooks-robo.
+ * Robo task definitions for cheppers/git-hooks.
  */
 
 use Robo\Tasks;
@@ -41,6 +41,7 @@ class RoboFile extends Tasks
      * @var string[]
      */
     protected $filesToDeploy = [
+        '_common' => ['base_mask' => 0666],
         'applypatch-msg' => ['base_mask' => 0777],
         'commit-msg' => ['base_mask' => 0777],
         'post-applypatch' => ['base_mask' => 0777],
@@ -91,41 +92,33 @@ class RoboFile extends Tasks
         /** @var \Robo\Collection\Collection $collection */
         $collection = $this->collection();
 
-        $collection->add($this
-            ->taskFilesystemStack()
-            ->remove('release'));
+        $name = "{$this->packageVendor}-{$this->packageName}-{$version}";
 
-        $cmd = sprintf(
-            'composer archive --format=%s --dir=%s --file=%s',
-            escapeshellarg('zip'),
-            escapeshellarg('release'),
-            escapeshellarg("v{$version}")
-        );
-        $collection->add($this->taskExec($cmd));
+        $fs_stack = $this->taskFilesystemStack();
+        $collection->add($fs_stack);
 
-        $collection->add($this
-            ->taskExtract("release/v{$version}.zip")
-            ->to("release/{$this->packageName}-{$version}"));
+        $fs_stack
+            ->remove("release/$name")
+            ->remove("release/$name.tar.gz");
 
-        $collection->add($this
-            ->taskFilesystemStack()
-            ->remove("release/v{$version}.zip"));
-
-        $fs_stack_chmod = $this->taskFilesystemStack();
         foreach ($this->filesToDeploy as $file_name => $file_meta) {
-            $fs_stack_chmod->chmod(
-                "release/{$this->packageName}-{$version}/$file_name",
+            $fs_stack->copy(
+                "hooks/$file_name",
+                "release/$name/$file_name"
+            );
+
+            $fs_stack->chmod(
+                "release/$name/$file_name",
                 $file_meta['base_mask'],
                 0022
             );
         }
-        $collection->add($fs_stack_chmod);
 
-        foreach (['tar.gz', 'zip'] as $extension) {
-            $collection->add($this
-                ->taskPack("release/{$this->packageVendor}-{$this->packageName}-{$version}.$extension")
-                ->addDir("{$this->packageName}-{$version}", "release/{$this->packageName}-{$version}"));
-        }
+        $collection->add(
+            $this
+                ->taskPack("release/$name.tar.gz")
+                ->addDir($name, "release/$name")
+        );
 
         $collection->run();
     }
@@ -243,7 +236,7 @@ class RoboFile extends Tasks
         $git_dir = preg_replace('@^' . preg_quote("$current_dir/", '@') . '@', './', $git_dir);
         foreach ($this->filesToDeploy as $file_name => $file_meta) {
             $dst = "$git_dir/hooks/$file_name";
-            $fsStack->copy($file_name, $dst);
+            $fsStack->copy("hooks/$file_name", $dst);
             $fsStack->chmod($dst, $file_meta['base_mask'], umask());
         }
 

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+##
+# @see https://git-scm.com/docs/githooks#_pre_commit
+##
+
+. "$(dirname $0)/_common"
