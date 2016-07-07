@@ -34,10 +34,10 @@ class RoboFile extends Tasks
         $output = [];
         $exit_code = null;
         exec('git diff --cached --name-only', $output, $exit_code);
-        $this->stopOnFail(true);
         $this
             ->taskPredestined(!$exit_code && !in_array('false.txt', $output))
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     public function githookPostCommit()
@@ -79,10 +79,54 @@ class RoboFile extends Tasks
             $subject_branch = $current_branch;
         }
 
-        $this->stopOnFail(true);
         $this
             ->taskPredestined(($subject_branch !== 'protected'))
-            ->run();
+            ->run()
+            ->stopOnFail();
+    }
+
+    /**
+     * @param string $trigger
+     */
+    public function githookPostRewrite($trigger)
+    {
+        $this->say(__METHOD__ . ' is called');
+        $this->say(sprintf('Trigger: "%s"', $trigger));
+
+        $pattern = '/^[a-z0-9]{40}$/i';
+        $num_of_lines = 0;
+        while ($line = fgets(STDIN)) {
+            $line = rtrim($line, "\n");
+
+            $num_of_lines++;
+            if (!$line) {
+                continue;
+            }
+
+            $keys = [
+                'old_rev',
+                'new_rev',
+                'extra',
+            ];
+            $input = array_combine($keys, explode(' ', $line) + [2 => null]);
+
+            $old_rev_label = (preg_match($pattern, $input['old_rev']) ? 'OLD_REV' : $input['old_rev']);
+            $new_rev_label = (preg_match($pattern, $input['new_rev']) ? 'NEW_REV' : $input['new_rev']);
+
+            $this->say(sprintf(
+                'stdInput line %d: "%s" "%s" "%s"',
+                $num_of_lines,
+                $old_rev_label,
+                $new_rev_label,
+                $input['extra']
+            ));
+        }
+        $this->say(sprintf('Lines in stdInput: "%d"', $num_of_lines));
+
+        $this
+            ->taskPredestined(true)
+            ->run()
+            ->stopOnFail();
     }
 
     /**
@@ -126,10 +170,10 @@ class RoboFile extends Tasks
 
         $this->say("Lines in stdInput: $num_of_lines");
 
-        $this->stopOnFail(true);
         $this
             ->taskPredestined($valid)
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     public function githookPreReceive()
@@ -156,10 +200,10 @@ class RoboFile extends Tasks
         }
         $this->say("Lines in stdInput: '$num_of_lines'");
 
-        $this->stopOnFail(true);
         $this
             ->taskPredestined($valid)
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     public function githookPostReceive()
@@ -190,10 +234,10 @@ class RoboFile extends Tasks
         }
         $this->say(sprintf('Lines in stdInput: "%d"', $num_of_lines));
 
-        $this->stopOnFail(true);
         $this
             ->taskPredestined(true)
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     /**
@@ -238,10 +282,10 @@ class RoboFile extends Tasks
         fclose($fh);
 
         $msg = file_get_contents($file_name);
-        $this->stopOnFail(true);
         $this
             ->taskPredestined(!preg_match('/^Invalid commit-msg(\n|$)/', $msg))
-            ->run();
+            ->run()
+            ->stopOnFail();
     }
 
     /**
