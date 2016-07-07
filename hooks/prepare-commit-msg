@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+##
+# @see https://git-scm.com/docs/githooks#_prepare_commit_msg
+##
+
+hasInput='true'
+. "$(dirname $0)/_common"

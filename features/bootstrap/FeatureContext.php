@@ -51,24 +51,25 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      * @var string[]
      */
     protected static $gitHooks = [
-        'applypatch-msg' => 0777,
-        'commit-msg' => 0777,
-        'post-applypatch' => 0777,
-        'post-checkout' => 0777,
-        'post-commit' => 0777,
-        'post-merge' => 0777,
-        'post-receive' => 0666,
-        'post-rewrite' => 0666,
-        'post-update' => 0777,
-        'pre-applypatch' => 0777,
-        'pre-auto-gc' => 0777,
-        'pre-commit' => 0777,
-        'pre-push' => 0777,
-        'pre-rebase' => 0777,
-        'pre-receive' => 0666,
-        'prepare-commit-msg' => 0777,
-        'push-to-checkout' => 0777,
-        'update' => 0777,
+        '_common' => ['base_mask' => 0666],
+        'applypatch-msg' => ['base_mask' => 0777],
+        'commit-msg' => ['base_mask' => 0777],
+        'post-applypatch' => ['base_mask' => 0777],
+        'post-checkout' => ['base_mask' => 0777],
+        'post-commit' => ['base_mask' => 0777],
+        'post-merge' => ['base_mask' => 0777],
+        'post-receive' => ['base_mask' => 0666],
+        'post-rewrite' => ['base_mask' => 0666],
+        'post-update' => ['base_mask' => 0777],
+        'pre-applypatch' => ['base_mask' => 0777],
+        'pre-auto-gc' => ['base_mask' => 0777],
+        'pre-commit' => ['base_mask' => 0777],
+        'pre-push' => ['base_mask' => 0777],
+        'pre-rebase' => ['base_mask' => 0777],
+        'pre-receive' => ['base_mask' => 0666],
+        'prepare-commit-msg' => ['base_mask' => 0777],
+        'push-to-checkout' => ['base_mask' => 0777],
+        'update' => ['base_mask' => 0777],
     ];
 
     /**
@@ -119,11 +120,11 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         static::$fs->mkdir($dir);
 
         $mask = umask();
-        foreach (static::$gitHooks as $file => $mode) {
-            $src = static::$projectRootDir . "/$file";
-            $dst = "$git_template_dir/hooks/$file";
+        foreach (static::$gitHooks as $file_name => $info) {
+            $src = static::$projectRootDir . "/hooks/$file_name";
+            $dst = "$git_template_dir/hooks/$file_name";
             static::$fs->copy($src, $dst, true);
-            static::$fs->chmod($dst, $mode, $mask);
+            static::$fs->chmod($dst, $info['base_mask'], $mask);
         }
     }
 

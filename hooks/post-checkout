@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+##
+# @see https://git-scm.com/docs/githooks#_post_checkout
+##
+
+hasInput='true'
+. "$(dirname $0)/_common"

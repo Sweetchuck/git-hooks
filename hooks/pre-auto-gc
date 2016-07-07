@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+##
+# @see https://git-scm.com/docs/githooks#_pre_auto_gc
+##
+
+hasInput='true'
+. "$(dirname $0)/_common"
