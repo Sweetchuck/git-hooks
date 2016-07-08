@@ -3,5 +3,5 @@
 # @see https://git-scm.com/docs/githooks#_pre_push
 ##
 
-hasInput='true'
+cghHasInput='true'
 . "$(dirname $0)/_common"

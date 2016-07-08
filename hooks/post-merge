@@ -3,5 +3,5 @@
 # @see https://git-scm.com/docs/githooks#_post_merge
 ##
 
-hasInput='false'
+cghHasInput='false'
 . "$(dirname $0)/_common"
