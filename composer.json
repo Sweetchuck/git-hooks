@@ -8,7 +8,7 @@
     "require": {},
     "require-dev": {
         "behat/behat": "~3.1",
-        "codegyre/robo": "dev-master#a605efd",
+        "consolidation/robo": "dev-master#6af485e",
         "pear/archive_tar": "~1.4",
         "phpunit/phpunit": "~4.5",
         "squizlabs/php_codesniffer": "~2.6",
