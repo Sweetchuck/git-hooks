@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "680fd4c78de4b7f03631a9987fd088b0",
-    "content-hash": "c9366dec5d601ecea2cb28c90411a635",
+    "hash": "8fd51bb0b6e8d69220a53c8cb11aed79",
+    "content-hash": "dd3bb5d43103fbeec5c536039cb629f8",
     "packages": [],
     "packages-dev": [
         {
@@ -187,87 +187,17 @@
             "time": "2015-09-28 16:26:35"
         },
         {
-            "name": "codegyre/robo",
-            "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/consolidation-org/Robo.git",
-                "reference": "9a901733b2001f5e41357ab2d5be357cae68122b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/consolidation-org/Robo/zipball/9a901733b2001f5e41357ab2d5be357cae68122b",
-                "reference": "9a901733b2001f5e41357ab2d5be357cae68122b",
-                "shasum": ""
-            },
-            "require": {
-                "consolidation/annotated-command": "~1",
-                "consolidation/log": "~1",
-                "consolidation/output-formatters": "~1",
-                "league/container": "~2.2",
-                "php": ">=5.5.0",
-                "symfony/console": "~2.5|~3.0",
-                "symfony/event-dispatcher": "~2.5|~3.0",
-                "symfony/filesystem": "~2.5|~3.0",
-                "symfony/finder": "~2.5|~3.0",
-                "symfony/process": "~2.5|~3.0"
-            },
-            "require-dev": {
-                "codeception/aspect-mock": "0.5.4",
-                "codeception/base": "~2.1.5",
-                "codeception/verify": "0.2.*",
-                "henrikbjorn/lurker": "~1.0",
-                "natxet/cssmin": "~3.0",
-                "patchwork/jsqueeze": "~1.0",
-                "pear/archive_tar": "~1.0",
-                "satooshi/php-coveralls": "^1.0",
-                "squizlabs/php_codesniffer": "2.*"
-            },
-            "suggest": {
-                "henrikbjorn/lurker": "For monitoring filesystem changes in taskWatch",
-                "natxet/CssMin": "For minifying JS files in taskMinify",
-                "patchwork/jsqueeze": "For minifying JS files in taskMinify",
-                "pear/archive_tar": "Allows tar archives to be created and extracted in taskPack and taskExtract, respectively."
-            },
-            "bin": [
-                "robo"
-            ],
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Robo\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Davert",
-                    "email": "davert.php@resend.cc"
-                }
-            ],
-            "description": "Modern task runner",
-            "time": "2016-06-07 18:49:42"
-        },
-        {
             "name": "consolidation/annotated-command",
-            "version": "1.0.1",
+            "version": "1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/consolidation-org/annotated-command.git",
-                "reference": "ed279df30b9386fd8e523003dc679421a87c52e0"
+                "reference": "00c13d61cbffa5bc182e10028d2decafb07bedaa"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/consolidation-org/annotated-command/zipball/ed279df30b9386fd8e523003dc679421a87c52e0",
-                "reference": "ed279df30b9386fd8e523003dc679421a87c52e0",
+                "url": "https://api.github.com/repos/consolidation-org/annotated-command/zipball/00c13d61cbffa5bc182e10028d2decafb07bedaa",
+                "reference": "00c13d61cbffa5bc182e10028d2decafb07bedaa",
                 "shasum": ""
             },
             "require": {
@@ -305,7 +235,7 @@
                 }
             ],
             "description": "Initialize Symfony Console commands from annotated command class methods.",
-            "time": "2016-05-21 13:25:52"
+            "time": "2016-07-06 15:34:13"
         },
         {
             "name": "consolidation/log",
@@ -400,6 +330,80 @@
             ],
             "description": "Format text by applying transformations provided by plug-in formatters.",
             "time": "2016-05-20 04:17:55"
+        },
+        {
+            "name": "consolidation/robo",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/consolidation-org/Robo.git",
+                "reference": "6af485e667c0e01111fd07e9e03a2f089ac67cb3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/consolidation-org/Robo/zipball/6af485e667c0e01111fd07e9e03a2f089ac67cb3",
+                "reference": "6af485e667c0e01111fd07e9e03a2f089ac67cb3",
+                "shasum": ""
+            },
+            "require": {
+                "consolidation/annotated-command": "~1",
+                "consolidation/log": "~1",
+                "consolidation/output-formatters": "~1",
+                "league/container": "~2.2",
+                "php": ">=5.5.0",
+                "symfony/console": "~2.5|~3.0",
+                "symfony/event-dispatcher": "~2.5|~3.0",
+                "symfony/filesystem": "~2.5|~3.0",
+                "symfony/finder": "~2.5|~3.0",
+                "symfony/process": "~2.5|~3.0"
+            },
+            "replace": {
+                "codegyre/robo": "< 1.0"
+            },
+            "require-dev": {
+                "codeception/aspect-mock": "0.5.4",
+                "codeception/base": "~2.1.5",
+                "codeception/verify": "0.2.*",
+                "henrikbjorn/lurker": "~1.0",
+                "natxet/cssmin": "~3.0",
+                "patchwork/jsqueeze": "~1.0",
+                "pear/archive_tar": "~1.0",
+                "phpunit/php-code-coverage": "2.*",
+                "satooshi/php-coveralls": "^1.0",
+                "squizlabs/php_codesniffer": "2.*"
+            },
+            "suggest": {
+                "henrikbjorn/lurker": "For monitoring filesystem changes in taskWatch",
+                "natxet/CssMin": "For minifying JS files in taskMinify",
+                "patchwork/jsqueeze": "For minifying JS files in taskMinify",
+                "pear/archive_tar": "Allows tar archives to be created and extracted in taskPack and taskExtract, respectively."
+            },
+            "bin": [
+                "robo"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Robo\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Davert",
+                    "email": "davert.php@resend.cc"
+                }
+            ],
+            "description": "Modern task runner",
+            "time": "2016-07-06 21:42:25"
         },
         {
             "name": "container-interop/container-interop",
@@ -1730,16 +1734,16 @@
         },
         {
             "name": "symfony/class-loader",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/class-loader.git",
-                "reference": "6ebc60f69a6df4b3cf5ad6f260ba4edf5957ea05"
+                "reference": "0d0ac77c336eb73f35bebdf3e1f3695ac741bbc9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/class-loader/zipball/6ebc60f69a6df4b3cf5ad6f260ba4edf5957ea05",
-                "reference": "6ebc60f69a6df4b3cf5ad6f260ba4edf5957ea05",
+                "url": "https://api.github.com/repos/symfony/class-loader/zipball/0d0ac77c336eb73f35bebdf3e1f3695ac741bbc9",
+                "reference": "0d0ac77c336eb73f35bebdf3e1f3695ac741bbc9",
                 "shasum": ""
             },
             "require": {
@@ -1782,20 +1786,20 @@
             ],
             "description": "Symfony ClassLoader Component",
             "homepage": "https://symfony.com",
-            "time": "2016-03-30 10:41:47"
+            "time": "2016-06-29 05:41:56"
         },
         {
             "name": "symfony/config",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/config.git",
-                "reference": "048dc47e07f92333203c3b7045868bbc864fc40e"
+                "reference": "bcf5aebabc95b56e370e13d78565f74c7d8726dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/config/zipball/048dc47e07f92333203c3b7045868bbc864fc40e",
-                "reference": "048dc47e07f92333203c3b7045868bbc864fc40e",
+                "url": "https://api.github.com/repos/symfony/config/zipball/bcf5aebabc95b56e370e13d78565f74c7d8726dc",
+                "reference": "bcf5aebabc95b56e370e13d78565f74c7d8726dc",
                 "shasum": ""
             },
             "require": {
@@ -1835,20 +1839,20 @@
             ],
             "description": "Symfony Config Component",
             "homepage": "https://symfony.com",
-            "time": "2016-05-20 11:48:17"
+            "time": "2016-06-29 05:41:56"
         },
         {
             "name": "symfony/console",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "64a4d43b045f07055bb197650159769604cb2a92"
+                "reference": "747154aa69b0f83cd02fc9aa554836dee417631a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/64a4d43b045f07055bb197650159769604cb2a92",
-                "reference": "64a4d43b045f07055bb197650159769604cb2a92",
+                "url": "https://api.github.com/repos/symfony/console/zipball/747154aa69b0f83cd02fc9aa554836dee417631a",
+                "reference": "747154aa69b0f83cd02fc9aa554836dee417631a",
                 "shasum": ""
             },
             "require": {
@@ -1895,20 +1899,20 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "https://symfony.com",
-            "time": "2016-06-14 11:18:07"
+            "time": "2016-06-29 07:02:31"
         },
         {
             "name": "symfony/dependency-injection",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/dependency-injection.git",
-                "reference": "4b9645f5870e0b4ab35cc5b528422049946e8bec"
+                "reference": "b7272b65f2f46cbe77def7d33916f2613669c508"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/dependency-injection/zipball/4b9645f5870e0b4ab35cc5b528422049946e8bec",
-                "reference": "4b9645f5870e0b4ab35cc5b528422049946e8bec",
+                "url": "https://api.github.com/repos/symfony/dependency-injection/zipball/b7272b65f2f46cbe77def7d33916f2613669c508",
+                "reference": "b7272b65f2f46cbe77def7d33916f2613669c508",
                 "shasum": ""
             },
             "require": {
@@ -1955,20 +1959,20 @@
             ],
             "description": "Symfony DependencyInjection Component",
             "homepage": "https://symfony.com",
-            "time": "2016-06-14 11:18:07"
+            "time": "2016-06-29 05:42:25"
         },
         {
             "name": "symfony/event-dispatcher",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/event-dispatcher.git",
-                "reference": "f5b7563f67779c6d3d5370e23448e707c858df3e"
+                "reference": "7f9839ede2070f53e7e2f0849b9bd14748c434c5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/event-dispatcher/zipball/f5b7563f67779c6d3d5370e23448e707c858df3e",
-                "reference": "f5b7563f67779c6d3d5370e23448e707c858df3e",
+                "url": "https://api.github.com/repos/symfony/event-dispatcher/zipball/7f9839ede2070f53e7e2f0849b9bd14748c434c5",
+                "reference": "7f9839ede2070f53e7e2f0849b9bd14748c434c5",
                 "shasum": ""
             },
             "require": {
@@ -2015,20 +2019,20 @@
             ],
             "description": "Symfony EventDispatcher Component",
             "homepage": "https://symfony.com",
-            "time": "2016-06-06 11:42:41"
+            "time": "2016-06-29 05:41:56"
         },
         {
             "name": "symfony/filesystem",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
-                "reference": "5751e80d6f94b7c018f338a4a7be0b700d6f3058"
+                "reference": "322da5f0910d8aa0b25fa65ffccaba68dbddb890"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/filesystem/zipball/5751e80d6f94b7c018f338a4a7be0b700d6f3058",
-                "reference": "5751e80d6f94b7c018f338a4a7be0b700d6f3058",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/322da5f0910d8aa0b25fa65ffccaba68dbddb890",
+                "reference": "322da5f0910d8aa0b25fa65ffccaba68dbddb890",
                 "shasum": ""
             },
             "require": {
@@ -2064,20 +2068,20 @@
             ],
             "description": "Symfony Filesystem Component",
             "homepage": "https://symfony.com",
-            "time": "2016-04-12 18:27:47"
+            "time": "2016-06-29 05:41:56"
         },
         {
             "name": "symfony/finder",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/finder.git",
-                "reference": "40d17ed287bf51a2f884c4619ce8ff2a1c5cd219"
+                "reference": "8201978de88a9fa0923e18601bb17f1df9c721e7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/finder/zipball/40d17ed287bf51a2f884c4619ce8ff2a1c5cd219",
-                "reference": "40d17ed287bf51a2f884c4619ce8ff2a1c5cd219",
+                "url": "https://api.github.com/repos/symfony/finder/zipball/8201978de88a9fa0923e18601bb17f1df9c721e7",
+                "reference": "8201978de88a9fa0923e18601bb17f1df9c721e7",
                 "shasum": ""
             },
             "require": {
@@ -2113,7 +2117,7 @@
             ],
             "description": "Symfony Finder Component",
             "homepage": "https://symfony.com",
-            "time": "2016-05-13 18:06:41"
+            "time": "2016-06-29 05:41:56"
         },
         {
             "name": "symfony/polyfill-mbstring",
@@ -2176,16 +2180,16 @@
         },
         {
             "name": "symfony/process",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "6350e63ed9c232da50e00f00a7e0330f066387a2"
+                "reference": "5c11a1a4d4016662eeaf0f8757958c7de069f9a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/6350e63ed9c232da50e00f00a7e0330f066387a2",
-                "reference": "6350e63ed9c232da50e00f00a7e0330f066387a2",
+                "url": "https://api.github.com/repos/symfony/process/zipball/5c11a1a4d4016662eeaf0f8757958c7de069f9a0",
+                "reference": "5c11a1a4d4016662eeaf0f8757958c7de069f9a0",
                 "shasum": ""
             },
             "require": {
@@ -2221,20 +2225,20 @@
             ],
             "description": "Symfony Process Component",
             "homepage": "https://symfony.com",
-            "time": "2016-06-06 11:42:41"
+            "time": "2016-06-29 05:42:25"
         },
         {
             "name": "symfony/translation",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation.git",
-                "reference": "b36e79d7bbbfa4a7e9708335082b3eba2263d356"
+                "reference": "d63a94528530c3ea5ff46924c8001cec4a398609"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation/zipball/b36e79d7bbbfa4a7e9708335082b3eba2263d356",
-                "reference": "b36e79d7bbbfa4a7e9708335082b3eba2263d356",
+                "url": "https://api.github.com/repos/symfony/translation/zipball/d63a94528530c3ea5ff46924c8001cec4a398609",
+                "reference": "d63a94528530c3ea5ff46924c8001cec4a398609",
                 "shasum": ""
             },
             "require": {
@@ -2285,20 +2289,20 @@
             ],
             "description": "Symfony Translation Component",
             "homepage": "https://symfony.com",
-            "time": "2016-06-14 11:18:07"
+            "time": "2016-06-29 05:41:56"
         },
         {
             "name": "symfony/yaml",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "c5a7e7fc273c758b92b85dcb9c46149ccda89623"
+                "reference": "2884c26ce4c1d61aebf423a8b912950fe7c764de"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/c5a7e7fc273c758b92b85dcb9c46149ccda89623",
-                "reference": "c5a7e7fc273c758b92b85dcb9c46149ccda89623",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/2884c26ce4c1d61aebf423a8b912950fe7c764de",
+                "reference": "2884c26ce4c1d61aebf423a8b912950fe7c764de",
                 "shasum": ""
             },
             "require": {
@@ -2334,13 +2338,13 @@
             ],
             "description": "Symfony Yaml Component",
             "homepage": "https://symfony.com",
-            "time": "2016-06-14 11:18:07"
+            "time": "2016-06-29 05:41:56"
         }
     ],
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "codegyre/robo": 20
+        "consolidation/robo": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

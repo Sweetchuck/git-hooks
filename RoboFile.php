@@ -49,7 +49,7 @@ class RoboFile extends Tasks
         'post-commit' => ['base_mask' => 0777],
         'post-merge' => ['base_mask' => 0777],
         'post-receive' => ['base_mask' => 0666],
-        'post-rewrite' => ['base_mask' => 0666],
+        'post-rewrite' => ['base_mask' => 0777],
         'post-update' => ['base_mask' => 0777],
         'pre-applypatch' => ['base_mask' => 0777],
         'pre-auto-gc' => ['base_mask' => 0777],
@@ -88,6 +88,8 @@ class RoboFile extends Tasks
         if (!$this->isValidVersionNumber($version)) {
             throw new \Exception('Invalid version number', 1);
         }
+
+        $this->stopOnFail();
 
         /** @var \Robo\Collection\Collection $collection */
         $collection = $this->collection();
@@ -137,6 +139,8 @@ class RoboFile extends Tasks
 
     public function test()
     {
+        $this->stopOnFail();
+
         /** @var \Robo\Collection\Collection $c */
         $c = $this->collection();
         $c
@@ -162,6 +166,8 @@ class RoboFile extends Tasks
 
     public function lint()
     {
+        $this->stopOnFail();
+
         /** @var \Robo\Collection\Collection $c */
         $c = $this->collection();
         $c

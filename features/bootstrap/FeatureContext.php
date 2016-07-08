@@ -59,7 +59,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         'post-commit' => ['base_mask' => 0777],
         'post-merge' => ['base_mask' => 0777],
         'post-receive' => ['base_mask' => 0666],
-        'post-rewrite' => ['base_mask' => 0666],
+        'post-rewrite' => ['base_mask' => 0777],
         'post-update' => ['base_mask' => 0777],
         'pre-applypatch' => ['base_mask' => 0777],
         'pre-auto-gc' => ['base_mask' => 0777],
