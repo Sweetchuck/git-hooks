@@ -3,5 +3,5 @@
 # @see https://git-scm.com/docs/githooks#_push_to_checkout
 ##
 
-hasInput='true'
+hasInput='false'
 . "$(dirname $0)/_common"

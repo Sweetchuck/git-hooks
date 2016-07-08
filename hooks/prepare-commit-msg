@@ -3,5 +3,5 @@
 # @see https://git-scm.com/docs/githooks#_prepare_commit_msg
 ##
 
-hasInput='true'
+hasInput='false'
 . "$(dirname $0)/_common"
