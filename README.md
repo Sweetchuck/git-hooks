@@ -17,14 +17,12 @@ teammates then this is the tool you are looking for.
 ## How to use
 
 1. Step into you existing package's directory (or create a new one with `git init && composer init`)
-1. See the example `composer.json` below and copy the `repositories` part to 
-   your `composer.json`.
-1. Run <pre><code>composer require --dev \
-  'bernardosilva/git-hooks-installer-plugin' \
-  'codegyre/robo'</code></pre>
-1. Run <pre><code>composer require --dev 'cheppers/git-hooks'</code></pre>
-1. Create a `.git-hooks` file. See the example bellow.
-1. Create a `RoboFile.php`. See the example bellow.
+1. Run <pre><code>composer require 'cheppers/git-hooks'</code></pre>
+1. Then you have two option
+    1. Relay on the git hooks scripts which are shipped with this package 
+       and implement the logic in your `.git-hooks` file.
+    1. Or create a `git-hooks` directory and create git hook files (`git-hooks/pre-commit`) in it.
+1. And trigger the deployment script on the `post-install-cmd` event.
 
 
 ## Example composer.json
@@ -37,32 +35,45 @@ teammates then this is the tool you are looking for.
     "license": "GPL-2.0",
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "require": {},
-    "require-dev": {},
-    "repositories": [
-        {
-            "type": "package",
-            "package": {
-                "name": "cheppers/git-hooks",
-                "version": "0.0.5",
-                "type": "git-hook",
-                "dist": {
-                    "type": "tar",
-                    "url": "https://github.com/Cheppers/git-hooks/releases/download/v0.0.5/v0.0.5.tar.gz"
-                },
-                "source": {
-                    "type": "git",
-                    "url": "https://github.com/Cheppers/git-hooks.git",
-                    "reference": "v0.0.5"
-                }
-            }
+    "require": {
+        "cheppers/git-hooks": "dev-master"
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@deploy-git-hooks"
+        ],
+        "deploy-git-hooks": "\\Cheppers\\GitHooks\\Main::deploy"
+    },
+    "extra": {
+        "cheppers/git-hooks": {
+            "core.hooksPath": "git-hooks",
+            "symlink": false
         }
-    ]
+    }
 }
 ```
 
 
-# Example .git-hooks
+# Configuration
+
+In the example `composer.json` above you can see two configurable option 
+under the `"extra": {"cheppers/git-hooks": {}}`.
+
+
+## Configuration symlink
+
+This option will be used when you have a `git-hooks` directory.
+
+
+## Configuration core.hooksPath
+
+When this option is `true` then it allows to use the new feature of the Git v2.9
+
+Actually if you and all of your development team use Git v2.9 then you don't need
+this package at all.
+
+
+# Example .git-hooks for Robo task runner
 
 ```bash
 #!/usr/bin/env bash

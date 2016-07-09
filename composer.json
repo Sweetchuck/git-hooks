@@ -15,34 +15,20 @@
         "symfony/filesystem": "~3.1",
         "symfony/process": "~3.1"
     },
-    "archive": {
-        "exclude": [
-            "/*",
-            "/.*",
-            "!/hooks/_common",
-            "!/hooks/applypatch-msg",
-            "!/hooks/commit-msg",
-            "!/hooks/post-applypatch",
-            "!/hooks/post-checkout",
-            "!/hooks/post-commit",
-            "!/hooks/post-merge",
-            "!/hooks/post-receive",
-            "!/hooks/post-rewrite",
-            "!/hooks/post-update",
-            "!/hooks/pre-applypatch",
-            "!/hooks/pre-auto-gc",
-            "!/hooks/pre-commit",
-            "!/hooks/pre-push",
-            "!/hooks/pre-rebase",
-            "!/hooks/pre-receive",
-            "!/hooks/prepare-commit-msg",
-            "!/hooks/push-to-checkout",
-            "!/hooks/update",
-            "!/composer.json",
-            "!/README.md"
-        ]
+    "autoload": {
+        "psr-4": {
+            "Cheppers\\GitHooks\\": "src/"
+        }
     },
     "scripts": {
-        "post-install-cmd": "robo deploy:git-hooks"
+        "post-install-cmd": [
+            "@deploy-git-hooks"
+        ],
+        "deploy-git-hooks": "\\Cheppers\\GitHooks\\Main::deploy"
+    },
+    "extra": {
+        "cheppers/git-hooks": {
+            "symlink": true
+        }
     }
 }
