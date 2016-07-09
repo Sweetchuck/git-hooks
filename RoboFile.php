@@ -194,13 +194,14 @@ class RoboFile extends Tasks
      */
     protected function getTaskPhpcsLint()
     {
-        $cmd_pattern = '%s --standard=%s --ignore=%s %s %s %s';
+        $cmd_pattern = '%s --standard=%s --ignore=%s %s %s %s %s';
         $cmd_args = [
             escapeshellcmd("{$this->binDir}/phpcs"),
             escapeshellarg('PSR2'),
             escapeshellarg('fixtures/project-template/*/vendor/'),
             escapeshellarg('features/bootstrap/'),
             escapeshellarg('fixtures/project-template/'),
+            escapeshellarg('src/'),
             escapeshellarg('RoboFile.php'),
         ];
 

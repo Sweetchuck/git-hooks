@@ -10,6 +10,8 @@ fi
 
 if [ -s "${cghBridge}" ]; then
     . "${cghBridge}" || exit $?
+else
+    echo "Git hook bridge '${cghBridge}' not found."
 fi
 
 exit 0

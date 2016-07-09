@@ -16,6 +16,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 {
 
     /**
+     * Base reference point. The directory of the behat.yml.
+     *
      * @var string
      */
     protected static $projectRootDir = '';
@@ -38,6 +40,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     protected static $composer = [];
 
     /**
+     * Random directory name somewhere in the /tmp directory.
+     *
      * @var string
      */
     protected static $suitRootDir = '';
@@ -48,31 +52,6 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     protected static $fs = null;
 
     /**
-     * @var string[]
-     */
-    protected static $gitHooks = [
-        '_common' => ['base_mask' => 0666],
-        'applypatch-msg' => ['base_mask' => 0777],
-        'commit-msg' => ['base_mask' => 0777],
-        'post-applypatch' => ['base_mask' => 0777],
-        'post-checkout' => ['base_mask' => 0777],
-        'post-commit' => ['base_mask' => 0777],
-        'post-merge' => ['base_mask' => 0777],
-        'post-receive' => ['base_mask' => 0666],
-        'post-rewrite' => ['base_mask' => 0777],
-        'post-update' => ['base_mask' => 0777],
-        'pre-applypatch' => ['base_mask' => 0777],
-        'pre-auto-gc' => ['base_mask' => 0777],
-        'pre-commit' => ['base_mask' => 0777],
-        'pre-push' => ['base_mask' => 0777],
-        'pre-rebase' => ['base_mask' => 0777],
-        'pre-receive' => ['base_mask' => 0666],
-        'prepare-commit-msg' => ['base_mask' => 0777],
-        'push-to-checkout' => ['base_mask' => 0777],
-        'update' => ['base_mask' => 0777],
-    ];
-
-    /**
      * @BeforeSuite
      */
     public static function hookBeforeSuite()
@@ -80,10 +59,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         static::$projectRootDir = getcwd();
 
         static::initComposer();
-        static::initTmpDirRoot();
+        static::initSuitRootDir();
         static::initFilesystem();
-        static::cleanGitTemplate();
-        static::initGitTemplate();
     }
 
     /**
@@ -91,7 +68,13 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public static function hookAfterSuite()
     {
-        static::cleanGitTemplate();
+        if (getenv('CHEPPERS_GIT_HOOKS_SKIP_AFTER_CLEANUP') === 'true') {
+            return;
+        }
+
+        if (static::$fs->exists(static::$suitRootDir)) {
+            static::$fs->remove(static::$suitRootDir);
+        }
     }
 
     protected static function initFilesystem()
@@ -108,41 +91,28 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         }
     }
 
-    protected static function initTmpDirRoot()
+    protected static function initSuitRootDir()
     {
-        static::$suitRootDir = sys_get_temp_dir() . '/' . static::$composer['name'];
-    }
-
-    protected static function initGitTemplate()
-    {
-        $git_template_dir = static::getGitTemplateDir();
-        $dir = "$git_template_dir/branches";
-        static::$fs->mkdir($dir);
-
-        $mask = umask();
-        foreach (static::$gitHooks as $file_name => $info) {
-            $src = static::$projectRootDir . "/hooks/$file_name";
-            $dst = "$git_template_dir/hooks/$file_name";
-            static::$fs->copy($src, $dst, true);
-            static::$fs->chmod($dst, $info['base_mask'], $mask);
-        }
-    }
-
-    protected static function cleanGitTemplate()
-    {
-        $git_template_dir = static::getGitTemplateDir();
-        if (static::$fs->exists("$git_template_dir/hooks")) {
-            static::$fs->remove("$git_template_dir/hooks");
-        }
+        static::$suitRootDir = implode('/', [
+            sys_get_temp_dir(),
+            static::$composer['name'],
+            'suit-' . static::randomId(),
+        ]);
     }
 
     /**
+     * @param $type
+     *
      * @return string
      */
-    protected static function getGitTemplateDir()
+    protected static function getGitTemplateDir($type)
     {
-        return static::$projectRootDir . '/' . static::$fixturesDir
-        . '/git-template';
+        return implode('/', [
+            static::$projectRootDir,
+            static::$fixturesDir,
+            'git-template',
+            $type,
+        ]);
     }
 
     /**
@@ -176,6 +146,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     }
 
     /**
+     * Absolute directory name. This dir is under the static::$suitRootDir.
+     *
      * @var string
      */
     protected $scenarioRootDir = '';
@@ -197,9 +169,9 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      *
      * @BeforeScenario
      */
-    public function initWorkingDir()
+    public function initScenarioRootDir()
     {
-        $this->scenarioRootDir = static::$suitRootDir . '/' . md5(microtime() * rand(0, 10000));
+        $this->scenarioRootDir = static::$suitRootDir . '/scenario-' .  static::randomId();
         static::$fs->mkdir($this->scenarioRootDir);
         $this->cwd = "{$this->scenarioRootDir}/workspace";
     }
@@ -207,11 +179,23 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     /**
      * @AfterScenario
      */
-    public function cleanWorkingDir()
+    public function cleanScenarioRootDir()
     {
+        if (getenv('CHEPPERS_GIT_HOOKS_SKIP_AFTER_CLEANUP') === 'true') {
+            return;
+        }
+
         if (static::$fs->exists($this->scenarioRootDir)) {
             static::$fs->remove($this->scenarioRootDir);
         }
+    }
+
+    /**
+     * @return string
+     */
+    protected static function randomId()
+    {
+        return md5(microtime() * rand(0, 10000));
     }
 
     /**
@@ -249,6 +233,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         $project_cache_dir = $this->getProjectCacheDir($type);
         static::$fs->mirror($project_cache_dir, $dir_normalized);
         $this->doGitInitLocal($dir);
+
+        $this->doExec('composer run deploy-git-hooks');
     }
 
     /**
@@ -287,37 +273,38 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     /**
      * @Given I initialize a local Git repo in directory :dir
+     * @Given I initialize a local Git repo in directory :dir with :tpl git template
      *
      * @param string $dir
+     * @param string $tpl
      */
-    public function doGitInitLocal($dir)
+    public function doGitInitLocal($dir, $tpl = 'basic')
     {
-        $this->doGitInit($dir, false);
+        $this->doGitInit($dir, $tpl, false);
     }
 
     /**
      * @Given I initialize a bare Git repo in directory :dir
+     * @Given I initialize a bare Git repo in directory :dir with :ttype git template
      *
      * @param string $dir
+     * @param string $type
      */
-    public function doGitInitBare($dir)
+    public function doGitInitBare($dir, $type = 'basic')
     {
-        $this->doGitInit($dir, true);
-
-        $src = static::$projectRootDir . '/' . static::$fixturesDir . '/'
-            . 'project-template/basic';
-
-        $files = [
-            '.gitignore',
-            'composer.json',
-            'composer.lock',
-            'RoboFile.php',
-        ];
-        foreach ($files as $file) {
-            static::$fs->copy("$src/$file", "./$file");
+        $dir_normalized = $this->getWorkspacePath($dir);
+        if (static::$fs->exists("$dir_normalized/.git")
+            || static::$fs->exists("$dir_normalized/config")
+        ) {
+            throw new \LogicException("A git repository is already exists in: '$dir_normalized'");
         }
 
-        $this->doExec('composer install');
+        $this->doCreateProjectCache($type);
+        $project_cache_dir = $this->getProjectCacheDir($type);
+        static::$fs->mirror($project_cache_dir, $dir_normalized);
+        $this->doGitInit($dir, $type, true);
+
+        $this->doExec('composer run deploy-git-hooks');
     }
 
     /**
@@ -668,41 +655,61 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     }
 
     /**
-     * @param string $type
+     * @param string $project_type
      */
-    protected function doCreateProjectCache($type)
+    protected function doCreateProjectCache($project_type)
     {
-        $project_cache_dir = $this->getProjectCacheDir($type);
+        $project_cache_dir = $this->getProjectCacheDir($project_type);
         if (static::$fs->exists($project_cache_dir)) {
             return;
         }
 
-        $project_template_dir = static::$projectRootDir . '/'
-            . static::$fixturesDir . "/project-template/$type";
-        if (!static::$fs->exists($project_template_dir)) {
-            throw new \InvalidArgumentException("Project template '$type' doesn't exists.");
+        $project_template = implode('/', [
+            static::$projectRootDir,
+            'fixtures',
+            'project-template',
+            $project_type,
+        ]);
+        static::$fs->mirror($project_template, $project_cache_dir);
+
+        $package = json_decode(file_get_contents("$project_cache_dir/composer.json"), true);
+        $package['repositories']['local']['url'] = static::$projectRootDir;
+        static::$fs->dumpFile("$project_cache_dir/composer.json", json_encode($package, JSON_PRETTY_PRINT));
+
+        if ($project_type !== 'basic') {
+            $master = implode('/', [
+                static::$projectRootDir,
+                'fixtures',
+                'project-template',
+                'basic',
+            ]);
+            $files = [
+                '.git-hooks',
+                '.gitignore',
+                'RoboFile.php',
+            ];
+            foreach ($files as $file_name) {
+                static::$fs->copy("$master/$file_name", "$project_cache_dir/$file_name");
+            }
         }
 
-        if (!static::$fs->exists("{$this->scenarioRootDir}/project/$type")) {
-            static::$fs->mirror($project_template_dir, $project_cache_dir);
-        }
-
-        $this->doExecCwd($project_cache_dir, 'composer install');
+        $this->doExecCwd($project_cache_dir, 'composer install --no-interaction');
     }
 
     /**
      * I initialize a Git repo.
      *
      * @param string $dir
+     * @param string $tpl
      * @param bool $bare
      */
-    protected function doGitInit($dir, $bare)
+    protected function doGitInit($dir, $tpl, $bare)
     {
         $this->doChangeWorkingDirectory($dir);
         $cmd_pattern = '%s init --template=%s';
         $cmd_args = [
             escapeshellcmd(static::$gitExecutable),
-            escapeshellarg(static::getGitTemplateDir()),
+            escapeshellarg(static::getGitTemplateDir($tpl)),
         ];
 
         if ($bare) {
@@ -787,7 +794,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     protected function getProjectCacheDir($type)
     {
-        return "{$this->scenarioRootDir}/project-cache/$type";
+        return static::$suitRootDir . "/cache/project/$type";
     }
 
     /**
