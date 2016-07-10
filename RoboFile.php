@@ -75,58 +75,6 @@ class RoboFile extends Tasks
         }
     }
 
-    /**
-     * Create release tar balls.
-     *
-     * @param string $version
-     *   Example: 1.0.0
-     *
-     * @throws \Exception
-     */
-    public function releaseCreate($version)
-    {
-        if (!$this->isValidVersionNumber($version)) {
-            throw new \Exception('Invalid version number', 1);
-        }
-
-        $this->stopOnFail();
-
-        /** @var \Robo\Collection\Collection $collection */
-        $collection = $this->collection();
-
-        $name = "{$this->packageVendor}-{$this->packageName}-{$version}";
-
-        $fs_stack = $this->taskFilesystemStack();
-        $collection->add($fs_stack);
-
-        $fs_stack
-            ->remove("release/$name")
-            ->remove("release/$name.tar.gz")
-            ->copy('composer.json', "release/$name/composer.json")
-            ->copy('README.md', "release/$name/README.md");
-
-        foreach ($this->filesToDeploy as $file_name => $file_meta) {
-            $fs_stack->copy(
-                "hooks/$file_name",
-                "release/$name/$file_name"
-            );
-
-            $fs_stack->chmod(
-                "release/$name/$file_name",
-                $file_meta['base_mask'],
-                0022
-            );
-        }
-
-        $collection->add(
-            $this
-                ->taskPack("release/$name.tar.gz")
-                ->addDir($name, "release/$name")
-        );
-
-        $collection->run();
-    }
-
     public function deployGitHooks()
     {
         $task = $this->getTaskDeployGitHooks();
