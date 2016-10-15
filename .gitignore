@@ -1,6 +1,7 @@
 
-/fixtures/project-template/*/vendor/
 
+/bin/
+/fixtures/project-template/*/vendor/
 /vendor/
 
 /cheppers-git-hooks-*.tar

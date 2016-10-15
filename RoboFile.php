@@ -75,66 +75,64 @@ class RoboFile extends Tasks
         }
     }
 
+    /**
+     * @return null|\Robo\Task\Filesystem\FilesystemStack
+     */
     public function deployGitHooks()
     {
-        $task = $this->getTaskDeployGitHooks();
-        if ($task) {
-            $task
-                ->run()
-                ->stopOnFail();
-        }
+        return $this->getTaskDeployGitHooks();
     }
 
+    /**
+     * @return \Robo\Collection\CollectionBuilder
+     */
     public function test()
     {
-        $this->stopOnFail();
+        /** @var \Robo\Collection\CollectionBuilder $cb */
+        $cb = $this->collectionBuilder();
 
-        /** @var \Robo\Collection\Collection $c */
-        $c = $this->collection();
-        $c
-            ->add($this->getTaskBehatRun())
-            ->run();
+        return $cb
+            ->addTaskList([
+                'test.behat' => $this->getTaskBehatRun(),
+            ]);
     }
 
+    /**
+     * @return \Robo\Task\Base\Exec
+     */
     public function behat()
     {
-        $this
-            ->getTaskBehatRun()
-            ->run()
-            ->stopOnFail();
+        return $this->getTaskBehatRun();
     }
 
+    /**
+     * @return \Robo\Task\Base\Exec
+     */
     public function composerValidate()
     {
-        $this
-            ->getTaskComposerValidate()
-            ->run()
-            ->stopOnFail();
+        return $this->getTaskComposerValidate();
     }
 
+    /**
+     * @return \Robo\Collection\CollectionBuilder
+     */
     public function lint()
     {
-        $this->stopOnFail();
+        /** @var \Robo\Collection\CollectionBuilder $cb */
+        $cb = $this->collectionBuilder();
 
-        /** @var \Robo\Collection\Collection $c */
-        $c = $this->collection();
-        $c
-            ->add($this->getTaskPhpcsLint())
-            ->add($this->getTaskComposerValidate())
-            ->run();
+        return $cb->addTaskList([
+            'lint.composer.validate' => $this->getTaskComposerValidate(),
+            'lint.phpcs.psr2' => $this->getTaskPhpcsLint(),
+        ]);
     }
 
-    public function lintPhpcs()
-    {
-        $this
-            ->getTaskPhpcsLint()
-            ->run()
-            ->stopOnFail();
-    }
-
+    /**
+     * @return \Robo\Collection\CollectionBuilder
+     */
     public function githookPreCommit()
     {
-        $this->lint();
+        return $this->lint();
     }
 
     /**
@@ -142,7 +140,7 @@ class RoboFile extends Tasks
      */
     protected function getTaskPhpcsLint()
     {
-        $cmd_pattern = '%s --standard=%s --ignore=%s %s %s %s %s';
+        $cmd_pattern = '%s --colors --standard=%s --ignore=%s %s %s %s %s';
         $cmd_args = [
             escapeshellcmd("{$this->binDir}/phpcs"),
             escapeshellarg('PSR2'),
