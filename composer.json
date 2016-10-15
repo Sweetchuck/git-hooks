@@ -2,12 +2,16 @@
     "name": "cheppers/git-hooks",
     "description": "Provide a bridge between Git hooks and scripts under VCS.",
     "license": "GPL-2.0",
+    "config": {
+        "bin-dir": "bin",
+        "sort-packages": true
+    },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {},
     "require-dev": {
         "behat/behat": "~3.1",
-        "consolidation/robo": "dev-master#6af485e",
+        "consolidation/robo": "~1.0",
         "pear/archive_tar": "~1.4",
         "phpunit/phpunit": "~4.5",
         "squizlabs/php_codesniffer": "~2.6",
