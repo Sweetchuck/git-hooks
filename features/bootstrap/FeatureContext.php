@@ -195,7 +195,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     protected static function randomId()
     {
-        return md5(microtime() * rand(0, 10000));
+        return md5(microtime(true) * rand(0, 10000));
     }
 
     /**
