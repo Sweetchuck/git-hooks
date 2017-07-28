@@ -1,15 +1,8 @@
 <?php
-/**
- * @file
- * Robo task definitions for cheppers/git-hooks.
- */
 
 use Robo\Tasks;
 use Symfony\Component\Process\Process;
 
-/**
- * Class RoboFile.
- */
 // @codingStandardsIgnoreStart
 class RoboFile extends Tasks
     // @codingStandardsIgnoreEnd

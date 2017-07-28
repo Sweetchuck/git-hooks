@@ -2,16 +2,14 @@
 
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\PyStringNode;
+use PHPUnit\Framework\Assert;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-/**
- * Class FeatureContext.
- */
 // @codingStandardsIgnoreStart
-class FeatureContext extends \PHPUnit_Framework_Assert implements Context
+class FeatureContext implements Context
     // @codingStandardsIgnoreEnd
 {
 
@@ -49,7 +47,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     /**
      * @var \Symfony\Component\Filesystem\Filesystem
      */
-    protected static $fs = null;
+    protected static $fs;
 
     /**
      * @BeforeSuite
@@ -68,7 +66,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public static function hookAfterSuite()
     {
-        if (getenv('CHEPPERS_GIT_HOOKS_SKIP_AFTER_CLEANUP') === 'true') {
+        if (getenv('SWEETCHUCK_GIT_HOOKS_SKIP_AFTER_CLEANUP') === 'true') {
             return;
         }
 
@@ -84,10 +82,10 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     protected static function initComposer()
     {
-        $file_name = static::$projectRootDir . '/composer.json';
-        static::$composer = json_decode(file_get_contents($file_name), true);
+        $fileName = static::$projectRootDir . '/composer.json';
+        static::$composer = json_decode(file_get_contents($fileName), true);
         if (static::$composer === null) {
-            throw new \InvalidArgumentException("Composer JSON file cannot be decoded. '$file_name'");
+            throw new \InvalidArgumentException("Composer JSON file cannot be decoded. '$fileName'");
         }
     }
 
@@ -100,12 +98,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         ]);
     }
 
-    /**
-     * @param $type
-     *
-     * @return string
-     */
-    protected static function getGitTemplateDir($type)
+    protected static function getGitTemplateDir(string $type): string
     {
         return implode('/', [
             static::$projectRootDir,
@@ -115,15 +108,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         ]);
     }
 
-    /**
-     * Normalize path.
-     *
-     * @param string $path
-     *
-     * @return string
-     *   Normalized path.
-     */
-    protected static function normalizePath($path)
+    protected static function normalizePath(string $path): string
     {
         // Remove any kind of funky unicode whitespace.
         $normalized = preg_replace('#\p{C}+|^\./#u', '', $path);
@@ -181,7 +166,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function cleanScenarioRootDir()
     {
-        if (getenv('CHEPPERS_GIT_HOOKS_SKIP_AFTER_CLEANUP') === 'true') {
+        if (getenv('SWEETCHUCK_GIT_HOOKS_SKIP_AFTER_CLEANUP') === 'true') {
             return;
         }
 
@@ -190,95 +175,77 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         }
     }
 
-    /**
-     * @return string
-     */
-    protected static function randomId()
+    protected static function randomId(): string
     {
         return md5(microtime(true) * rand(0, 10000));
     }
 
     /**
      * @Given I run git add remote :name :uri
-     *
-     * @param string $name
-     * @param string $uri
      */
-    public function doGitRemoteAdd($name, $uri)
+    public function doGitRemoteAdd(string $name, string $uri)
     {
-        $cmd_pattern = '%s remote add %s %s';
-        $cmd_args = [
+        $cmdPattern = '%s remote add %s %s';
+        $cmdArgs = [
             escapeshellcmd(static::$gitExecutable),
             escapeshellarg($name),
             escapeshellarg($uri),
         ];
 
-        $this->process = $this->doExec(vsprintf($cmd_pattern, $cmd_args));
+        $this->process = $this->doExec(vsprintf($cmdPattern, $cmdArgs));
     }
 
     /**
      * @Given I create a :type project in :dir directory
-     *
-     * @param string $dir
-     * @param string $type
      */
-    public function doCreateProjectInstance($dir, $type)
+    public function doCreateProjectInstance(string $dir, string $type)
     {
-        $dir_normalized = $this->getWorkspacePath($dir);
-        if (static::$fs->exists("$dir_normalized/composer.json")) {
-            throw new \LogicException("A project is already exists in: '$dir_normalized'");
+        $dirNormalized = $this->getWorkspacePath($dir);
+        if (static::$fs->exists("$dirNormalized/composer.json")) {
+            throw new \LogicException("A project is already exists in: '$dirNormalized'");
         }
 
         $this->doCreateProjectCache($type);
-        $project_cache_dir = $this->getProjectCacheDir($type);
-        static::$fs->mirror($project_cache_dir, $dir_normalized);
+        $projectCacheDir = $this->getProjectCacheDir($type);
+        static::$fs->mirror($projectCacheDir, $dirNormalized);
         $this->doGitInitLocal($dir);
 
-        $this->doExec('composer run deploy-git-hooks');
+        $this->doExec('composer run post-install-cmd');
     }
 
     /**
      * @Given I am in the :dir directory
-     *
-     * @param string $dir
-     *
-     * @throws \Exception
      */
-    public function doChangeWorkingDirectory($dir)
+    public function doChangeWorkingDirectory(string $dir)
     {
-        $dir_normal = $this->getWorkspacePath($dir);
+        $dirNormal = $this->getWorkspacePath($dir);
 
-        if (strpos($dir_normal, $this->scenarioRootDir) !== 0) {
+        if (strpos($dirNormal, $this->scenarioRootDir) !== 0) {
             throw new \InvalidArgumentException('Out of working directory.');
         }
 
-        static::$fs->mkdir($dir_normal);
+        static::$fs->mkdir($dirNormal);
 
-        if (!chdir($dir_normal)) {
-            throw new IOException("Failed to step into directory: '$dir_normal'.");
+        if (!chdir($dirNormal)) {
+            throw new IOException("Failed to step into directory: '$dirNormal'.");
         }
 
-        $this->cwd = $dir_normal;
+        $this->cwd = $dirNormal;
     }
 
     /**
-     * @Given I create a :file_name file
-     *
-     * @param string $file_name
+     * @Given I create a :fileName file
      */
-    public function doCreateFile($file_name)
+    public function doCreateFile(string $fileName)
     {
-        static::$fs->touch($this->getWorkspacePath($file_name));
+        static::$fs->touch($this->getWorkspacePath($fileName));
     }
 
     /**
      * @Given I initialize a local Git repo in directory :dir
      * @Given I initialize a local Git repo in directory :dir with :tpl git template
-     *
-     * @param string $dir
-     * @param string $tpl
      */
-    public function doGitInitLocal($dir, $tpl = 'basic')
+    public function doGitInitLocal(string $dir, string $tpl = 'basic')
     {
         $this->doGitInit($dir, $tpl, false);
     }
@@ -286,67 +253,60 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     /**
      * @Given I initialize a bare Git repo in directory :dir
      * @Given I initialize a bare Git repo in directory :dir with :ttype git template
-     *
-     * @param string $dir
-     * @param string $type
      */
-    public function doGitInitBare($dir, $type = 'basic')
+    public function doGitInitBare(string $dir, string $type = 'basic')
     {
-        $dir_normalized = $this->getWorkspacePath($dir);
-        if (static::$fs->exists("$dir_normalized/.git")
-            || static::$fs->exists("$dir_normalized/config")
+        $dirNormalized = $this->getWorkspacePath($dir);
+        if (static::$fs->exists("$dirNormalized/.git")
+            || static::$fs->exists("$dirNormalized/config")
         ) {
-            throw new \LogicException("A git repository is already exists in: '$dir_normalized'");
+            throw new \LogicException("A git repository is already exists in: '$dirNormalized'");
         }
 
         $this->doCreateProjectCache($type);
-        $project_cache_dir = $this->getProjectCacheDir($type);
-        static::$fs->mirror($project_cache_dir, $dir_normalized);
+        $projectCacheDir = $this->getProjectCacheDir($type);
+        static::$fs->mirror($projectCacheDir, $dirNormalized);
         $this->doGitInit($dir, $type, true);
 
-        $this->doExec('composer run deploy-git-hooks');
+        $this->doExec('composer run post-install-cmd');
     }
 
     /**
      * @Given I run git add :files
-     *
-     * @param string $files
      */
-    public function doGitAdd($files)
+    public function doGitAdd(string $files)
     {
         $files = preg_split('/, /', $files);
-        $cmd_pattern = '%s add --' . str_repeat(' %s', count($files));
-        $cmd_args = [
+        $cmdPattern = '%s add --' . str_repeat(' %s', count($files));
+        $cmdArgs = [
             escapeshellcmd(static::$gitExecutable),
         ];
 
         foreach ($files as $file) {
-            $cmd_args[] = escapeshellcmd($file);
+            $cmdArgs[] = escapeshellcmd($file);
         }
 
-        $this->process = $this->doExec(vsprintf($cmd_pattern, $cmd_args));
+        $this->process = $this->doExec(vsprintf($cmdPattern, $cmdArgs));
     }
 
     /**
      * @Given I run git commit
      * @Given /^I run git commit -m "(?P<message>[^"]+)"$/
-     *
-     * @param string $message
      */
-    public function doGitCommit($message = null)
+    public function doGitCommit(?string $message = null)
     {
-        $cmd_pattern = '%s commit';
-        $cmd_args = [
+        $cmdPattern = '%s commit';
+        $cmdArgs = [
             escapeshellcmd(static::$gitExecutable),
         ];
 
         if ($message) {
-            $cmd_pattern .= ' -m %s';
-            $cmd_args[] = escapeshellarg($message);
+            $cmdPattern .= ' -m %s';
+            $cmdArgs[] = escapeshellarg($message);
         }
 
         $this->process = $this->doExec(
-            vsprintf($cmd_pattern, $cmd_args),
+            vsprintf($cmdPattern, $cmdArgs),
             [
                 'exitCode' => false,
             ]
@@ -355,11 +315,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     /**
      * @Given I run git push :remote :branch
-     *
-     * @param string $remote
-     * @param string $branch
      */
-    public function doGitPush($remote, $branch)
+    public function doGitPush(string $remote, string $branch)
     {
         $cmd = vsprintf('%s push %s %s', [
             escapeshellcmd(static::$gitExecutable),
@@ -376,26 +333,23 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
     }
 
     /**
-     * @Given I commit a new :file_name file with message :message and content:
-     *
-     * @param string $file_name
-     * @param string $message
-     * @param \Behat\Gherkin\Node\PyStringNode $content
+     * @Given I commit a new :fileName file with message :message and content:
      */
-    public function doGitCommitNewFileWithMessageAndContent($file_name, $message, PyStringNode $content)
-    {
-        $this->doCreateFile($file_name);
-        static::$fs->dumpFile($file_name, $content);
-        $this->doGitAdd($file_name);
+    public function doGitCommitNewFileWithMessageAndContent(
+        string $fileName,
+        string $message,
+        PyStringNode $content
+    ) {
+        $this->doCreateFile($fileName);
+        static::$fs->dumpFile($fileName, $content);
+        $this->doGitAdd($fileName);
         $this->doGitCommit($message);
     }
 
     /**
      * @Given I run git checkout -b :branch
-     *
-     * @param string $branch
      */
-    public function doGitCheckoutNewBranch($branch)
+    public function doGitCheckoutNewBranch(string $branch)
     {
         $cmd = sprintf(
             '%s checkout -b %s',
@@ -407,11 +361,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     /**
      * @Given I run git checkout :branch -- :file
-     *
-     * @param string $branch
-     * @param string $file
      */
-    public function doGitCheckoutFile($branch, $file)
+    public function doGitCheckoutFile(string $branch, string $file)
     {
         $cmd = sprintf(
             '%s checkout %s -- %s',
@@ -424,11 +375,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     /**
      * @Given I run git checkout :branch
-     *
-     * @param string $branch
-     *   Branch name to checkout.
      */
-    public function doRunGitCheckout($branch)
+    public function doRunGitCheckout(string $branch)
     {
         $cmd = sprintf(
             '%s checkout %s',
@@ -440,11 +388,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     /**
      * @Given I run git branch :branch
-     *
-     * @param string $branch
-     *   Name of the new branch.
      */
-    public function doGitBranchCreate($branch)
+    public function doGitBranchCreate(string $branch)
     {
         $cmd = sprintf(
             '%s branch %s',
@@ -463,21 +408,21 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      * @param string $branch
      *   Name of the base branch.
      */
-    public function doRunGitRebase($upstream, $branch = null)
+    public function doRunGitRebase(string $upstream, ?string $branch = null)
     {
-        $cmd_pattern = '%s rebase %s';
-        $cmd_args = [
+        $cmdPattern = '%s rebase %s';
+        $cmdArgs = [
             escapeshellcmd(static::$gitExecutable),
             escapeshellarg($upstream),
         ];
 
         if ($branch) {
-            $cmd_pattern .= ' %s';
-            $cmd_args[] = escapeshellarg($branch);
+            $cmdPattern .= ' %s';
+            $cmdArgs[] = escapeshellarg($branch);
         }
 
         $this->process = $this->doExec(
-            vsprintf($cmd_pattern, $cmd_args),
+            vsprintf($cmdPattern, $cmdArgs),
             [
                 'exitCode' => false,
             ]
@@ -486,11 +431,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     /**
      * @Given I run git merge :branch -m :message
-     *
-     * @param string $branch
-     * @param string $message
      */
-    public function doGitMerge($branch, $message)
+    public function doGitMerge(string $branch, string $message)
     {
         $cmd = sprintf(
             '%s merge %s -m %s',
@@ -503,11 +445,8 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     /**
      * @Given I run git merge :branch --squash -m :message
-     *
-     * @param string $branch
-     * @param string $message
      */
-    public function doGitMergeSquash($branch, $message)
+    public function doGitMergeSquash(string $branch, string $message)
     {
         $cmd = sprintf(
             '%s merge %s --ff --squash -m %s',
@@ -520,33 +459,27 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
 
     /**
      * @Given /^I run git config core.editor (?P<editor>true|false)$/
-     *
-     * @param string $editor
      */
-    public function doGitConfigSetCoreEditor($editor)
+    public function doGitConfigSetCoreEditor(string $editor)
     {
         $this->doGitConfigSet('core.editor', $editor);
     }
 
     /**
      * @Given /^I wait for (?P<amount>\d+) seconds$/
-     *
-     * @param int $amount
      */
-    public function doWait($amount)
+    public function doWait(int $amount)
     {
         sleep(intval($amount));
     }
 
     /**
-     * @Then /^the exit code should be (?P<exit_code>\d+)$/
-     *
-     * @param int $exit_code
+     * @Then /^the exit code should be (?P<exitCode>\d+)$/
      */
-    public function assertExitCodeEquals($exit_code)
+    public function assertExitCodeEquals(string $exitCode)
     {
-        $this->assertEquals(
-            $exit_code,
+        Assert::assertEquals(
+            $exitCode,
             $this->process->getExitCode(),
             "Exit codes don't match"
         );
@@ -562,7 +495,7 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         $output = $this->trimTrailingWhitespaces($this->process->getOutput());
         $output = $this->removeColorCodes($output);
 
-        $this->assertContains($string->getRaw(), $output);
+        Assert::assertContains($string->getRaw(), $output);
     }
 
     /**
@@ -575,29 +508,27 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         $output = $this->trimTrailingWhitespaces($this->process->getErrorOutput());
         $output = $this->removeColorCodes($output);
 
-        $this->assertContains($string->getRaw(), $output);
+        Assert::assertContains($string->getRaw(), $output);
     }
 
     /**
      * @Given /^the number of commits is (?P<expected>\d+)$/
-     *
-     * @param int $expected
      */
-    public function assertGitLogLength($expected)
+    public function assertGitLogLength(int $expected)
     {
-        $cmd_pattern = '%s log --format=%s | cat';
-        $cmd_args = [
+        $cmdPattern = '%s log --format=%s | cat';
+        $cmdArgs = [
             escapeshellcmd(static::$gitExecutable),
             escapeshellarg('%h'),
         ];
         $git_log = $this->doExec(
-            vsprintf($cmd_pattern, $cmd_args),
+            vsprintf($cmdPattern, $cmdArgs),
             [
                 'exitCode' => false,
             ]
         );
 
-        $this->assertEquals(
+        Assert::assertEquals(
             $expected,
             substr_count($git_log->getOutput(), "\n")
         );
@@ -608,12 +539,12 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertGitLogIsNotEmpty()
     {
-        $cmd_pattern = '%s log -1';
-        $cmd_args = [
+        $cmdPattern = '%s log -1';
+        $cmdArgs = [
             escapeshellcmd(static::$gitExecutable),
         ];
-        $git_log = $this->doExec(vsprintf($cmd_pattern, $cmd_args));
-        $this->assertNotEquals('', $git_log->getOutput());
+        $git_log = $this->doExec(vsprintf($cmdPattern, $cmdArgs));
+        Assert::assertNotEquals('', $git_log->getOutput());
     }
 
     /**
@@ -621,62 +552,51 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
      */
     public function assertGitLogIsEmpty()
     {
-        $cmd_pattern = '%s log -1';
-        $cmd_args = [
+        $cmdPattern = '%s log -1';
+        $cmdArgs = [
             escapeshellcmd(static::$gitExecutable),
         ];
-        $git_log = $this->doExec(vsprintf($cmd_pattern, $cmd_args));
-        $this->assertEquals('', $git_log->getOutput());
+        $gitLog = $this->doExec(vsprintf($cmdPattern, $cmdArgs));
+        Assert::assertEquals('', $gitLog->getOutput());
     }
 
-    /**
-     * @param string $path
-     *
-     * @return string
-     */
-    protected function getWorkspacePath($path)
+    protected function getWorkspacePath(string $path): string
     {
-        $normalized_path = static::normalizePath("{$this->cwd}/$path");
-        $this->validateWorkspacePath($normalized_path);
+        $normalizedPath = static::normalizePath("{$this->cwd}/$path");
+        $this->validateWorkspacePath($normalizedPath);
 
-        return $normalized_path;
+        return $normalizedPath;
     }
 
-    /**
-     * @param string $normalized_path
-     */
-    protected function validateWorkspacePath($normalized_path)
+    protected function validateWorkspacePath(string $normalizedPath)
     {
-        if (strpos($normalized_path, "{$this->scenarioRootDir}/workspace")
+        if (strpos($normalizedPath, "{$this->scenarioRootDir}/workspace")
             !== 0
         ) {
             throw new \InvalidArgumentException('Out of working directory.');
         }
     }
 
-    /**
-     * @param string $project_type
-     */
-    protected function doCreateProjectCache($project_type)
+    protected function doCreateProjectCache(string $projectType)
     {
-        $project_cache_dir = $this->getProjectCacheDir($project_type);
-        if (static::$fs->exists($project_cache_dir)) {
+        $projectCacheDir = $this->getProjectCacheDir($projectType);
+        if (static::$fs->exists($projectCacheDir)) {
             return;
         }
 
-        $project_template = implode('/', [
+        $projectTemplate = implode('/', [
             static::$projectRootDir,
             'fixtures',
             'project-template',
-            $project_type,
+            $projectType,
         ]);
-        static::$fs->mirror($project_template, $project_cache_dir);
+        static::$fs->mirror($projectTemplate, $projectCacheDir);
 
-        $package = json_decode(file_get_contents("$project_cache_dir/composer.json"), true);
+        $package = json_decode(file_get_contents("$projectCacheDir/composer.json"), true);
         $package['repositories']['local']['url'] = static::$projectRootDir;
-        static::$fs->dumpFile("$project_cache_dir/composer.json", json_encode($package, JSON_PRETTY_PRINT));
+        static::$fs->dumpFile("$projectCacheDir/composer.json", json_encode($package, JSON_PRETTY_PRINT));
 
-        if ($project_type !== 'basic') {
+        if ($projectType !== 'basic') {
             $master = implode('/', [
                 static::$projectRootDir,
                 'fixtures',
@@ -688,52 +608,44 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
                 '.gitignore',
                 'RoboFile.php',
             ];
-            foreach ($files as $file_name) {
-                static::$fs->copy("$master/$file_name", "$project_cache_dir/$file_name");
+            foreach ($files as $fileName) {
+                static::$fs->copy("$master/$fileName", "$projectCacheDir/$fileName");
             }
         }
 
-        $this->doExecCwd($project_cache_dir, 'composer install --no-interaction');
+        $this->doExecCwd($projectCacheDir, 'composer install --no-interaction');
     }
 
     /**
      * I initialize a Git repo.
-     *
-     * @param string $dir
-     * @param string $tpl
-     * @param bool $bare
      */
-    protected function doGitInit($dir, $tpl, $bare)
+    protected function doGitInit(string $dir, string $tpl, bool $bare)
     {
         $this->doChangeWorkingDirectory($dir);
-        $cmd_pattern = '%s init --template=%s';
-        $cmd_args = [
+        $cmdPattern = '%s init --template=%s';
+        $cmdArgs = [
             escapeshellcmd(static::$gitExecutable),
             escapeshellarg(static::getGitTemplateDir($tpl)),
         ];
 
         if ($bare) {
-            $cmd_pattern .= ' --bare';
-            $git_dir = '';
+            $cmdPattern .= ' --bare';
+            $gitDir = '';
         } else {
-            $git_dir = '.git/';
+            $gitDir = '.git/';
         }
 
-        $cmd = vsprintf($cmd_pattern, $cmd_args);
+        $cmd = vsprintf($cmdPattern, $cmdArgs);
 
-        $git_init = $this->doExec($cmd);
-        $cwd_real = realpath($this->cwd);
-        $this->assertEquals(
-            "Initialized empty Git repository in $cwd_real/$git_dir\n",
-            $git_init->getOutput()
+        $gitInit = $this->doExec($cmd);
+        $cwdReal = realpath($this->cwd);
+        Assert::assertEquals(
+            "Initialized empty Git repository in $cwdReal/$gitDir\n",
+            $gitInit->getOutput()
         );
     }
 
-    /**
-     * @param string $name
-     * @param string $value
-     */
-    protected function doGitConfigSet($name, $value)
+    protected function doGitConfigSet(string $name, string $value)
     {
         $cmd = sprintf(
             '%s config %s %s',
@@ -744,30 +656,17 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         $this->process = $this->doExec($cmd);
     }
 
-    /**
-     * @param string $wd
-     * @param string $cmd
-     * @param bool[] $check
-     *
-     * @return \Symfony\Component\Process\Process
-     */
-    protected function doExecCwd($wd, $cmd, $check = [])
+    protected function doExecCwd(string $wd, string $cmd, array $check = []): Process
     {
-        $cwd_backup = $this->cwd;
+        $cwdBackup = $this->cwd;
         chdir($wd);
         $return = $this->doExec($cmd, $check);
-        $this->cwd = $cwd_backup;
+        $this->cwd = $cwdBackup;
 
         return $return;
     }
 
-    /**
-     * @param string $cmd
-     * @param bool[] $check
-     *
-     * @return \Symfony\Component\Process\Process
-     */
-    protected function doExec($cmd, $check = [])
+    protected function doExec(string $cmd, array $check = []): Process
     {
         $check += [
             'exitCode' => true,
@@ -781,38 +680,23 @@ class FeatureContext extends \PHPUnit_Framework_Assert implements Context
         }
 
         if ($check['stdErr'] !== false) {
-            $this->assertEquals($check['stdErr'], $process->getErrorOutput());
+            Assert::assertEquals($check['stdErr'], $process->getErrorOutput());
         }
 
         return $process;
     }
 
-    /**
-     * @param string $type
-     *
-     * @return string
-     */
-    protected function getProjectCacheDir($type)
+    protected function getProjectCacheDir(string $type): string
     {
         return static::$suitRootDir . "/cache/project/$type";
     }
 
-    /**
-     * @param string $string
-     *
-     * @return string mixed
-     */
-    protected function trimTrailingWhitespaces($string)
+    protected function trimTrailingWhitespaces(string $string): string
     {
         return preg_replace('/[ \t]+\n/', "\n", rtrim($string, " \t"));
     }
 
-    /**
-     * @param string $string
-     *
-     * @return string
-     */
-    protected function removeColorCodes($string)
+    protected function removeColorCodes(string $string): string
     {
         return preg_replace('/\x1B\[[0-9;]*[JKmsu]/', '', $string);
     }

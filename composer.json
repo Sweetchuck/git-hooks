@@ -1,5 +1,5 @@
 {
-    "name": "cheppers/git-hooks",
+    "name": "sweetchuck/git-hooks",
     "description": "Provide a bridge between Git hooks and scripts under VCS.",
     "license": "GPL-2.0",
     "config": {
@@ -10,27 +10,24 @@
     "prefer-stable": true,
     "require": {},
     "require-dev": {
+        "php": ">=7.1",
         "behat/behat": "~3.1",
         "consolidation/robo": "~1.0",
-        "pear/archive_tar": "~1.4",
-        "phpunit/phpunit": "~4.5",
+        "phpunit/phpunit": "^6.2",
         "squizlabs/php_codesniffer": "~2.6",
         "symfony/filesystem": "~3.1",
         "symfony/process": "~3.1"
     },
     "autoload": {
         "psr-4": {
-            "Cheppers\\GitHooks\\": "src/"
+            "Sweetchuck\\GitHooks\\": "src/"
         }
     },
     "scripts": {
-        "post-install-cmd": [
-            "@deploy-git-hooks"
-        ],
-        "deploy-git-hooks": "\\Cheppers\\GitHooks\\Main::deploy"
+        "post-install-cmd": "\\Sweetchuck\\GitHooks\\Composer\\Scripts::postInstallCmd"
     },
     "extra": {
-        "cheppers/git-hooks": {
+        "sweetchuck/git-hooks": {
             "symlink": true
         }
     }

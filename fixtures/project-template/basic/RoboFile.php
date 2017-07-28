@@ -1,16 +1,10 @@
 <?php
-/**
- * @file
- * Test helper Robo task definitions.
- */
 
+use Robo\Contract\TaskInterface;
 use Robo\Result;
 use Robo\Task\BaseTask;
 use Robo\Tasks;
 
-/**
- * Class RoboFile.
- */
 // @codingStandardsIgnoreStart
 class RoboFile extends Tasks
     // @codingStandardsIgnoreEnd
@@ -27,17 +21,15 @@ class RoboFile extends Tasks
      */
     protected $yellPrefix = '>  ';
 
-    public function githookPreCommit()
+    public function githookPreCommit(): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
 
         $output = [];
-        $exit_code = null;
-        exec('git diff --cached --name-only', $output, $exit_code);
-        $this
-            ->taskPredestined(!$exit_code && !in_array('false.txt', $output))
-            ->run()
-            ->stopOnFail();
+        $exitCode = null;
+        exec('git diff --cached --name-only', $output, $exitCode);
+
+        return $this->taskPredestined(!$exitCode && !in_array('false.txt', $output));
     }
 
     public function githookPostCommit()
@@ -45,60 +37,45 @@ class RoboFile extends Tasks
         $this->say(__METHOD__ . ' is called');
     }
 
-    /**
-     * @param string $ref_old
-     * @param string $ref_new
-     * @param string $is_branch
-     */
-    public function githookPostCheckout($ref_old, $ref_new, $is_branch)
+    public function githookPostCheckout(string $refOld, string $refNew, string $isBranch)
     {
         $pattern = '/^[a-z0-9]{40}$/i';
-        $ref_old_label = (preg_match($pattern, $ref_old) ? 'OLD_REF' : $ref_old);
-        $ref_new_label = (preg_match($pattern, $ref_new) ? 'NEW_REF' : $ref_new);
-        $is_branch_label = ($is_branch ? 'yes' : 'no');
+        $refOldLabel = (preg_match($pattern, $refOld) ? 'OLD_REF' : $refOld);
+        $refNewLabel = (preg_match($pattern, $refNew) ? 'NEW_REF' : $refNew);
+        $isBranchLabel = ($isBranch ? 'yes' : 'no');
 
         $this->say(__METHOD__ . ' is called');
-        $this->say(sprintf('Old ref: "%s"', $ref_old_label));
-        $this->say(sprintf('New ref: "%s"', $ref_new_label));
-        $this->say(sprintf('Branch checkout: "%s"', $is_branch_label));
+        $this->say(sprintf('Old ref: "%s"', $refOldLabel));
+        $this->say(sprintf('New ref: "%s"', $refNewLabel));
+        $this->say(sprintf('Branch checkout: "%s"', $isBranchLabel));
     }
 
-    /**
-     * @param string $base_branch
-     * @param string|null $subject_branch
-     */
-    public function githookPreRebase($base_branch, $subject_branch = null)
+    public function githookPreRebase(string $baseBranch, ?string $subjectBranch = null): TaskInterface
     {
-        $current_branch = $this->gitCurrentBranch();
+        $currentBranch = $this->gitCurrentBranch();
         $this->say(__METHOD__ . ' is called');
-        $this->say(sprintf('Current branch: "%s"', $current_branch));
-        $this->say(sprintf('Upstream: "%s"', $base_branch));
-        $this->say(sprintf('Subject branch: "%s"', $subject_branch));
+        $this->say(sprintf('Current branch: "%s"', $currentBranch));
+        $this->say(sprintf('Upstream: "%s"', $baseBranch));
+        $this->say(sprintf('Subject branch: "%s"', $subjectBranch));
 
-        if (!$subject_branch) {
-            $subject_branch = $current_branch;
+        if (!$subjectBranch) {
+            $subjectBranch = $currentBranch;
         }
 
-        $this
-            ->taskPredestined(($subject_branch !== 'protected'))
-            ->run()
-            ->stopOnFail();
+        return $this->taskPredestined(($subjectBranch !== 'protected'));
     }
 
-    /**
-     * @param string $trigger
-     */
-    public function githookPostRewrite($trigger)
+    public function githookPostRewrite(string $trigger): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
         $this->say(sprintf('Trigger: "%s"', $trigger));
 
         $pattern = '/^[a-z0-9]{40}$/i';
-        $num_of_lines = 0;
+        $numOfLines = 0;
         while ($line = fgets(STDIN)) {
             $line = rtrim($line, "\n");
 
-            $num_of_lines++;
+            $numOfLines++;
             if (!$line) {
                 continue;
             }
@@ -110,82 +87,72 @@ class RoboFile extends Tasks
             ];
             $input = array_combine($keys, explode(' ', $line) + [2 => null]);
 
-            $old_rev_label = (preg_match($pattern, $input['old_rev']) ? 'OLD_REV' : $input['old_rev']);
-            $new_rev_label = (preg_match($pattern, $input['new_rev']) ? 'NEW_REV' : $input['new_rev']);
+            $oldRevLabel = (preg_match($pattern, $input['old_rev']) ? 'OLD_REV' : $input['old_rev']);
+            $newRevLabel = (preg_match($pattern, $input['new_rev']) ? 'NEW_REV' : $input['new_rev']);
 
             $this->say(sprintf(
                 'stdInput line %d: "%s" "%s" "%s"',
-                $num_of_lines,
-                $old_rev_label,
-                $new_rev_label,
+                $numOfLines,
+                $oldRevLabel,
+                $newRevLabel,
                 $input['extra']
             ));
         }
-        $this->say(sprintf('Lines in stdInput: "%d"', $num_of_lines));
+        $this->say(sprintf('Lines in stdInput: "%d"', $numOfLines));
 
-        $this
-            ->taskPredestined(true)
-            ->run()
-            ->stopOnFail();
+        return $this->taskPredestined(true);
     }
 
-    /**
-     * @param string $remote_name
-     * @param string $remote_uri
-     */
-    public function githookPrePush($remote_name, $remote_uri)
+    public function githookPrePush(string $remote_name, string $remote_uri): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
         $this->say("Remote name: $remote_name");
         $this->say("Remote URI: $remote_uri");
 
-        $git_log_pattern = 'git log --format=%s -n 1 %s';
+        $gitLogPattern = 'git log --format=%s -n 1 %s';
         $valid = true;
-        $num_of_lines = 0;
+        $numOfLines = 0;
         while ($line = fgets(STDIN)) {
             $line = rtrim($line, "\n");
 
-            $num_of_lines++;
+            $numOfLines++;
             if (!$line) {
                 continue;
             }
 
-            list($local_ref, $local_sha) = explode(' ', $line);
-            if ($valid && $this->gitRefIsBranch($local_ref)) {
+            list($localRef, $localSha) = explode(' ', $line);
+            if ($valid && $this->gitRefIsBranch($localRef)) {
                 $cmd = sprintf(
-                    $git_log_pattern,
+                    $gitLogPattern,
                     escapeshellarg('%B'),
-                    escapeshellarg($local_sha)
+                    escapeshellarg($localSha)
                 );
 
-                $commit_message = $this
+                $commitMessage = $this
                     ->taskExec($cmd)
-                    ->printed(false)
+                    ->printOutput(false)
                     ->run()
                     ->getMessage();
 
-                $valid = !preg_match('/^Invalid pre-push(\n|$)/', trim($commit_message));
+                $valid = !preg_match('/^Invalid pre-push(\n|$)/', trim($commitMessage));
             }
         }
 
-        $this->say("Lines in stdInput: $num_of_lines");
+        $this->say("Lines in stdInput: $numOfLines");
 
-        $this
-            ->taskPredestined($valid)
-            ->run()
-            ->stopOnFail();
+        return $this->taskPredestined($valid);
     }
 
-    public function githookPreReceive()
+    public function githookPreReceive(): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
 
-        $num_of_lines = 0;
+        $numOfLines = 0;
         $valid = true;
         while ($line = fgets(STDIN)) {
             $line = rtrim($line, "\n");
 
-            $num_of_lines++;
+            $numOfLines++;
             if (!$line) {
                 continue;
             }
@@ -198,114 +165,95 @@ class RoboFile extends Tasks
 
             $this->say("Ref: '$ref_name'");
         }
-        $this->say("Lines in stdInput: '$num_of_lines'");
+        $this->say("Lines in stdInput: '$numOfLines'");
 
-        $this
-            ->taskPredestined($valid)
-            ->run()
-            ->stopOnFail();
+        return $this->taskPredestined($valid);
     }
 
-    public function githookPostReceive()
+    public function githookPostReceive(): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
 
         $pattern = '/^[a-z0-9]{40}$/i';
-        $num_of_lines = 0;
+        $numOfLines = 0;
         while ($line = fgets(STDIN)) {
             $line = rtrim($line, "\n");
 
-            $num_of_lines++;
+            $numOfLines++;
             if (!$line) {
                 continue;
             }
 
-            list($old_rev, $new_rev, $ref_name) = explode(' ', $line);
-            $old_rev_label = (preg_match($pattern, $old_rev) ? 'OLD_REV' : $old_rev);
-            $new_rev_label = (preg_match($pattern, $new_rev) ? 'NEW_REV' : $new_rev);
+            list($oldRev, $newRev, $refName) = explode(' ', $line);
+            $oldRevLabel = (preg_match($pattern, $oldRev) ? 'OLD_REV' : $oldRev);
+            $newRevLabel = (preg_match($pattern, $newRev) ? 'NEW_REV' : $newRev);
 
             $this->say(sprintf(
                 'stdInput line %d: "%s" "%s" "%s"',
-                $num_of_lines,
-                $old_rev_label,
-                $new_rev_label,
-                $ref_name
+                $numOfLines,
+                $oldRevLabel,
+                $newRevLabel,
+                $refName
             ));
         }
-        $this->say(sprintf('Lines in stdInput: "%d"', $num_of_lines));
+        $this->say(sprintf('Lines in stdInput: "%d"', $numOfLines));
 
-        $this
-            ->taskPredestined(true)
-            ->run()
-            ->stopOnFail();
+        return $this->taskPredestined(true);
     }
 
-    /**
-     * @param string $is_squash
-     */
-    public function githookPostMerge($is_squash)
+    public function githookPostMerge(string $isSquash)
     {
         $this->say(__METHOD__ . ' is called');
-        $this->say("Squash: $is_squash");
+        $this->say("Squash: $isSquash");
     }
 
     /**
-     * @param string $file_name
+     * @param string $fileName
      *   The name of the file that has the commit message.
      * @param string $description
      *   The description of the commit message's source.
      */
-    public function githookPrepareCommitMsg($file_name, $description = null)
+    public function githookPrepareCommitMsg(string $fileName, ?string $description = null)
     {
         $this->say(__METHOD__ . ' is called');
-        $this->say("File name: '$file_name'");
+        $this->say("File name: '$fileName'");
         $this->say("Description: '$description'");
 
         if (!$description) {
-            $fh = fopen($file_name, 'a');
+            $fh = fopen($fileName, 'a');
             fwrite($fh, "This line added by the 'prepare-commit-msg' callback\n\n");
             fclose($fh);
         }
     }
 
     /**
-     * @param string $file_name
+     * @param string $fileName
      *   The name of the file that has the commit message.
      */
-    public function githookCommitMsg($file_name)
+    public function githookCommitMsg(string $fileName): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
-        $this->say("File name: '$file_name'");
+        $this->say("File name: '$fileName'");
 
-        $fh = fopen($file_name, 'a');
+        $fh = fopen($fileName, 'a');
         fwrite($fh, "This line added by the 'commit-msg' callback\n\n");
         fclose($fh);
 
-        $msg = file_get_contents($file_name);
-        $this
-            ->taskPredestined(!preg_match('/^Invalid commit-msg(\n|$)/', $msg))
-            ->run()
-            ->stopOnFail();
+        $msg = file_get_contents($fileName);
+
+        return $this->taskPredestined(!preg_match('/^Invalid commit-msg(\n|$)/', $msg));
     }
 
-    /**
-     * @param string $ref
-     *
-     * @return bool
-     */
-    protected function gitRefIsBranch($ref)
+    protected function gitRefIsBranch(string $ref): bool
     {
         return strpos($ref, 'refs/heads/') === 0;
     }
 
-    /**
-     * @return string
-     */
-    protected function gitCurrentBranch()
+    protected function gitCurrentBranch(): string
     {
         $result = $this
             ->taskExec('git rev-parse --abbrev-ref HEAD')
-            ->printed(false)
+            ->printOutput(false)
             ->run();
 
         return trim($result->getMessage());
@@ -316,7 +264,7 @@ class RoboFile extends Tasks
      */
     protected function say($text)
     {
-        $this->getOutput()->writeln("{$this->sayPrefix}$text");
+        $this->output()->writeln("{$this->sayPrefix}$text");
     }
 
     /**
@@ -326,36 +274,27 @@ class RoboFile extends Tasks
     {
         $format = "%s<fg=white;bg=$color;options=bold> %s </fg=white;bg=$color;options=bold>";
         $delimiter = sprintf($format, $this->yellPrefix, str_repeat(' ', $length));
-        $o = $this->getOutput();
 
-        $o->writeln($delimiter);
-        $o->writeln(sprintf($format, $this->yellPrefix, str_pad($text, $length, ' ', STR_PAD_BOTH)));
-        $o->writeln($delimiter);
+        $this->writeln($delimiter);
+        $this->writeln(sprintf($format, $this->yellPrefix, str_pad($text, $length, ' ', STR_PAD_BOTH)));
+        $this->writeln($delimiter);
     }
 }
 
-/**
- * Class PredestinedLoadTasks.
- */
 // @codingStandardsIgnoreStart
 trait PredestinedLoadTasks
     // @codingStandardsIgnoreEnd
 {
 
     /**
-     * @param bool $outcome
-     *
      * @return \PredestinedTask
      */
-    public function taskPredestined($outcome)
+    public function taskPredestined(bool $outcome)
     {
         return new PredestinedTask($outcome);
     }
 }
 
-/**
- * Class PredestinedTask.
- */
 // @codingStandardsIgnoreStart
 class PredestinedTask extends BaseTask
     // @codingStandardsIgnoreEnd
@@ -366,12 +305,7 @@ class PredestinedTask extends BaseTask
      */
     protected $outcome = true;
 
-    /**
-     * PredestinedTask constructor.
-     *
-     * @param bool $outcome
-     */
-    public function __construct($outcome)
+    public function __construct(bool $outcome)
     {
         $this->outcome = $outcome;
     }

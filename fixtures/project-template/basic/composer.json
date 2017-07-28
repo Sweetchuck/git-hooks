@@ -1,6 +1,6 @@
 {
-    "name": "cheppers/git-hooks-helper-project-basic",
-    "description": "Helper project for cheppers/git-hooks",
+    "name": "sweetchuck/git-hooks-helper-project-basic",
+    "description": "Helper project for sweetchuck/git-hooks",
     "license": "proprietary",
     "minimum-stability": "dev",
     "prefer-stable": true,
@@ -11,16 +11,13 @@
         }
     },
     "require": {
-        "cheppers/git-hooks": "*"
+        "sweetchuck/git-hooks": "*"
     },
     "require-dev": {
-        "codegyre/robo": "1.0.0-beta1",
+        "consolidation/robo": "~1.0",
         "symfony/event-dispatcher": "~3.0"
     },
     "scripts": {
-        "post-install-cmd": [
-            "@deploy-git-hooks"
-        ],
-        "deploy-git-hooks": "\\Cheppers\\GitHooks\\Main::deploy"
+        "post-install-cmd": "\\Sweetchuck\\GitHooks\\Composer\\Scripts::postInstallCmd"
     }
 }

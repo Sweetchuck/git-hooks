@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 
-cghHookName=$(basename "${0}")
+sghHookName=$(basename "${0}")
 
 if [ "$(git rev-parse --is-bare-repository)" = 'true' ]; then
-    cghBridge='./.git-hooks'
+    sghBridge='./.git-hooks'
 else
-    cghBridge="$(git rev-parse --show-toplevel)/.git-hooks"
+    sghBridge="$(git rev-parse --show-toplevel)/.git-hooks"
 fi
 
-if [ -s "${cghBridge}" ]; then
-    . "${cghBridge}" || exit $?
+if [ -s "${sghBridge}" ]; then
+    . "${sghBridge}" || exit $?
 else
-    echo "Git hook bridge '${cghBridge}' not found."
+    echo "Git hook bridge '${sghBridge}' not found."
 fi
 
 exit 0

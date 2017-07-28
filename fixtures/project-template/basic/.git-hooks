@@ -5,12 +5,12 @@ robo="$(composer config 'bin-dir')/robo"
 
 # Exit without error if "robo" doesn't exists or it has no corresponding task.
 test -x "$robo" || exit 0
-"$robo" help "githook:$cghHookName" 1> /dev/null 2>&1 || exit 0
+"$robo" help "githook:$sghHookName" 1> /dev/null 2>&1 || exit 0
 
-if [ "$cghHasInput" = 'true' ]; then
-    "$robo" "githook:$cghHookName" $@ <<< $(</dev/stdin) || exit $?
+if [ "$sghHasInput" = 'true' ]; then
+    "$robo" "githook:$sghHookName" $@ <<< $(</dev/stdin) || exit $?
 else
-    "$robo" "githook:$cghHookName" $@ || exit $?
+    "$robo" "githook:$sghHookName" $@ || exit $?
 fi
 
 exit 0

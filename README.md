@@ -4,8 +4,7 @@
 This package provides a bridge between the un-versioned `.git/hooks/*` scripts
 and scripts in your Git repository.
 
-[![Build Status](https://travis-ci.org/Cheppers/git-hooks.svg?branch=master)](https://travis-ci.org/Cheppers/git-hooks)
-[![Total Downloads](https://poser.pugx.org/cheppers/git-hooks/downloads.png)](https://packagist.org/packages/cheppers/git-hooks)
+[![Build Status](https://travis-ci.org/Sweetchuck/git-hooks.svg?branch=master)](https://travis-ci.org/Sweetchuck/git-hooks)
 
 
 ## When to use
@@ -17,7 +16,7 @@ teammates then this is the tool you are looking for.
 ## How to use
 
 1. Step into you existing package's directory (or create a new one with `git init && composer init`)
-1. Run <pre><code>composer require 'cheppers/git-hooks'</code></pre>
+1. Run <pre><code>composer require 'sweetchuck/git-hooks'</code></pre>
 1. Then you have two option
     1. Relay on the git hooks scripts which are shipped with this package 
        and implement the logic in your `.git-hooks` file.
@@ -36,16 +35,16 @@ teammates then this is the tool you are looking for.
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "cheppers/git-hooks": "dev-master"
+        "sweetchuck/git-hooks": "dev-master"
     },
     "scripts": {
         "post-install-cmd": [
             "@deploy-git-hooks"
         ],
-        "deploy-git-hooks": "\\Cheppers\\GitHooks\\Main::deploy"
+        "deploy-git-hooks": "\\Sweetchuck\\GitHooks\\Main::deploy"
     },
     "extra": {
-        "cheppers/git-hooks": {
+        "sweetchuck/git-hooks": {
             "core.hooksPath": "git-hooks",
             "symlink": false
         }
@@ -57,7 +56,7 @@ teammates then this is the tool you are looking for.
 # Configuration
 
 In the example `composer.json` above you can see two configurable option 
-under the `"extra": {"cheppers/git-hooks": {}}`.
+under the `"extra": {"sweetchuck/git-hooks": {}}`.
 
 
 ## Configuration symlink
