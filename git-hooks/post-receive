@@ -3,5 +3,5 @@
 # @see https://git-scm.com/docs/githooks#post-receive
 ##
 
-cghHasInput='true'
+sghHasInput='true'
 . "$(dirname $0)/_common"

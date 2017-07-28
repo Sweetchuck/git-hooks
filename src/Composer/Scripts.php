@@ -1,16 +1,11 @@
 <?php
 
-namespace Cheppers\GitHooks;
+namespace Sweetchuck\GitHooks\Composer;
 
 use Composer\Script\Event;
 use Symfony\Component\Filesystem\Filesystem;
 
-/**
- * Class Deploy.
- *
- * @package Cheppers\GitHooks
- */
-class Main
+class Scripts
 {
 
     /**
@@ -19,9 +14,9 @@ class Main
     const EXIT_CODE_NO_GIT = 1;
 
     /**
-     * @var Event
+     * @var \Composer\Script\Event
      */
-    protected static $event = null;
+    protected static $event;
 
     /**
      * @var string
@@ -45,12 +40,12 @@ class Main
      */
     protected static $selfPackage = null;
 
-    /**
-     * @param Event $event
-     *
-     * @return bool
-     */
-    public static function deploy(Event $event)
+    public static function postInstallCmd(Event $event): bool
+    {
+        return static::deploy($event);
+    }
+
+    public static function deploy(Event $event): bool
     {
         static::$event = $event;
         $io_class = get_class(static::$event->getIO());
@@ -98,7 +93,7 @@ class Main
 
         static::$event
             ->getIO()
-            ->write('END Git hooks deploy', true, $io_class::VERBOSE);
+            ->write('END   Git hooks deploy', true, $io_class::VERBOSE);
 
         return $is_success;
     }
@@ -109,9 +104,6 @@ class Main
         static::initGitVersion();
     }
 
-    /**
-     * @throws \Exception
-     */
     protected static function initGitVersion()
     {
         $command = sprintf('%s --version', escapeshellcmd(static::$gitExecutable));
@@ -131,13 +123,10 @@ class Main
 
     protected static function initSelfPackage()
     {
-        static::$selfPackage = json_decode(file_get_contents(__DIR__ . '/../composer.json'), true);
+        static::$selfPackage = json_decode(file_get_contents(__DIR__ . '/../../composer.json'), true);
     }
 
-    /**
-     * @return bool
-     */
-    protected static function isSymlinkPrefered()
+    protected static function isSymlinkPrefered(): bool
     {
         $args = static::$event->getArguments();
         for ($i = count($args) - 1; $i > -1; $i--) {
@@ -148,35 +137,24 @@ class Main
             }
         }
 
-        /** @var \Composer\Package\Package $package */
-        $package = static::$event
+        $extra = static::$event
             ->getComposer()
-            ->getPackage();
-        $extra = $package->getExtra();
+            ->getPackage()
+            ->getExtra();
 
         return !empty($extra[static::$selfPackage['name']]['symlink']);
     }
 
     /**
      * Checks that the core.hooksPath configuration is supported by the current git executable.
-     *
-     * @return bool
      */
-    protected static function coreHooksPathSupported()
+    protected static function coreHooksPathSupported(): bool
     {
         // @todo There is a strange thing with the pre-rebase hooks.
         return false;
         return version_compare(static::$gitVersion, '2.9', '>=');
     }
 
-    /**
-     * @param string $name
-     * @param string $value
-     *
-     * @return null|string
-     *
-     * @throws \Exception
-     */
     protected static function gitConfigSet($name, $value)
     {
         $command = sprintf(
@@ -200,36 +178,24 @@ class Main
             ->write($command, true, $io_class::VERBOSE);
     }
 
-    /**
-     * @param string $src_dir
-     * @param string $dst_dir
-     *
-     * @throws \Exception
-     */
-    protected static function symlinkHooksDir($src_dir, $dst_dir)
+    protected static function symlinkHooksDir($srcDir, $dstDir)
     {
         $fs = new Filesystem();
-        $fs->remove($dst_dir);
-        $fs->symlink(realpath($src_dir), $dst_dir, true);
+        $fs->remove($dstDir);
+        $fs->symlink(realpath($srcDir), $dstDir, true);
 
         return;
     }
 
-    /**
-     * @param string $src_dir
-     * @param string $dst_dir
-     *
-     * @throws \Exception
-     */
-    protected static function copyHooksDir($src_dir, $dst_dir)
+    protected static function copyHooksDir($srcDir, $dstDir)
     {
         $fs = new Filesystem();
-        $fs->mirror($src_dir, $dst_dir, null, ['override' => true]);
-        $file = new \DirectoryIterator($src_dir);
+        $fs->mirror($srcDir, $dstDir, null, ['override' => true]);
+        $file = new \DirectoryIterator($srcDir);
         $mask = umask();
         while ($file->valid()) {
             if ($file->isFile() && is_executable($file->getPathname())) {
-                $fs->chmod("$dst_dir/" . $file->getBasename(), 0777, $mask);
+                $fs->chmod("$dstDir/" . $file->getBasename(), 0777, $mask);
             }
 
             $file->next();
@@ -237,9 +203,7 @@ class Main
     }
 
     /**
-     * @return null|string
-     *
-     * @throws \Exception
+     * @return bool|string
      */
     protected static function getGitDir()
     {
@@ -249,9 +213,9 @@ class Main
         );
 
         $output = null;
-        $exit_code = null;
-        exec($command, $output, $exit_code);
-        if ($exit_code !== 0) {
+        $exitCode = null;
+        exec($command, $output, $exitCode);
+        if ($exitCode !== 0) {
             // @todo Error code.
             throw new \Exception('The $GIT_DIR cannot be detected', 3);
         }
@@ -259,10 +223,7 @@ class Main
         return realpath(rtrim(reset($output), "\n"));
     }
 
-    /**
-     * @return string
-     */
-    protected static function getCoreHooksPath()
+    protected static function getCoreHooksPath(): string
     {
         foreach (static::$event->getArguments() as $arg) {
             if (strpos($arg, '--') !== 0) {
@@ -270,11 +231,11 @@ class Main
             }
         }
 
-        /** @var \Composer\Package\Package $root_package */
-        $root_package = static::$event
+        $rootPackage = static::$event
             ->getComposer()
             ->getPackage();
-        $extra = $root_package->getExtra();
+
+        $extra = $rootPackage->getExtra();
         if (!empty($extra[static::$selfPackage['name']]['core.hooksPath'])) {
             return $extra[static::$selfPackage['name']]['core.hooksPath'];
         }
@@ -283,24 +244,23 @@ class Main
             return static::$defaultCoreHooksPath;
         }
 
-        /** @var \Composer\Config $config */
         $config = static::$event
             ->getComposer()
             ->getConfig();
 
         $chg_path_abs = $config->get('vendor-dir') . '/' . static::$selfPackage['name'];
         $cwd = getcwd();
-        $cgh_path_rel = preg_replace('@^' . preg_quote("$cwd/", '@') . '@', '', "$chg_path_abs/");
-        $cgh_path_rel = rtrim($cgh_path_rel, '/');
-        if (!$cgh_path_rel) {
-            $cgh_path_rel = '.';
+        $sghPathRel = preg_replace('@^' . preg_quote("$cwd/", '@') . '@', '', "$chg_path_abs/");
+        $sghPathRel = rtrim($sghPathRel, '/');
+        if (!$sghPathRel) {
+            $sghPathRel = '.';
         }
 
-        if (is_dir("$cgh_path_rel/" . static::$defaultCoreHooksPath)) {
-            return "$cgh_path_rel/" . static::$defaultCoreHooksPath;
+        if (is_dir("$sghPathRel/" . static::$defaultCoreHooksPath)) {
+            return "$sghPathRel/" . static::$defaultCoreHooksPath;
         }
 
-        if ($root_package->getName() === static::$selfPackage['name']) {
+        if ($rootPackage->getName() === static::$selfPackage['name']) {
             return static::$defaultCoreHooksPath;
         }
 
