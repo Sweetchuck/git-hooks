@@ -1,5 +1,7 @@
 <?php
 
+use Composer\Plugin\Capability\CommandProvider;
+use Composer\Plugin\Capability\CommandProvider as ComposerCommandProvider;
 use Robo\Tasks;
 use Symfony\Component\Process\Process;
 
@@ -61,7 +63,7 @@ class RoboFile extends Tasks
     public function __construct()
     {
         $package = json_decode(file_get_contents(__DIR__ . '/composer.json'), true);
-        list($this->packageVendor, $this->packageName) = explode('/', $package['name']);
+        [$this->packageVendor, $this->packageName] = explode('/', $package['name']);
 
         if (!empty($package['config']['bin-dir'])) {
             $this->binDir = $package['config']['bin-dir'];

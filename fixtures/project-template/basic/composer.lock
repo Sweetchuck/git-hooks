@@ -8,24 +8,27 @@
     "packages": [
         {
             "name": "sweetchuck/git-hooks",
-            "version": "dev-master",
+            "version": "dev-i23-composer-plugin",
             "dist": {
                 "type": "path",
                 "url": "@see \\FeatureContext::doCreateProjectCache",
-                "reference": "abcdefg"
+                "reference": "78486853bd1ca45b20ebcdd35a0f871593330022"
             },
             "require": {
+                "composer-plugin-api": "^1.1",
                 "ext-json": "*",
-                "php": ">=7.1"
+                "ext-mbstring": "*",
+                "php": ">=7.2"
             },
             "require-dev": {
                 "behat/behat": "^3.6",
                 "consolidation/robo": "^2.0",
-                "phpunit/phpunit": "^9.1",
+                "phpunit/phpunit": "^8.0",
                 "squizlabs/php_codesniffer": "^3.5"
             },
-            "type": "library",
+            "type": "composer-plugin",
             "extra": {
+                "class": "\\Sweetchuck\\GitHooks\\Composer\\Plugin",
                 "sweetchuck/git-hooks": {
                     "symlink": true
                 }
@@ -35,13 +38,8 @@
                     "Sweetchuck\\GitHooks\\": "src/"
                 }
             },
-            "scripts": {
-                "post-install-cmd": [
-                    "\\Sweetchuck\\GitHooks\\Composer\\Scripts::postInstallCmd"
-                ]
-            },
             "license": [
-                "GPL-2.0"
+                "GPL-2.0-or-later"
             ],
             "description": "Provide a bridge between Git hooks and scripts under VCS."
         }
@@ -1053,20 +1051,6 @@
             ],
             "description": "Symfony Filesystem Component",
             "homepage": "https://symfony.com",
-            "funding": [
-                {
-                    "url": "https://symfony.com/sponsor",
-                    "type": "custom"
-                },
-                {
-                    "url": "https://github.com/fabpot",
-                    "type": "github"
-                },
-                {
-                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
-                    "type": "tidelift"
-                }
-            ],
             "time": "2020-03-27T16:54:36+00:00"
         },
         {
