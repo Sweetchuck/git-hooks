@@ -3,6 +3,8 @@
 namespace Sweetchuck\GitHooks\Composer;
 
 use Composer\Script\Event;
+use DirectoryIterator;
+use Exception;
 use Symfony\Component\Filesystem\Filesystem;
 
 class Scripts
@@ -58,7 +60,7 @@ class Scripts
         $is_success = true;
         try {
             $git_dir = static::getGitDir();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $git_dir = false;
             static::$event
                 ->getIO()
@@ -79,7 +81,7 @@ class Scripts
                     static::copyHooksDir($core_hooks_path, static::getGitDir() . '/hooks');
                     $message = 'Git hooks have been deployed by coping the script files.';
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $is_success = false;
                 static::$event
                     ->getIO()
@@ -111,7 +113,7 @@ class Scripts
         $exit_code = null;
         exec($command, $output, $exit_code);
         if ($exit_code) {
-            throw new \Exception('Failed to detect the version of Git.', static::EXIT_CODE_NO_GIT);
+            throw new Exception('Failed to detect the version of Git.', static::EXIT_CODE_NO_GIT);
         }
 
         // @todo Better regex.
@@ -129,12 +131,17 @@ class Scripts
     protected static function isSymlinkPrefered(): bool
     {
         $args = static::$event->getArguments();
+        $isSymlink = null;
         for ($i = count($args) - 1; $i > -1; $i--) {
             if ($args[$i] === '--no-symlink') {
-                return false;
+                $isSymlink = false;
             } elseif ($args[$i] === '--symlink') {
-                return true;
+                $isSymlink = true;
             }
+        }
+
+        if ($isSymlink !== null) {
+            return $isSymlink;
         }
 
         $extra = static::$event
@@ -150,8 +157,6 @@ class Scripts
      */
     protected static function coreHooksPathSupported(): bool
     {
-        // @todo There is a strange thing with the pre-rebase hooks.
-        return false;
         return version_compare(static::$gitVersion, '2.9', '>=');
     }
 
@@ -168,7 +173,7 @@ class Scripts
         exec($command, $output, $exit_code);
         if ($exit_code !== 0) {
             // @todo Exit code.
-            throw new \Exception("Failed to execute: '$command'", 1);
+            throw new Exception("Failed to execute: '$command'", 1);
         }
 
 
@@ -191,7 +196,7 @@ class Scripts
     {
         $fs = new Filesystem();
         $fs->mirror($srcDir, $dstDir, null, ['override' => true]);
-        $file = new \DirectoryIterator($srcDir);
+        $file = new DirectoryIterator($srcDir);
         $mask = umask();
         while ($file->valid()) {
             if ($file->isFile() && is_executable($file->getPathname())) {
@@ -217,7 +222,7 @@ class Scripts
         exec($command, $output, $exitCode);
         if ($exitCode !== 0) {
             // @todo Error code.
-            throw new \Exception('The $GIT_DIR cannot be detected', 3);
+            throw new Exception('The $GIT_DIR cannot be detected', 3);
         }
 
         return realpath(rtrim(reset($output), "\n"));

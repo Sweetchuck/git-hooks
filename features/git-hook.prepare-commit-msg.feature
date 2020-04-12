@@ -5,7 +5,7 @@ Feature: Test for prepare-commit-msg hook.
     And I create a "README.md" file
     And I run git add "README.md"
 
-  Scenario: Commit with commit message.
+  Scenario: prepare-commit-msg - commit with commit message
     Given I run git commit -m "Initial commit"
     Then the exit code should be 0
     And the stdErr should contains the following text:
@@ -15,7 +15,7 @@ Feature: Test for prepare-commit-msg hook.
     >  Description: 'message'
     """
 
-  Scenario Outline: Commit without commit message.
+  Scenario Outline: prepare-commit-msg - commit without commit message
     Given I run git config core.editor <editor>
     And I run git commit
     Then the exit code should be <exit_code>

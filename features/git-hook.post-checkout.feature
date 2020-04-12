@@ -8,7 +8,7 @@ Feature: Test for post-checkout
     """
     And I run git branch "feature-1"
 
-  Scenario: Branch checkout.
+  Scenario: post-checkout - branch checkout
     And I run git checkout "feature-1"
     Then the stdErr should contains the following text:
     """
@@ -18,7 +18,7 @@ Feature: Test for post-checkout
     >  Branch checkout: "yes"
     """
 
-  Scenario: File checkout.
+  Scenario: post-checkout - file checkout
     And I commit a new "CONTRIBUTE.md" file with message "WIP" and content:
     """
     @todo

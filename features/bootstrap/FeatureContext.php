@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 use Behat\Behat\Context\Context;
 use Behat\Gherkin\Node\PyStringNode;
 use PHPUnit\Framework\Assert;
@@ -8,9 +10,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-// @codingStandardsIgnoreStart
 class FeatureContext implements Context
-    // @codingStandardsIgnoreEnd
 {
 
     /**
@@ -85,7 +85,7 @@ class FeatureContext implements Context
         $fileName = static::$projectRootDir . '/composer.json';
         static::$composer = json_decode(file_get_contents($fileName), true);
         if (static::$composer === null) {
-            throw new \InvalidArgumentException("Composer JSON file cannot be decoded. '$fileName'");
+            throw new InvalidArgumentException("Composer JSON file cannot be decoded. '$fileName'");
         }
     }
 
@@ -124,7 +124,7 @@ class FeatureContext implements Context
         }
 
         if (preg_match('#/\.{2}|\.{2}/#', $normalized)) {
-            throw new \LogicException("Path is outside of the defined root, path: [$path], resolved: [$normalized]");
+            throw new LogicException("Path is outside of the defined root, path: [$path], resolved: [$normalized]");
         }
 
         return rtrim($normalized, '/');
@@ -177,7 +177,7 @@ class FeatureContext implements Context
 
     protected static function randomId(): string
     {
-        return md5(microtime(true) * rand(0, 10000));
+        return md5((string) (microtime(true) * rand(0, 10000)));
     }
 
     /**
@@ -185,14 +185,15 @@ class FeatureContext implements Context
      */
     public function doGitRemoteAdd(string $name, string $uri)
     {
-        $cmdPattern = '%s remote add %s %s';
-        $cmdArgs = [
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($name),
-            escapeshellarg($uri),
+        $cmd = [
+            static::$gitExecutable,
+            'remote',
+            'add',
+            $name,
+            $uri,
         ];
 
-        $this->process = $this->doExec(vsprintf($cmdPattern, $cmdArgs));
+        $this->process = $this->doExec($cmd);
     }
 
     /**
@@ -202,7 +203,7 @@ class FeatureContext implements Context
     {
         $dirNormalized = $this->getWorkspacePath($dir);
         if (static::$fs->exists("$dirNormalized/composer.json")) {
-            throw new \LogicException("A project is already exists in: '$dirNormalized'");
+            throw new LogicException("A project is already exists in: '$dirNormalized'");
         }
 
         $this->doCreateProjectCache($type);
@@ -210,7 +211,7 @@ class FeatureContext implements Context
         static::$fs->mirror($projectCacheDir, $dirNormalized);
         $this->doGitInitLocal($dir);
 
-        $this->doExec('composer run post-install-cmd');
+        $this->doExec(['composer', 'run', 'post-install-cmd']);
     }
 
     /**
@@ -221,7 +222,7 @@ class FeatureContext implements Context
         $dirNormal = $this->getWorkspacePath($dir);
 
         if (strpos($dirNormal, $this->scenarioRootDir) !== 0) {
-            throw new \InvalidArgumentException('Out of working directory.');
+            throw new InvalidArgumentException('Out of working directory.');
         }
 
         static::$fs->mkdir($dirNormal);
@@ -260,7 +261,7 @@ class FeatureContext implements Context
         if (static::$fs->exists("$dirNormalized/.git")
             || static::$fs->exists("$dirNormalized/config")
         ) {
-            throw new \LogicException("A git repository is already exists in: '$dirNormalized'");
+            throw new LogicException("A git repository is already exists in: '$dirNormalized'");
         }
 
         $this->doCreateProjectCache($type);
@@ -268,25 +269,26 @@ class FeatureContext implements Context
         static::$fs->mirror($projectCacheDir, $dirNormalized);
         $this->doGitInit($dir, $type, true);
 
-        $this->doExec('composer run post-install-cmd');
+        $this->doExec(['composer', 'run', 'post-install-cmd']);
     }
 
     /**
      * @Given I run git add :files
+     *
+     * @todo NodeTable.
      */
     public function doGitAdd(string $files)
     {
-        $files = preg_split('/, /', $files);
-        $cmdPattern = '%s add --' . str_repeat(' %s', count($files));
-        $cmdArgs = [
-            escapeshellcmd(static::$gitExecutable),
-        ];
+        $cmd = array_merge(
+            [
+                static::$gitExecutable,
+                'add',
+                '--',
+            ],
+            preg_split('/, /', $files)
+        );
 
-        foreach ($files as $file) {
-            $cmdArgs[] = escapeshellcmd($file);
-        }
-
-        $this->process = $this->doExec(vsprintf($cmdPattern, $cmdArgs));
+        $this->process = $this->doExec($cmd);
     }
 
     /**
@@ -295,18 +297,18 @@ class FeatureContext implements Context
      */
     public function doGitCommit(?string $message = null)
     {
-        $cmdPattern = '%s commit';
-        $cmdArgs = [
-            escapeshellcmd(static::$gitExecutable),
+        $cmd = [
+            static::$gitExecutable,
+            'commit',
         ];
 
         if ($message) {
-            $cmdPattern .= ' -m %s';
-            $cmdArgs[] = escapeshellarg($message);
+            $cmd[] = '-m';
+            $cmd[] = $message;
         }
 
         $this->process = $this->doExec(
-            vsprintf($cmdPattern, $cmdArgs),
+            $cmd,
             [
                 'exitCode' => false,
             ]
@@ -318,14 +320,13 @@ class FeatureContext implements Context
      */
     public function doGitPush(string $remote, string $branch)
     {
-        $cmd = vsprintf('%s push %s %s', [
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($remote),
-            escapeshellarg($branch)
-        ]);
-
         $this->process = $this->doExec(
-            $cmd,
+            [
+                static::$gitExecutable,
+                'push',
+                $remote,
+                $branch,
+            ],
             [
                 'exitCode' => false,
             ]
@@ -351,11 +352,12 @@ class FeatureContext implements Context
      */
     public function doGitCheckoutNewBranch(string $branch)
     {
-        $cmd = sprintf(
-            '%s checkout -b %s',
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($branch)
-        );
+        $cmd = [
+            static::$gitExecutable,
+            'checkout',
+            '-b',
+            $branch,
+        ];
         $this->process = $this->doExec($cmd);
     }
 
@@ -364,12 +366,13 @@ class FeatureContext implements Context
      */
     public function doGitCheckoutFile(string $branch, string $file)
     {
-        $cmd = sprintf(
-            '%s checkout %s -- %s',
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($branch),
-            escapeshellarg($file)
-        );
+        $cmd = [
+            static::$gitExecutable,
+            'checkout',
+            $branch,
+            '--',
+            $file,
+        ];
         $this->process = $this->doExec($cmd);
     }
 
@@ -378,11 +381,11 @@ class FeatureContext implements Context
      */
     public function doRunGitCheckout(string $branch)
     {
-        $cmd = sprintf(
-            '%s checkout %s',
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($branch)
-        );
+        $cmd = [
+            static::$gitExecutable,
+            'checkout',
+            $branch
+        ];
         $this->process = $this->doExec($cmd);
     }
 
@@ -391,11 +394,11 @@ class FeatureContext implements Context
      */
     public function doGitBranchCreate(string $branch)
     {
-        $cmd = sprintf(
-            '%s branch %s',
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($branch)
-        );
+        $cmd = [
+            static::$gitExecutable,
+            'branch',
+            $branch
+        ];
         $this->process = $this->doExec($cmd);
     }
 
@@ -410,19 +413,18 @@ class FeatureContext implements Context
      */
     public function doRunGitRebase(string $upstream, ?string $branch = null)
     {
-        $cmdPattern = '%s rebase %s';
-        $cmdArgs = [
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($upstream),
+        $cmd = [
+            static::$gitExecutable,
+            'rebase',
+            $upstream,
         ];
 
         if ($branch) {
-            $cmdPattern .= ' %s';
-            $cmdArgs[] = escapeshellarg($branch);
+            $cmd[] = $branch;
         }
 
         $this->process = $this->doExec(
-            vsprintf($cmdPattern, $cmdArgs),
+            $cmd,
             [
                 'exitCode' => false,
             ]
@@ -434,12 +436,13 @@ class FeatureContext implements Context
      */
     public function doGitMerge(string $branch, string $message)
     {
-        $cmd = sprintf(
-            '%s merge %s -m %s',
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($branch),
-            escapeshellarg($message)
-        );
+        $cmd = [
+            static::$gitExecutable,
+            'merge',
+            $branch,
+            '-m',
+            $message,
+        ];
         $this->process = $this->doExec($cmd);
     }
 
@@ -448,12 +451,15 @@ class FeatureContext implements Context
      */
     public function doGitMergeSquash(string $branch, string $message)
     {
-        $cmd = sprintf(
-            '%s merge %s --ff --squash -m %s',
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($branch),
-            escapeshellarg($message)
-        );
+        $cmd = [
+            static::$gitExecutable,
+            'merge',
+            $branch,
+            '--ff',
+            '--squash',
+            '-m',
+            $message
+        ];
         $this->process = $this->doExec($cmd);
     }
 
@@ -468,7 +474,7 @@ class FeatureContext implements Context
     /**
      * @Given /^I wait for (?P<amount>\d+) seconds$/
      */
-    public function doWait(int $amount)
+    public function doWait(string $amount)
     {
         sleep(intval($amount));
     }
@@ -478,8 +484,8 @@ class FeatureContext implements Context
      */
     public function assertExitCodeEquals(string $exitCode)
     {
-        Assert::assertEquals(
-            $exitCode,
+        Assert::assertSame(
+            (int) $exitCode,
             $this->process->getExitCode(),
             "Exit codes don't match"
         );
@@ -495,7 +501,7 @@ class FeatureContext implements Context
         $output = $this->trimTrailingWhitespaces($this->process->getOutput());
         $output = $this->removeColorCodes($output);
 
-        Assert::assertContains($string->getRaw(), $output);
+        Assert::assertStringContainsString($string->getRaw(), $output);
     }
 
     /**
@@ -508,29 +514,33 @@ class FeatureContext implements Context
         $output = $this->trimTrailingWhitespaces($this->process->getErrorOutput());
         $output = $this->removeColorCodes($output);
 
-        Assert::assertContains($string->getRaw(), $output);
+        Assert::assertStringContainsString($string->getRaw(), $output);
     }
 
     /**
      * @Given /^the number of commits is (?P<expected>\d+)$/
      */
-    public function assertGitLogLength(int $expected)
+    public function assertGitLogLength(string $expected)
     {
-        $cmdPattern = '%s log --format=%s | cat';
-        $cmdArgs = [
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg('%h'),
+        $cmd = [
+            'bash',
+            '-c',
+            sprintf(
+                '%s log --format=%s | cat',
+                static::$gitExecutable,
+                '%h'
+            ),
         ];
-        $git_log = $this->doExec(
-            vsprintf($cmdPattern, $cmdArgs),
+        $gitLog = $this->doExec(
+            $cmd,
             [
                 'exitCode' => false,
             ]
         );
 
-        Assert::assertEquals(
-            $expected,
-            substr_count($git_log->getOutput(), "\n")
+        Assert::assertSame(
+            (int) $expected,
+            substr_count($gitLog->getOutput(), "\n")
         );
     }
 
@@ -539,12 +549,14 @@ class FeatureContext implements Context
      */
     public function assertGitLogIsNotEmpty()
     {
-        $cmdPattern = '%s log -1';
-        $cmdArgs = [
-            escapeshellcmd(static::$gitExecutable),
+        $cmd = [
+            static::$gitExecutable,
+            'log',
+            '-1',
         ];
-        $git_log = $this->doExec(vsprintf($cmdPattern, $cmdArgs));
-        Assert::assertNotEquals('', $git_log->getOutput());
+
+        $gitLog = $this->doExec($cmd);
+        Assert::assertNotEquals('', $gitLog->getOutput());
     }
 
     /**
@@ -552,11 +564,12 @@ class FeatureContext implements Context
      */
     public function assertGitLogIsEmpty()
     {
-        $cmdPattern = '%s log -1';
-        $cmdArgs = [
-            escapeshellcmd(static::$gitExecutable),
+        $cmd = [
+            static::$gitExecutable,
+            'log',
+            '-1',
         ];
-        $gitLog = $this->doExec(vsprintf($cmdPattern, $cmdArgs));
+        $gitLog = $this->doExec($cmd);
         Assert::assertEquals('', $gitLog->getOutput());
     }
 
@@ -570,10 +583,8 @@ class FeatureContext implements Context
 
     protected function validateWorkspacePath(string $normalizedPath)
     {
-        if (strpos($normalizedPath, "{$this->scenarioRootDir}/workspace")
-            !== 0
-        ) {
-            throw new \InvalidArgumentException('Out of working directory.');
+        if (strpos($normalizedPath, "{$this->scenarioRootDir}/workspace") !== 0) {
+            throw new InvalidArgumentException('Out of working directory.');
         }
     }
 
@@ -592,9 +603,32 @@ class FeatureContext implements Context
         ]);
         static::$fs->mirror($projectTemplate, $projectCacheDir);
 
-        $package = json_decode(file_get_contents("$projectCacheDir/composer.json"), true);
-        $package['repositories']['local']['url'] = static::$projectRootDir;
-        static::$fs->dumpFile("$projectCacheDir/composer.json", json_encode($package, JSON_PRETTY_PRINT));
+        $composerJson = json_decode(file_get_contents("$projectCacheDir/composer.json"), true);
+        $composerJson['repositories']['local']['url'] = static::$projectRootDir;
+        static::$fs->dumpFile(
+            "$projectCacheDir/composer.json",
+            json_encode($composerJson, JSON_PRETTY_PRINT)
+        );
+
+        $composerLock = json_decode(file_get_contents("$projectCacheDir/composer.lock"), true);
+        foreach ($composerLock['packages'] as $i => $package) {
+            if ($package['name'] !== 'sweetchuck/git-hooks') {
+                continue;
+            }
+
+            $composerLock['packages'][$i]['dist'] = [
+                'type' => 'path',
+                'url' => static::$projectRootDir,
+                'reference' => 'abcdefg',
+            ];
+
+            static::$fs->dumpFile(
+                "$projectCacheDir/composer.lock",
+                json_encode($composerLock, JSON_PRETTY_PRINT)
+            );
+
+            break;
+        }
 
         if ($projectType !== 'basic') {
             $master = implode('/', [
@@ -613,7 +647,13 @@ class FeatureContext implements Context
             }
         }
 
-        $this->doExecCwd($projectCacheDir, 'composer install --no-interaction');
+        $cmd = [
+            'composer',
+            'install',
+            '--no-interaction',
+        ];
+
+        $this->doExecCwd($projectCacheDir, $cmd);
     }
 
     /**
@@ -621,25 +661,24 @@ class FeatureContext implements Context
      */
     protected function doGitInit(string $dir, string $tpl, bool $bare)
     {
-        $this->doChangeWorkingDirectory($dir);
-        $cmdPattern = '%s init --template=%s';
-        $cmdArgs = [
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg(static::getGitTemplateDir($tpl)),
+        $cmd = [
+            static::$gitExecutable,
+            'init',
+            '--template=' . static::getGitTemplateDir($tpl),
         ];
+        $this->doChangeWorkingDirectory($dir);
+
 
         if ($bare) {
-            $cmdPattern .= ' --bare';
+            $cmd[] = '--bare';
             $gitDir = '';
         } else {
             $gitDir = '.git/';
         }
 
-        $cmd = vsprintf($cmdPattern, $cmdArgs);
-
         $gitInit = $this->doExec($cmd);
         $cwdReal = realpath($this->cwd);
-        Assert::assertEquals(
+        Assert::assertSame(
             "Initialized empty Git repository in $cwdReal/$gitDir\n",
             $gitInit->getOutput()
         );
@@ -647,16 +686,17 @@ class FeatureContext implements Context
 
     protected function doGitConfigSet(string $name, string $value)
     {
-        $cmd = sprintf(
-            '%s config %s %s',
-            escapeshellcmd(static::$gitExecutable),
-            escapeshellarg($name),
-            escapeshellarg($value)
-        );
+        $cmd = [
+            static::$gitExecutable,
+            'config',
+            $name,
+            $value,
+        ];
+
         $this->process = $this->doExec($cmd);
     }
 
-    protected function doExecCwd(string $wd, string $cmd, array $check = []): Process
+    protected function doExecCwd(string $wd, array $cmd, array $check = []): Process
     {
         $cwdBackup = $this->cwd;
         chdir($wd);
@@ -666,7 +706,7 @@ class FeatureContext implements Context
         return $return;
     }
 
-    protected function doExec(string $cmd, array $check = []): Process
+    protected function doExec(array $cmd, array $check = []): Process
     {
         $check += [
             'exitCode' => true,
@@ -680,7 +720,7 @@ class FeatureContext implements Context
         }
 
         if ($check['stdErr'] !== false) {
-            Assert::assertEquals($check['stdErr'], $process->getErrorOutput());
+            Assert::assertSame($check['stdErr'], $process->getErrorOutput());
         }
 
         return $process;

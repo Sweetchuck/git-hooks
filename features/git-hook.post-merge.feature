@@ -13,7 +13,7 @@ Feature: Test for post-merge hook.
     """
     And I run git checkout "master"
 
-  Scenario: Normal merge
+  Scenario: post-merge - normal merge
     Given I run git merge "feature-01" -m "Merge feature-01 into master"
     Then the stdErr should contains the following text:
     """
@@ -21,7 +21,7 @@ Feature: Test for post-merge hook.
     >  Squash: 0
     """
 
-  Scenario: Squash merge
+  Scenario: post-merge - squash merge
     Given I run git merge "feature-01" --squash -m "Merge feature-01 into master"
     Then the stdErr should contains the following text:
     """

@@ -1,0 +1,148 @@
+
+version: 2.1
+
+.env_composer: &env_composer
+    COMPOSER_NO_INTERACTION: '1'
+    COMPOSER_MEMORY_LIMIT: '-1'
+    COMPOSER_DISABLE_XDEBUG_WARN: '1'
+
+orbs:
+    codecov: codecov/codecov@1.0.5
+
+executors:
+    php704:
+        environment:
+            <<: *env_composer
+
+        docker:
+            -
+                name: 'main'
+                image: 'circleci/php:7.4'
+
+    php703:
+        environment:
+            <<: *env_composer
+
+        docker:
+            -
+                name: 'main'
+                image: 'circleci/php:7.3'
+
+    php702:
+        environment:
+            <<: *env_composer
+
+        docker:
+            -
+                name: 'main'
+                image: 'circleci/php:7.2'
+
+commands:
+    composer_install:
+        description: 'Install Composer dependencies with cache restore and save'
+        steps:
+            -
+                restore_cache:
+                    name: 'Composer - cache restore'
+                    keys:
+                        - 'composer-{{ checksum "./composer.lock" }}-1'
+
+            -
+                run:
+                    name: 'Composer - install'
+                    command: >
+                        [[ -d "$(composer config vendor-dir)" ]] || composer install --no-progress
+
+            -
+                save_cache:
+                    name: 'Composer - cache save'
+                    key: 'composer-{{ checksum "./composer.lock" }}-1'
+                    paths:
+                        - './bin/'
+                        - './vendor/'
+                        - '~/.composer/cache/'
+
+
+    lint:
+        description: 'Run linters'
+        steps:
+            -
+                run:
+                    name: 'Run linters'
+                    command: 'bin/robo lint'
+
+    test:
+        description: 'Run tests'
+        steps:
+            -
+                run:
+                    name: 'Git config user.name and user.email'
+                    command: |
+                        git config --global user.name 'Circle CI'
+                        git config --global user.email 'circle.ci@example.com'
+            -
+                run:
+                    name: 'Run Behat tests'
+                    command: 'bin/robo test'
+            -
+                store_test_results:
+                    name: 'Store unit test results'
+                    path: './reports/machine/junit'
+
+jobs:
+    build:
+        executor: 'php702'
+        working_directory: '~/repo'
+        steps:
+            - 'checkout'
+            - 'composer_install'
+    lint:
+        executor: 'php702'
+        working_directory: '~/repo'
+        steps:
+            - 'checkout'
+            - 'composer_install'
+            - 'lint'
+    test_php704:
+        executor: 'php704'
+        working_directory: '~/repo'
+        steps:
+            - 'checkout'
+            - 'composer_install'
+            - 'test'
+    test_php703:
+        executor: 'php703'
+        working_directory: '~/repo'
+        steps:
+            - 'checkout'
+            - 'composer_install'
+            - 'test'
+    test_php702:
+        executor: 'php702'
+        working_directory: '~/repo'
+        steps:
+            - 'checkout'
+            - 'composer_install'
+            - 'test'
+
+workflows:
+    lint_and_test:
+        jobs:
+            -
+                build: {}
+            -
+                lint:
+                    requires:
+                        - build
+            -
+                test_php704:
+                    requires:
+                        - build
+            -
+                test_php703:
+                    requires:
+                        - build
+            -
+                test_php702:
+                    requires:
+                        - build

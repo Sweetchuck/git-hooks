@@ -14,8 +14,7 @@
         "sweetchuck/git-hooks": "*"
     },
     "require-dev": {
-        "consolidation/robo": "~1.0",
-        "symfony/event-dispatcher": "~3.0"
+        "consolidation/robo": "^2.0"
     },
     "scripts": {
         "post-install-cmd": "\\Sweetchuck\\GitHooks\\Composer\\Scripts::postInstallCmd"

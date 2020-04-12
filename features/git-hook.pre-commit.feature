@@ -1,6 +1,6 @@
 Feature: Test for pre-commit hook.
 
-  Scenario Outline: Positive & negative.
+  Scenario Outline: pre-commit - positive and negative
     Given I create a "basic" project in "p-01" directory
     And I create a <file_name> file
     And I run git add <file_name>

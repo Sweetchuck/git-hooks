@@ -1,22 +1,22 @@
 {
     "name": "sweetchuck/git-hooks",
     "description": "Provide a bridge between Git hooks and scripts under VCS.",
-    "license": "GPL-2.0",
+    "license": "GPL-2.0-or-later",
     "config": {
         "bin-dir": "bin",
         "sort-packages": true
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "require": {},
+    "require": {
+        "php": ">=7.2",
+        "ext-json": "*"
+    },
     "require-dev": {
-        "php": ">=7.1",
-        "behat/behat": "~3.1",
-        "consolidation/robo": "~1.0",
-        "phpunit/phpunit": "^6.2",
-        "squizlabs/php_codesniffer": "~2.6",
-        "symfony/filesystem": "~3.1",
-        "symfony/process": "~3.1"
+        "behat/behat": "^3.6",
+        "consolidation/robo": "^2.0",
+        "phpunit/phpunit": "^9.1",
+        "squizlabs/php_codesniffer": "^3.5"
     },
     "autoload": {
         "psr-4": {

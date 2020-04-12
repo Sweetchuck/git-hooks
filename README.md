@@ -1,10 +1,12 @@
 
-# Trigger custom scripts from Git hooks
+# sweetchuck/git-hooks
 
-This package provides a bridge between the un-versioned `.git/hooks/*` scripts
+Triggers custom scripts from Git hooks.
+
+This package provides a bridge between the un-versioned `./.git/hooks/*` scripts
 and scripts in your Git repository.
 
-[![Build Status](https://travis-ci.org/Sweetchuck/git-hooks.svg?branch=master)](https://travis-ci.org/Sweetchuck/git-hooks)
+[![CircleCI](https://circleci.com/gh/Sweetchuck/git-hooks.svg?style=svg)](https://circleci.com/gh/Sweetchuck/git-hooks)
 
 
 ## When to use
@@ -15,34 +17,38 @@ teammates then this is the tool you are looking for.
 
 ## How to use
 
-1. Step into you existing package's directory (or create a new one with `git init && composer init`)
-1. Run <pre><code>composer require 'sweetchuck/git-hooks'</code></pre>
-1. Then you have two option
-    1. Relay on the git hooks scripts which are shipped with this package 
-       and implement the logic in your `.git-hooks` file.
-    1. Or create a `git-hooks` directory and create git hook files (`git-hooks/pre-commit`) in it.
-1. And trigger the deployment script on the `post-install-cmd` event.
+1. Step into you existing package's directory (or create a new one with `git
+   init && composer init`)
+2. Run `composer require 'sweetchuck/git-hooks'`
+3. Then you have two option
+   1. Relay on the git hooks scripts which are shipped with this packag and
+      implement the logic in your `./.git-hooks` file.
+   2. Or create a `./git-hooks` directory and create Git hook files in it. (eg:
+      `./git-hooks/pre-commit`)
+4. The deployment script will be automatically triggered by the
+   `post-install-cmd` Composer event.
 
 
 ## Example composer.json
 
 ```JSON
 {
-    "name": "my/package-01",
-    "description": "My description.",
-    "type": "library",
-    "license": "GPL-2.0",
-    "minimum-stability": "dev",
-    "prefer-stable": true,
     "require": {
         "sweetchuck/git-hooks": "dev-master"
     },
     "scripts": {
         "post-install-cmd": [
-            "@deploy-git-hooks"
-        ],
-        "deploy-git-hooks": "\\Sweetchuck\\GitHooks\\Main::deploy"
-    },
+            "\\Sweetchuck\\GitHooks\\Composer\\Scripts::postInstallCmd"
+        ]
+    }
+}
+```
+
+
+## Configuration
+
+```json
+{
     "extra": {
         "sweetchuck/git-hooks": {
             "core.hooksPath": "git-hooks",
@@ -53,49 +59,51 @@ teammates then this is the tool you are looking for.
 ```
 
 
-# Configuration
+### Configuration - symlink
 
-In the example `composer.json` above you can see two configurable option 
-under the `"extra": {"sweetchuck/git-hooks": {}}`.
+Type: boolean
 
+Default value: false
 
-## Configuration symlink
-
-This option will be used when you have a `git-hooks` directory.
+Copy or symlink Git hook files from the original location to the `./.git/hooks`.
 
 
-## Configuration core.hooksPath
+### Configuration - core.hooksPath
 
-When this option is `true` then it allows to use the new feature of the Git v2.9
+Type: string
 
-Actually if you and all of your development team use Git v2.9 then you don't need
-this package at all.
+Default value: git-hooks
+
+When this option is not empty then it allows to use the new feature of the Git
+v2.9
 
 
-# Example .git-hooks for Robo task runner
+## Example ./.git-hooks file
+
+The file below runs a Robo command corresponding the name of the current Git
+hook.
 
 ```bash
 #!/usr/bin/env bash
-
-hook=$(basename "${0}")
 
 # @todo Better detection for executables: php, composer.phar and robo.
 robo="$(composer config 'bin-dir')/robo"
 
 # Exit without error if "robo" doesn't exists or it has no corresponding task.
 test -x "$robo" || exit 0
-"$robo" help "githook:$hook" 1> /dev/null 2>&1 || exit 0
+"$robo" help "githook:$sghHookName" 1> /dev/null 2>&1 || exit 0
 
-if [ "$hasInput" = 'true' ]; then
-    "$robo" "githook:$hook" $@ <<< $(</dev/stdin) || exit $?
+if [ "$sghHasInput" = 'true' ]; then
+    "$robo" "githook:$sghHookName" $@ <<< $(</dev/stdin) || exit $?
 else
-    "$robo" "githook:$hook" $@ || exit $?
+    "$robo" "githook:$sghHookName" $@ || exit $?
 fi
 
 exit 0
 ```
 
-## Example RoboFile.php
+
+## Example ./RoboFile.php
 
 ```php
 <?php
@@ -120,5 +128,4 @@ class RoboFile extends \Robo\Tasks
 
 ## Links
 
-* https://github.com/BernardoSilva/git-hooks-installer-plugin
-* https://github.com/Codegyre/Robo/blob/master/docs/index.md
+* https://robo.li/

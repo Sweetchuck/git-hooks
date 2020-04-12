@@ -1,6 +1,6 @@
 Feature: Test for pre-push hook.
 
-  Scenario Outline: Single branch - Positive & Negative
+  Scenario Outline: pre-push - Single branch with positive and negative outcome
     Given I initialize a bare Git repo in directory "b-01"
     And I am in the ".." directory
     And I create a "basic" project in "p-01" directory

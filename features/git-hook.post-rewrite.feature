@@ -18,7 +18,7 @@ Feature: Test for post-rewrite hook.
     @todo
     """
 
-  Scenario: Current branch
+  Scenario: post-rewrite - current branch
     And I run git rebase "production"
     Then the exit code should be 0
     And the stdErr should contains the following text:
@@ -29,7 +29,7 @@ Feature: Test for post-rewrite hook.
     >  Lines in stdInput: "1"
     """
 
-  Scenario: Other branch
+  Scenario: post-rewrite - other branch
     And I run git checkout "master"
     And I run git rebase "production" "feature-1"
     Then the exit code should be 0
