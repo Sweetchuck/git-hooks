@@ -16,14 +16,21 @@
         "composer-plugin-api": "^1.1"
     },
     "require-dev": {
-        "behat/behat": "^3.6",
+        "codeception/codeception": "^4.1",
+        "codeception/module-asserts": "^1.1",
         "consolidation/robo": "^2.0",
-        "phpunit/phpunit": "^8.0",
         "squizlabs/php_codesniffer": "^3.5"
     },
     "autoload": {
         "psr-4": {
             "Sweetchuck\\GitHooks\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Sweetchuck\\GitHooks\\Test\\": "tests/_support/",
+            "Sweetchuck\\GitHooks\\Tests\\Acceptance\\": "tests/acceptance/",
+            "Sweetchuck\\GitHooks\\Tests\\Unit\\": "tests/unit/"
         }
     },
     "extra": {

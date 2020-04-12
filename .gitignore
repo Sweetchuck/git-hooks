@@ -1,8 +1,18 @@
 
 /bin/
-/fixtures/project-template/*/vendor/
+
 /reports/
+
+/tests/_data/fixtures/project-template/*/vendor/
+/tests/_envs/*
+!/tests/_envs/example.yml
+/tests/_output/
+/tests/_support/_generated/
+/tests/*.suite.yml
+
 /vendor/
 
+/.git-hooks-local
+/codeception.yml
 /sweetchuck-git-hooks-*.tar
 /sweetchuck-git-hooks-*.zip

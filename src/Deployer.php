@@ -4,17 +4,26 @@ namespace Sweetchuck\GitHooks;
 
 use DirectoryIterator;
 use Exception;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Filesystem\Filesystem;
 
-class Deployer
+class Deployer implements LoggerAwareInterface
 {
+
+    use LoggerAwareTrait;
 
     /**
      * @var int
      */
     const EXIT_CODE_NO_GIT = 1;
+
+    /**
+     * @var string
+     */
+    protected $projectRoot = '.';
 
     /**
      * @var string
@@ -53,10 +62,16 @@ class Deployer
      */
     protected $fs;
 
-    public function __construct(?LoggerInterface $logger = null, ?Filesystem $fs = null)
+    public function __construct(?LoggerInterface $logger = null, ?Filesystem $fs = null, string $projectRoot = '.')
     {
-        $this->logger = $logger ?: new NullLogger();
+        $this->logger = $logger;
         $this->fs = $fs ?: new Filesystem();
+        $this->projectRoot = $projectRoot;
+    }
+
+    public function getLogger(): ?LoggerInterface
+    {
+        return $this->logger;
     }
 
     public function deploy(array $config): array
@@ -81,6 +96,15 @@ class Deployer
         $this
             ->initSelfPackage()
             ->initGitVersion();
+
+        return $this;
+    }
+
+    protected function initLogger()
+    {
+        if ($this->getLogger() === null) {
+            $this->setLogger(new NullLogger());
+        }
 
         return $this;
     }
@@ -126,32 +150,49 @@ class Deployer
         try {
             $gitDir = $this->getGitDir();
         } catch (Exception $e) {
-            $this->logger->warning('Git hooks haven\'t been deployed because of lack of $GIT_DIR');
+            $this->logger->warning('Git hooks deployment skipped because of the absence of $GIT_DIR');
 
             return $this;
         }
 
         try {
             if ($this->coreHooksPathSupported()) {
-                $this->gitConfigSet('core.hooksPath', $this->config['core.hooksPath']);
-                $this->logger->debug('Git hooks have been deployed by the core.hooksPath configuration.');
-
-                return $this;
+                $this->doMainConfig();
+            } elseif ($this->config['symlink']) {
+                $this->doMainSymlink($gitDir);
+            } else {
+                $this->doMainCopy($gitDir);
             }
 
-            if ($this->config['symlink']) {
-                $this->symlinkHooksDir($this->config['core.hooksPath'], "$gitDir/hooks");
-                $this->logger->debug('Git hooks have been symbolically linked.');
-
-                return $this;
-            }
-
-            $this->copyHooksDir($this->config['core.hooksPath'], "$gitDir/hooks");
-            $this->logger->debug('Git hooks have been deployed by coping the script files.');
+            return $this;
         } catch (Exception $e) {
             $this->result['exitCode'] = 1;
             $this->logger->error($e->getMessage());
         }
+
+        return $this;
+    }
+
+    protected function doMainConfig()
+    {
+        $this->gitConfigSet('core.hooksPath', $this->config['core.hooksPath']);
+        $this->logger->debug('Git hooks have been deployed by the core.hooksPath configuration.');
+
+        return $this;
+    }
+
+    protected function doMainSymlink(string $gitDir)
+    {
+        $this->symlinkHooksDir($this->config['core.hooksPath'], "$gitDir/hooks");
+        $this->logger->debug('Git hooks have been symbolically linked.');
+
+        return $this;
+    }
+
+    protected function doMainCopy(string $gitDir)
+    {
+        $this->copyHooksDir($this->config['core.hooksPath'], "$gitDir/hooks");
+        $this->logger->debug('Git hooks have been deployed by coping the script files.');
 
         return $this;
     }
@@ -171,10 +212,11 @@ class Deployer
         return version_compare($this->gitVersion, '2.9', '>=');
     }
 
-    protected function gitConfigSet($name, $value)
+    protected function gitConfigSet(string $name, string $value)
     {
         $command = sprintf(
-            '%s config %s %s',
+            'cd %s && %s config %s %s',
+            escapeshellarg($this->projectRoot),
             escapeshellcmd($this->gitExecutable),
             escapeshellarg($name),
             escapeshellarg($value)
@@ -218,7 +260,8 @@ class Deployer
     protected function getGitDir()
     {
         $command = sprintf(
-            '%s rev-parse --git-dir',
+            'cd %s && %s rev-parse --git-dir',
+            escapeshellarg($this->projectRoot),
             escapeshellcmd($this->gitExecutable)
         );
 
@@ -230,6 +273,6 @@ class Deployer
             throw new Exception('The $GIT_DIR cannot be detected', 3);
         }
 
-        return realpath(rtrim(reset($output), "\n"));
+        return realpath($this->projectRoot . '/' . rtrim(reset($output), "\n"));
     }
 }

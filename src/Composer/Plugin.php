@@ -4,6 +4,7 @@ namespace Sweetchuck\GitHooks\Composer;
 
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
+use Composer\IO\ConsoleIO;
 use Composer\IO\IOInterface;
 use Composer\Plugin\Capability\CommandProvider as ComposerCommandProvider;
 use Composer\Plugin\Capable;
@@ -30,6 +31,16 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
      * @var \Composer\IO\IOInterface
      */
     protected $io;
+
+    /**
+     * @var \Sweetchuck\GitHooks\DeployConfigReader
+     */
+    protected $deployConfigReader;
+
+    /**
+     * @var \Sweetchuck\GitHooks\Deployer
+     */
+    protected $deployer;
 
     /**
      * @inheritDoc
@@ -88,12 +99,11 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
     {
         $package = $event->getComposer()->getPackage();
         $extra = $package->getExtra();
-        $deployConfigReader = new DeployConfigReader();
-        $config = $deployConfigReader->getConfig(null, $extra[$package->getName()] ?? []);
+        $config = $this->deployConfigReader->getConfig(null, $extra[$package->getName()] ?? []);
         /** @var \Composer\IO\ConsoleIO $io */
         $io = $event->getIO();
-        $deployer = new Deployer($io);
+        $this->deployer->setLogger($io);
 
-        return $deployer->deploy($config);
+        return $this->deployer->deploy($config);
     }
 }
