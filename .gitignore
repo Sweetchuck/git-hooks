@@ -12,5 +12,6 @@
 
 /.git-hooks-local
 /codeception.yml
+/phpcs.xml
 /sweetchuck-git-hooks-*.tar
 /sweetchuck-git-hooks-*.zip

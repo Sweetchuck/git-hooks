@@ -19,9 +19,9 @@ teammates then this is the tool you are looking for.
 
 1. Step into you existing package's directory (or create a new one with `git
    init && composer init`)
-2. Run `composer require 'sweetchuck/git-hooks'`
+2. Run `composer require --dev 'sweetchuck/git-hooks'`
 3. Then you have two option
-   1. Relay on the git hooks scripts which are shipped with this packag and
+   1. Relay on Git hooks scripts which are shipped with this package and
       implement the logic in your `./.git-hooks` file.
    2. Or create a `./git-hooks` directory and create Git hook files in it. (eg:
       `./git-hooks/pre-commit`)
@@ -29,77 +29,80 @@ teammates then this is the tool you are looking for.
    `post-install-cmd` Composer event.
 
 
-## Example composer.json
-
-```JSON
-{
-    "require": {
-        "sweetchuck/git-hooks": "dev-master"
-    },
-    "scripts": {
-        "post-install-cmd": [
-            "\\Sweetchuck\\GitHooks\\Composer\\Scripts::postInstallCmd"
-        ]
-    }
-}
-```
-
-
 ## Configuration
 
+Example composer.json file:
 ```json
 {
     "extra": {
         "sweetchuck/git-hooks": {
-            "core.hooksPath": "git-hooks",
-            "symlink": false
+            "core.hooksPath": "./git-hooks",
+            "symlink": true
         }
     }
 }
 ```
 
 
-### Configuration - symlink
-
-Type: boolean
-
-Default value: false
-
-Copy or symlink Git hook files from the original location to the `./.git/hooks`.
-
-
 ### Configuration - core.hooksPath
 
 Type: string
 
-Default value: git-hooks
+Default value: `vendor/sweetchuck/git-hooks/git-hooks` (dynamically detected)
 
-When this option is not empty then it allows to use the new feature of the Git
-v2.9
+If the Git version is >= v2.9 then this value will be used to set `git config
+core.hooksPath <FOO>`. If Git is older than 2.9 then the content of this
+directory will be symbolically linked or copied to `./.git/hooks` directory.
+
+
+### Configuration - symlink
+
+Type: boolean
+
+Default value: `false`
+
+This configuration option will be used only if Git version is older than v2.9.
+Copy or symlink Git hook files from the original location (provided by the
+`core.hooksPath` configuration) to the `./.git/hooks`.
 
 
 ## Example ./.git-hooks file
 
-The file below runs a Robo command corresponding the name of the current Git
-hook.
+If you use the Git hooks script from this package
+(`vendor/sweetchuck/git-hooks/git-hooks`) you will need custom script which
+catches Git hooks add triggers something really useful.
 
+Copy the content below into `./.git-hooks`
 ```bash
 #!/usr/bin/env bash
 
-# @todo Better detection for executables: php, composer.phar and robo.
-robo="$(composer config 'bin-dir')/robo"
+echo "BEGIN Git hook: ${sghHookName}"
+
+function sghExit ()
+{
+    echo "END   Git hook: ${sghHookName}"
+
+    exit $1
+}
+
+# @todo Better detection for executables: php, composer.phar.
+sghRobo="$(composer config 'bin-dir')/robo"
+
+test -s "${sghBridge}.local" && . "${sghBridge}.local"
+
+sghTask="githook:${sghHookName}"
 
 # Exit without error if "robo" doesn't exists or it has no corresponding task.
-test -x "$robo" || exit 0
-"$robo" help "githook:$sghHookName" 1> /dev/null 2>&1 || exit 0
+test -x "$sghRobo" || sghExit 0
+"${sghRobo}" help "${sghTask}" 1> /dev/null 2>&1 || sghExit 0
 
 if [ "$sghHasInput" = 'true' ]; then
-    "$robo" "githook:$sghHookName" $@ <<< $(</dev/stdin) || exit $?
+    "$sghRobo" "${sghTask}" $@ <<< $(</dev/stdin) || sghExit $?
 else
-    "$robo" "githook:$sghHookName" $@ || exit $?
+    "$sghRobo" "${sghTask}" $@ || sghExit $?
 fi
 
-exit 0
+sghExit 0
 ```
 
 
@@ -124,8 +127,3 @@ class RoboFile extends \Robo\Tasks
     }
 }
 ```
-
-
-## Links
-
-* https://robo.li/
