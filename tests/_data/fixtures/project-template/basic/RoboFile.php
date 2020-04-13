@@ -5,9 +5,7 @@ use Robo\Result;
 use Robo\Task\BaseTask;
 use Robo\Tasks;
 
-// @codingStandardsIgnoreStart
 class RoboFile extends Tasks
-    // @codingStandardsIgnoreEnd
 {
     use \PredestinedLoadTasks;
 
@@ -281,9 +279,7 @@ class RoboFile extends Tasks
     }
 }
 
-// @codingStandardsIgnoreStart
 trait PredestinedLoadTasks
-    // @codingStandardsIgnoreEnd
 {
 
     /**
@@ -295,9 +291,7 @@ trait PredestinedLoadTasks
     }
 }
 
-// @codingStandardsIgnoreStart
 class PredestinedTask extends BaseTask
-    // @codingStandardsIgnoreEnd
 {
 
     /**

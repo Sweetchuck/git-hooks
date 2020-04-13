@@ -1,0 +1,27 @@
+
+namespace: Sweetchuck\GitHooks\Test
+
+paths:
+    data: tests/_data
+    envs: tests/_envs
+    output: tests/_output
+    support: tests/_support
+    tests: tests
+
+settings:
+    colors: true
+    memory_limit: '1024M'
+    shuffle: false
+    lint: false
+
+extensions:
+    enabled:
+        - 'Codeception\Extension\RunFailed'
+
+coverage:
+    enabled: true
+    show_uncovered: true
+    low_limit: 60
+    high_limit: 90
+    include:
+        - 'src/*'

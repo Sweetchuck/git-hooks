@@ -1,4 +1,5 @@
 {
+    "type": "composer-plugin",
     "name": "sweetchuck/git-hooks",
     "description": "Provide a bridge between Git hooks and scripts under VCS.",
     "license": "GPL-2.0-or-later",
@@ -10,25 +11,45 @@
     "prefer-stable": true,
     "require": {
         "php": ">=7.2",
-        "ext-json": "*"
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "composer-plugin-api": "^1.1"
     },
     "require-dev": {
-        "behat/behat": "^3.6",
+        "codeception/codeception": "^4.1",
+        "codeception/module-asserts": "^1.1",
+        "composer/composer": "^1.10",
         "consolidation/robo": "^2.0",
-        "phpunit/phpunit": "^8.0",
-        "squizlabs/php_codesniffer": "^3.5"
+        "squizlabs/php_codesniffer": "^3.5",
+        "sweetchuck/robo-git": "^0.2.0",
+        "sweetchuck/robo-phpcs": "^0.1.0",
+        "webmozart/path-util": "^2.3"
     },
     "autoload": {
         "psr-4": {
             "Sweetchuck\\GitHooks\\": "src/"
         }
     },
-    "scripts": {
-        "post-install-cmd": "\\Sweetchuck\\GitHooks\\Composer\\Scripts::postInstallCmd"
+    "autoload-dev": {
+        "psr-4": {
+            "Sweetchuck\\GitHooks\\Test\\": "tests/_support/",
+            "Sweetchuck\\GitHooks\\Tests\\Acceptance\\": "tests/acceptance/",
+            "Sweetchuck\\GitHooks\\Tests\\Unit\\": "tests/unit/"
+        }
     },
     "extra": {
+        "class": "\\Sweetchuck\\GitHooks\\Composer\\Plugin",
         "sweetchuck/git-hooks": {
             "symlink": true
         }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@git-hooks:deploy"
+        ],
+        "post-update-cmd": [
+            "@git-hooks:deploy"
+        ],
+        "git-hooks:deploy": "git config core.hooksPath ./git-hooks"
     }
 }

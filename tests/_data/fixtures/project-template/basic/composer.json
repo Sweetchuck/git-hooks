@@ -2,6 +2,7 @@
     "name": "sweetchuck/git-hooks-helper-project-basic",
     "description": "Helper project for sweetchuck/git-hooks",
     "license": "proprietary",
+    "type": "project",
     "minimum-stability": "dev",
     "prefer-stable": true,
     "repositories": {
@@ -15,8 +16,5 @@
     },
     "require-dev": {
         "consolidation/robo": "^2.0"
-    },
-    "scripts": {
-        "post-install-cmd": "\\Sweetchuck\\GitHooks\\Composer\\Scripts::postInstallCmd"
     }
 }

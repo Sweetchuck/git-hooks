@@ -1,12 +1,40 @@
 <?php
 
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerAwareTrait;
 use Robo\Tasks;
+use Sweetchuck\LintReport\Reporter\BaseReporter;
+use League\Container\ContainerInterface;
+use Robo\Collection\CollectionBuilder;
+use Sweetchuck\Robo\Git\GitTaskLoader;
+use Sweetchuck\Robo\Phpcs\PhpcsTaskLoader;
+use Symfony\Component\Console\Output\ConsoleOutputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Finder\Finder;
 use Symfony\Component\Process\Process;
+use Symfony\Component\Yaml\Yaml;
+use Webmozart\PathUtil\Path;
 
-// @codingStandardsIgnoreStart
-class RoboFile extends Tasks
-    // @codingStandardsIgnoreEnd
+class RoboFile extends Tasks implements LoggerAwareInterface
 {
+    use LoggerAwareTrait;
+    use GitTaskLoader;
+    use PhpcsTaskLoader;
+
+    /**
+     * @var array
+     */
+    protected $composerInfo = [];
+
+    /**
+     * @var array
+     */
+    protected $codeceptionInfo = [];
+
+    /**
+     * @var string[]
+     */
+    protected $codeceptionSuiteNames = [];
 
     /**
      * @var string
@@ -19,8 +47,6 @@ class RoboFile extends Tasks
     protected $packageName = '';
 
     /**
-     * The "bin-dir" configured in composer.json.
-     *
      * @var string
      */
     protected $binDir = 'vendor/bin';
@@ -28,216 +54,436 @@ class RoboFile extends Tasks
     /**
      * @var string
      */
-    protected $gitExecutable = 'git';
+    protected $gitHook = '';
 
     /**
-     * @var string[]
+     * @var string
      */
-    protected $filesToDeploy = [
-        '_common' => ['base_mask' => 0666],
-        'applypatch-msg' => ['base_mask' => 0777],
-        'commit-msg' => ['base_mask' => 0777],
-        'post-applypatch' => ['base_mask' => 0777],
-        'post-checkout' => ['base_mask' => 0777],
-        'post-commit' => ['base_mask' => 0777],
-        'post-merge' => ['base_mask' => 0777],
-        'post-receive' => ['base_mask' => 0666],
-        'post-rewrite' => ['base_mask' => 0777],
-        'post-update' => ['base_mask' => 0777],
-        'pre-applypatch' => ['base_mask' => 0777],
-        'pre-auto-gc' => ['base_mask' => 0777],
-        'pre-commit' => ['base_mask' => 0777],
-        'pre-push' => ['base_mask' => 0777],
-        'pre-rebase' => ['base_mask' => 0777],
-        'pre-receive' => ['base_mask' => 0666],
-        'prepare-commit-msg' => ['base_mask' => 0777],
-        'push-to-checkout' => ['base_mask' => 0777],
-        'update' => ['base_mask' => 0777],
-    ];
+    protected $envVarNamePrefix = '';
+
+    /**
+     * Allowed values: dev, ci, prod.
+     *
+     * @var string
+     */
+    protected $environmentType = '';
+
+    /**
+     * Allowed values: local, jenkins, travis.
+     *
+     * @var string
+     */
+    protected $environmentName = '';
 
     /**
      * RoboFile constructor.
      */
     public function __construct()
     {
-        $package = json_decode(file_get_contents(__DIR__ . '/composer.json'), true);
-        list($this->packageVendor, $this->packageName) = explode('/', $package['name']);
+        putenv('COMPOSER_DISABLE_XDEBUG_WARN=1');
+        $this
+            ->initComposerInfo()
+            ->initEnvVarNamePrefix()
+            ->initEnvironmentTypeAndName();
+    }
 
-        if (!empty($package['config']['bin-dir'])) {
-            $this->binDir = $package['config']['bin-dir'];
+    /**
+     * {@inheritdoc}
+     */
+    public function setContainer(ContainerInterface $container)
+    {
+        BaseReporter::lintReportConfigureContainer($container);
+
+        return parent::setContainer($container);
+    }
+
+    /**
+     * Git "pre-commit" hook callback.
+     */
+    public function githookPreCommit(): CollectionBuilder
+    {
+        $this->gitHook = 'pre-commit';
+
+        return $this
+            ->collectionBuilder()
+            ->addTask($this->taskComposerValidate())
+            ->addTask($this->getTaskPhpcsLint())
+            ->addTask($this->getTaskCodeceptRunSuites());
+    }
+
+    /**
+     * Run the Robo unit tests.
+     */
+    public function test(array $suiteNames): CollectionBuilder
+    {
+        $this->validateArgCodeceptionSuiteNames($suiteNames);
+
+        return $this->getTaskCodeceptRunSuites($suiteNames);
+    }
+
+    /**
+     * Run code style checkers.
+     */
+    public function lint(): CollectionBuilder
+    {
+        return $this
+            ->collectionBuilder()
+            ->addTask($this->taskComposerValidate())
+            ->addTask($this->getTaskPhpcsLint());
+    }
+
+    protected function errorOutput(): ?OutputInterface
+    {
+        $output = $this->output();
+
+        return ($output instanceof ConsoleOutputInterface) ? $output->getErrorOutput() : $output;
+    }
+
+    /**
+     * @return $this
+     */
+    protected function initEnvVarNamePrefix()
+    {
+        $this->envVarNamePrefix = strtoupper(str_replace('-', '_', $this->packageName));
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    protected function initEnvironmentTypeAndName()
+    {
+        $this->environmentType = getenv($this->getEnvVarName('environment_type'));
+        $this->environmentName = getenv($this->getEnvVarName('environment_name'));
+
+        if (!$this->environmentType) {
+            if (getenv('CI') === 'true') {
+                // CircleCI, Travis and GitLab.
+                $this->environmentType = 'ci';
+            } elseif (getenv('JENKINS_HOME')) {
+                $this->environmentType = 'ci';
+                if (!$this->environmentName) {
+                    $this->environmentName = 'jenkins';
+                }
+            }
         }
+
+        if (!$this->environmentName && $this->environmentType === 'ci') {
+            if (getenv('GITLAB_CI') === 'true') {
+                $this->environmentName = 'gitlab';
+            } elseif (getenv('TRAVIS') === 'true') {
+                $this->environmentName = 'travis';
+            } elseif (getenv('CIRCLECI') === 'true') {
+                $this->environmentName = 'circle';
+            }
+        }
+
+        if (!$this->environmentType) {
+            $this->environmentType = 'dev';
+        }
+
+        if (!$this->environmentName) {
+            $this->environmentName = 'local';
+        }
+
+        return $this;
+    }
+
+    protected function getEnvVarName(string $name): string
+    {
+        return "{$this->envVarNamePrefix}_" . strtoupper($name);
+    }
+
+    protected function getPhpExecutable(): string
+    {
+        return getenv($this->getEnvVarName('php_executable')) ?: PHP_BINARY;
+    }
+
+    protected function getPhpdbgExecutable(): string
+    {
+        return getenv($this->getEnvVarName('phpdbg_executable')) ?: Path::join(PHP_BINDIR, 'phpdbg');
     }
 
     /**
-     * @return null|\Robo\Task\Filesystem\FilesystemStack
+     * @return $this
      */
-    public function deployGitHooks()
+    protected function initComposerInfo()
     {
-        return $this->getTaskDeployGitHooks();
+        if ($this->composerInfo || !is_readable('composer.json')) {
+            return $this;
+        }
+
+        $this->composerInfo = json_decode(file_get_contents('composer.json'), true);
+        [$this->packageVendor, $this->packageName] = explode('/', $this->composerInfo['name']);
+
+        if (!empty($this->composerInfo['config']['bin-dir'])) {
+            $this->binDir = $this->composerInfo['config']['bin-dir'];
+        }
+
+        return $this;
     }
 
     /**
-     * @return \Robo\Collection\CollectionBuilder
+     * @return $this
      */
-    public function test()
+    protected function initCodeceptionInfo()
     {
-        /** @var \Robo\Collection\CollectionBuilder $cb */
+        if ($this->codeceptionInfo) {
+            return $this;
+        }
+
+        $default = [
+            'paths' => [
+                'tests' => 'tests',
+                'output' => 'tests/_output',
+            ],
+        ];
+        $dist = [];
+        $local = [];
+
+        if (is_readable('codeception.dist.yml')) {
+            $dist = Yaml::parse(file_get_contents('codeception.dist.yml'));
+        }
+
+        if (is_readable('codeception.yml')) {
+            $local = Yaml::parse(file_get_contents('codeception.yml'));
+        }
+
+        $this->codeceptionInfo = array_replace_recursive($default, $dist, $local);
+
+        return $this;
+    }
+
+    protected function getTaskCodeceptRunSuites(array $suiteNames = []): CollectionBuilder
+    {
+        if (!$suiteNames) {
+            $suiteNames = ['all'];
+        }
+
         $cb = $this->collectionBuilder();
+        foreach ($suiteNames as $suiteName) {
+            $cb->addTask($this->getTaskCodeceptRunSuite($suiteName));
+        }
+
+        return $cb;
+    }
+
+    protected function getTaskCodeceptRunSuite(string $suite): CollectionBuilder
+    {
+        $this->initCodeceptionInfo();
+
+        $withCoverageHtml = in_array($this->environmentType, ['dev']);
+        $withCoverageXml = in_array($this->environmentType, ['ci']);
+
+        $withUnitReportHtml = in_array($this->environmentType, ['dev']);
+        $withUnitReportXml = in_array($this->environmentType, ['ci']);
+
+        $logDir = $this->getLogDir();
+
+        $cmdArgs = [];
+        if ($this->isPhpDbgAvailable()) {
+            $cmdPattern = '%s -qrr';
+            $cmdArgs[] = escapeshellcmd($this->getPhpdbgExecutable());
+        } else {
+            $cmdPattern = '%s';
+            $cmdArgs[] = escapeshellcmd($this->getPhpExecutable());
+        }
+
+        $cmdPattern .= ' %s';
+        $cmdArgs[] = escapeshellcmd("{$this->binDir}/codecept");
+
+        $cmdPattern .= ' --ansi';
+        $cmdPattern .= ' --verbose';
+        $cmdPattern .= ' --debug';
+
+        $cb = $this->collectionBuilder();
+        if ($withCoverageHtml) {
+            $cmdPattern .= ' --coverage-html=%s';
+            $cmdArgs[] = escapeshellarg("human/coverage/$suite/html");
+
+            $cb->addTask(
+                $this
+                    ->taskFilesystemStack()
+                    ->mkdir("$logDir/human/coverage/$suite")
+            );
+        }
+
+        if ($withCoverageXml) {
+            $cmdPattern .= ' --coverage-xml=%s';
+            $cmdArgs[] = escapeshellarg("machine/coverage/$suite/coverage.xml");
+        }
+
+        if ($withCoverageHtml || $withCoverageXml) {
+            $cmdPattern .= ' --coverage=%s';
+            $cmdArgs[] = escapeshellarg("machine/coverage/$suite/coverage.serialized");
+
+            $cb->addTask(
+                $this
+                    ->taskFilesystemStack()
+                    ->mkdir("$logDir/machine/coverage/$suite")
+            );
+        }
+
+        if ($withUnitReportHtml) {
+            $cmdPattern .= ' --html=%s';
+            $cmdArgs[] = escapeshellarg("human/junit/junit.$suite.html");
+
+            $cb->addTask(
+                $this
+                    ->taskFilesystemStack()
+                    ->mkdir("$logDir/human/junit")
+            );
+        }
+
+        if ($withUnitReportXml) {
+            $cmdPattern .= ' --xml=%s';
+            $cmdArgs[] = escapeshellarg("machine/junit/junit.$suite.xml");
+
+            $cb->addTask(
+                $this
+                    ->taskFilesystemStack()
+                    ->mkdir("$logDir/machine/junit")
+            );
+        }
+
+        $cmdPattern .= ' run';
+        if ($suite !== 'all') {
+            $cmdPattern .= ' %s';
+            $cmdArgs[] = escapeshellarg($suite);
+        }
+
+        $cmdPattern .= ' --env %s';
+        $cmdArgs[] = escapeshellarg('sandbox');
+
+        if ($this->environmentType === 'ci' && $this->environmentName === 'jenkins') {
+            // Jenkins has to use a post-build action to mark the build "unstable".
+            $cmdPattern .= ' || [[ "${?}" == "1" ]]';
+        }
+
+        $command = vsprintf($cmdPattern, $cmdArgs);
 
         return $cb
-            ->addTaskList([
-                'test.behat' => $this->getTaskBehatRun(),
-            ]);
+            ->addCode(function () use ($command) {
+                $this->output()->writeln(strtr(
+                    '<question>[{name}]</question> runs <info>{command}</info>',
+                    [
+                        '{name}' => 'Codeception',
+                        '{command}' => $command,
+                    ]
+                ));
+                $process = Process::fromShellCommandline($command, null, null, null, null);
+                return $process->run(function ($type, $data) {
+                    switch ($type) {
+                        case Process::OUT:
+                            $this->output()->write($data);
+                            break;
+
+                        case Process::ERR:
+                            $this->errorOutput()->write($data);
+                            break;
+                    }
+                });
+            });
     }
 
     /**
-     * @return \Robo\Task\Base\Exec
-     */
-    public function behat()
-    {
-        return $this->getTaskBehatRun();
-    }
-
-    /**
-     * @return \Robo\Task\Base\Exec
-     */
-    public function composerValidate()
-    {
-        return $this->getTaskComposerValidate();
-    }
-
-    /**
-     * @return \Robo\Collection\CollectionBuilder
-     */
-    public function lint()
-    {
-        /** @var \Robo\Collection\CollectionBuilder $cb */
-        $cb = $this->collectionBuilder();
-
-        return $cb->addTaskList([
-            'lint.composer.validate' => $this->getTaskComposerValidate(),
-            'lint.phpcs.psr2' => $this->getTaskPhpcsLint(),
-        ]);
-    }
-
-    /**
-     * @return \Robo\Collection\CollectionBuilder
-     */
-    public function githookPreCommit()
-    {
-        return $this->lint();
-    }
-
-    /**
-     * @return \Robo\Task\Base\Exec
+     * @return \Sweetchuck\Robo\Phpcs\Task\PhpcsLintFiles|\Robo\Collection\CollectionBuilder
      */
     protected function getTaskPhpcsLint()
     {
-        return $this->taskExec(escapeshellcmd("{$this->binDir}/phpcs"));
-    }
+        $options = [
+            'failOn' => 'warning',
+            'lintReporters' => [
+                'lintVerboseReporter' => null,
+            ],
+        ];
 
-    /**
-     * @return \Robo\Task\Base\Exec
-     */
-    protected function getTaskComposerValidate()
-    {
-        return $this->taskExec('composer validate');
-    }
-
-    /**
-     * @return \Robo\Task\Filesystem\FilesystemStack|null
-     */
-    protected function getTaskDeployGitHooks()
-    {
-        $current_dir = realpath(getcwd());
-        $repo_type = $this->getGitRepoType();
-        if ($repo_type === null) {
-            // This directory is not tracked by Git.
-            return null;
+        if ($this->environmentType === 'ci' && $this->environmentName === 'jenkins') {
+            $options['failOn'] = 'never';
+            $options['lintReporters']['lintCheckstyleReporter'] = $this
+                ->getContainer()
+                ->get('lintCheckstyleReporter')
+                ->setDestination('tests/_output/machine/checkstyle/phpcs.psr2.xml');
         }
 
-        $git_dir = $this->getGitDir();
-        if (!($repo_type === 'bare' && strpos($current_dir, $git_dir) === 0)
-            && !($repo_type === 'not-bare' && file_exists("$current_dir/.git"))
-        ) {
-            // Git directory cannot be detected 100%.
-            return null;
+        if ($this->gitHook === 'pre-commit') {
+            return $this
+                ->collectionBuilder()
+                ->addTask($this
+                    ->taskPhpcsParseXml()
+                    ->setAssetNamePrefix('phpcsXml.'))
+                ->addTask($this
+                    ->taskGitListStagedFiles()
+                    ->setPaths(['*.php' => true])
+                    ->setDiffFilter(['d' => false])
+                    ->setAssetNamePrefix('staged.'))
+                ->addTask($this
+                    ->taskGitReadStagedFiles()
+                    ->setCommandOnly(true)
+                    ->setWorkingDirectory('.')
+                    ->deferTaskConfiguration('setPaths', 'staged.fileNames'))
+                ->addTask($this
+                    ->taskPhpcsLintInput($options)
+                    ->deferTaskConfiguration('setFiles', 'files')
+                    ->deferTaskConfiguration('setIgnore', 'phpcsXml.exclude-patterns'));
         }
 
-        /** @var \League\Container\Container $container */
-        $container = $this->getContainer();
+        return $this->taskPhpcsLintFiles($options);
+    }
 
-        /** @var \Robo\Task\Filesystem\FilesystemStack $fsStack */
-        $fsStack = $container->get('taskFilesystemStack');
+    protected function isPhpDbgAvailable(): bool
+    {
+        $command = [$this->getPhpdbgExecutable(), '-qrr'];
 
-        $git_dir = preg_replace('@^' . preg_quote("$current_dir/", '@') . '@', './', $git_dir);
-        foreach ($this->filesToDeploy as $file_name => $file_meta) {
-            $dst = "$git_dir/hooks/$file_name";
-            $fsStack->copy("hooks/$file_name", $dst);
-            $fsStack->chmod($dst, $file_meta['base_mask'], umask());
+        return (new Process($command))->run() === 0;
+    }
+
+    protected function getLogDir(): string
+    {
+        $this->initCodeceptionInfo();
+
+        return !empty($this->codeceptionInfo['paths']['output']) ?
+            $this->codeceptionInfo['paths']['output']
+            : 'tests/_output';
+    }
+
+    protected function getCodeceptionSuiteNames(): array
+    {
+        if (!$this->codeceptionSuiteNames) {
+            $this->initCodeceptionInfo();
+
+            /** @var \Symfony\Component\Finder\Finder $suiteFiles */
+            $suiteFiles = Finder::create()
+                ->in($this->codeceptionInfo['paths']['tests'])
+                ->files()
+                ->name('*.suite.yml')
+                ->name('*.suite.dist.yml')
+                ->depth(0);
+
+            foreach ($suiteFiles as $suiteFile) {
+                $parts = explode('.', $suiteFile->getBasename());
+                $this->codeceptionSuiteNames[] = reset($parts);
+            }
+
+            $this->codeceptionSuiteNames = array_unique($this->codeceptionSuiteNames);
         }
 
-        return $fsStack;
+        return $this->codeceptionSuiteNames;
     }
 
-    /**
-     * @return \Robo\Task\Base\Exec
-     */
-    protected function getTaskBehatRun()
+    protected function validateArgCodeceptionSuiteNames(array $suiteNames): void
     {
-        $cmd = sprintf(
-            '%s --colors --strict',
-            escapeshellcmd("{$this->binDir}/behat")
-        );
-
-        return  $this->taskExec($cmd);
-    }
-
-    /**
-     * @return string|null
-     */
-    protected function getGitRepoType()
-    {
-        $cmd = sprintf(
-            '%s rev-parse --is-bare-repository',
-            escapeshellcmd($this->gitExecutable)
-        );
-
-        $process = new Process($cmd);
-        $exit_code = $process->run();
-        if ($exit_code) {
-            return null;
+        if (!$suiteNames) {
+            return;
         }
 
-        return trim($process->getOutput()) === 'true' ? 'bare' : 'not-bare';
-    }
-
-    /**
-     * @return string|null
-     */
-    protected function getGitDir()
-    {
-        $cmd = sprintf(
-            '%s rev-parse --git-dir',
-            escapeshellcmd($this->gitExecutable)
-        );
-
-        $process = new Process($cmd);
-        $exit_code = $process->run();
-        if ($exit_code !== 0) {
-            return null;
+        $invalidSuiteNames = array_diff($suiteNames, $this->getCodeceptionSuiteNames());
+        if ($invalidSuiteNames) {
+            throw new InvalidArgumentException(
+                'The following Codeception suite names are invalid: ' . implode(', ', $invalidSuiteNames),
+                1
+            );
         }
-
-        return realpath(rtrim($process->getOutput(), "\n"));
-    }
-
-    /**
-     * @param string $version
-     *
-     * @return bool
-     */
-    protected function isValidVersionNumber($version)
-    {
-        return preg_match('/^\d+\.\d+\.\d+(-(alpha|beta|rc)\d+){0,1}$/', $version);
     }
 }

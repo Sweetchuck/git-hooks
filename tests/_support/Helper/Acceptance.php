@@ -2,133 +2,46 @@
 
 declare(strict_types = 1);
 
-use Behat\Behat\Context\Context;
-use Behat\Gherkin\Node\PyStringNode;
-use PHPUnit\Framework\Assert;
+namespace Sweetchuck\GitHooks\Test\Helper;
+
+use Codeception\Module;
+use Codeception\TestInterface;
+use InvalidArgumentException;
+use LogicException;
 use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-class FeatureContext implements Context
+class Acceptance extends Module
 {
 
     /**
-     * Base reference point. The directory of the behat.yml.
+     * @var string
+     */
+    protected $projectRootDir;
+
+    /**
+     * Absolute path to the fixtures directory.
      *
      * @var string
      */
-    protected static $projectRootDir = '';
-
-    /**
-     * Relative to static::$projectRootDir.
-     *
-     * @var string
-     */
-    protected static $fixturesDir = 'fixtures';
-
-    /**
-     * @var string
-     */
-    protected static $gitExecutable = 'git';
+    protected $fixturesDir = '';
 
     /**
      * @var array
      */
-    protected static $composer = [];
+    protected $composer = [];
 
     /**
-     * Random directory name somewhere in the /tmp directory.
-     *
      * @var string
      */
-    protected static $suitRootDir = '';
+    protected $suitRootDir;
 
     /**
      * @var \Symfony\Component\Filesystem\Filesystem
      */
-    protected static $fs;
-
-    /**
-     * @BeforeSuite
-     */
-    public static function hookBeforeSuite()
-    {
-        static::$projectRootDir = getcwd();
-
-        static::initComposer();
-        static::initSuitRootDir();
-        static::initFilesystem();
-    }
-
-    /**
-     * @AfterSuite
-     */
-    public static function hookAfterSuite()
-    {
-        if (getenv('SWEETCHUCK_GIT_HOOKS_SKIP_AFTER_CLEANUP') === 'true') {
-            return;
-        }
-
-        if (static::$fs->exists(static::$suitRootDir)) {
-            static::$fs->remove(static::$suitRootDir);
-        }
-    }
-
-    protected static function initFilesystem()
-    {
-        static::$fs = new Filesystem();
-    }
-
-    protected static function initComposer()
-    {
-        $fileName = static::$projectRootDir . '/composer.json';
-        static::$composer = json_decode(file_get_contents($fileName), true);
-        if (static::$composer === null) {
-            throw new InvalidArgumentException("Composer JSON file cannot be decoded. '$fileName'");
-        }
-    }
-
-    protected static function initSuitRootDir()
-    {
-        static::$suitRootDir = implode('/', [
-            sys_get_temp_dir(),
-            static::$composer['name'],
-            'suit-' . static::randomId(),
-        ]);
-    }
-
-    protected static function getGitTemplateDir(string $type): string
-    {
-        return implode('/', [
-            static::$projectRootDir,
-            static::$fixturesDir,
-            'git-template',
-            $type,
-        ]);
-    }
-
-    protected static function normalizePath(string $path): string
-    {
-        // Remove any kind of funky unicode whitespace.
-        $normalized = preg_replace('#\p{C}+|^\./#u', '', $path);
-
-        // Remove self referring paths ("/./").
-        $normalized = preg_replace('#/\.(?=/)|^\./|\./$#', '', $normalized);
-
-        // Regex for resolving relative paths.
-        $pattern = '#\/*[^/\.]+/\.\.#Uu';
-
-        while (preg_match($pattern, $normalized)) {
-            $normalized = preg_replace($pattern, '', $normalized);
-        }
-
-        if (preg_match('#/\.{2}|\.{2}/#', $normalized)) {
-            throw new LogicException("Path is outside of the defined root, path: [$path], resolved: [$normalized]");
-        }
-
-        return rtrim($normalized, '/');
-    }
+    protected $fs;
 
     /**
      * Absolute directory name. This dir is under the static::$suitRootDir.
@@ -145,48 +58,74 @@ class FeatureContext implements Context
     protected $cwd = '';
 
     /**
-     * @var Symfony\Component\Process\Process
+     * @var \Symfony\Component\Process\Process
      */
     protected $process = null;
 
     /**
-     * Prepares test folders in the temporary directory.
-     *
-     * @BeforeScenario
+     * @var string
      */
-    public function initScenarioRootDir()
+    protected $gitExecutable = 'git';
+
+    /**
+     * @inheritDoc
+     */
+    public function _beforeSuite($settings = [])
     {
-        $this->scenarioRootDir = static::$suitRootDir . '/scenario-' .  static::randomId();
-        static::$fs->mkdir($this->scenarioRootDir);
+        parent::_beforeSuite($settings);
+
+        $this->projectRootDir = getcwd();
+
+        $this->initComposer();
+        $this->initSuitRootDir();
+        $this->initFilesystem();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function _afterSuite()
+    {
+        if ($this->fs->exists($this->suitRootDir)) {
+            $this->fs->remove($this->suitRootDir);
+        }
+
+        parent::_afterSuite();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function _before(TestInterface $test)
+    {
+        parent::_before($test);
+
+        $this->fixturesDir = codecept_data_dir('fixtures');
+
+        $this->scenarioRootDir = "{$this->suitRootDir}/scenario-" .  $this->randomId();
+        $this->fs->mkdir($this->scenarioRootDir);
         $this->cwd = "{$this->scenarioRootDir}/workspace";
     }
 
     /**
-     * @AfterScenario
+     * @inheritDoc
      */
-    public function cleanScenarioRootDir()
+    public function _after(TestInterface $test)
     {
-        if (getenv('SWEETCHUCK_GIT_HOOKS_SKIP_AFTER_CLEANUP') === 'true') {
-            return;
-        }
+        parent::_after($test);
 
-        if (static::$fs->exists($this->scenarioRootDir)) {
-            static::$fs->remove($this->scenarioRootDir);
+        if ($this->fs->exists($this->scenarioRootDir)) {
+            $this->fs->remove($this->scenarioRootDir);
         }
-    }
-
-    protected static function randomId(): string
-    {
-        return md5((string) (microtime(true) * rand(0, 10000)));
     }
 
     /**
-     * @Given I run git add remote :name :uri
+     * @Given I run git remote add :name :uri
      */
     public function doGitRemoteAdd(string $name, string $uri)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'remote',
             'add',
             $name,
@@ -199,16 +138,16 @@ class FeatureContext implements Context
     /**
      * @Given I create a :type project in :dir directory
      */
-    public function doCreateProjectInstance(string $dir, string $type)
+    public function doCreateProjectInstance(string $type, string $dir)
     {
         $dirNormalized = $this->getWorkspacePath($dir);
-        if (static::$fs->exists("$dirNormalized/composer.json")) {
+        if ($this->fs->exists("$dirNormalized/composer.json")) {
             throw new LogicException("A project is already exists in: '$dirNormalized'");
         }
 
         $this->doCreateProjectCache($type);
         $projectCacheDir = $this->getProjectCacheDir($type);
-        static::$fs->mirror($projectCacheDir, $dirNormalized);
+        $this->fs->mirror($projectCacheDir, $dirNormalized);
         $this->doGitInitLocal($dir);
 
         $this->doExec(['composer', 'run', 'post-install-cmd']);
@@ -225,7 +164,7 @@ class FeatureContext implements Context
             throw new InvalidArgumentException('Out of working directory.');
         }
 
-        static::$fs->mkdir($dirNormal);
+        $this->fs->mkdir($dirNormal);
 
         if (!chdir($dirNormal)) {
             throw new IOException("Failed to step into directory: '$dirNormal'.");
@@ -239,7 +178,7 @@ class FeatureContext implements Context
      */
     public function doCreateFile(string $fileName)
     {
-        static::$fs->touch($this->getWorkspacePath($fileName));
+        $this->fs->touch($this->getWorkspacePath($fileName));
     }
 
     /**
@@ -258,15 +197,15 @@ class FeatureContext implements Context
     public function doGitInitBare(string $dir, string $type = 'basic')
     {
         $dirNormalized = $this->getWorkspacePath($dir);
-        if (static::$fs->exists("$dirNormalized/.git")
-            || static::$fs->exists("$dirNormalized/config")
+        if ($this->fs->exists("$dirNormalized/.git")
+            || $this->fs->exists("$dirNormalized/config")
         ) {
             throw new LogicException("A git repository is already exists in: '$dirNormalized'");
         }
 
         $this->doCreateProjectCache($type);
         $projectCacheDir = $this->getProjectCacheDir($type);
-        static::$fs->mirror($projectCacheDir, $dirNormalized);
+        $this->fs->mirror($projectCacheDir, $dirNormalized);
         $this->doGitInit($dir, $type, true);
 
         $this->doExec(['composer', 'run', 'post-install-cmd']);
@@ -281,7 +220,7 @@ class FeatureContext implements Context
     {
         $cmd = array_merge(
             [
-                static::$gitExecutable,
+                $this->gitExecutable,
                 'add',
                 '--',
             ],
@@ -298,7 +237,7 @@ class FeatureContext implements Context
     public function doGitCommit(?string $message = null)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'commit',
         ];
 
@@ -322,7 +261,7 @@ class FeatureContext implements Context
     {
         $this->process = $this->doExec(
             [
-                static::$gitExecutable,
+                $this->gitExecutable,
                 'push',
                 $remote,
                 $branch,
@@ -339,10 +278,10 @@ class FeatureContext implements Context
     public function doGitCommitNewFileWithMessageAndContent(
         string $fileName,
         string $message,
-        PyStringNode $content
+        string $content
     ) {
         $this->doCreateFile($fileName);
-        static::$fs->dumpFile($fileName, $content);
+        $this->fs->dumpFile($fileName, $content);
         $this->doGitAdd($fileName);
         $this->doGitCommit($message);
     }
@@ -353,7 +292,7 @@ class FeatureContext implements Context
     public function doGitCheckoutNewBranch(string $branch)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'checkout',
             '-b',
             $branch,
@@ -367,7 +306,7 @@ class FeatureContext implements Context
     public function doGitCheckoutFile(string $branch, string $file)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'checkout',
             $branch,
             '--',
@@ -382,7 +321,7 @@ class FeatureContext implements Context
     public function doRunGitCheckout(string $branch)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'checkout',
             $branch
         ];
@@ -395,7 +334,7 @@ class FeatureContext implements Context
     public function doGitBranchCreate(string $branch)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'branch',
             $branch
         ];
@@ -414,7 +353,7 @@ class FeatureContext implements Context
     public function doRunGitRebase(string $upstream, ?string $branch = null)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'rebase',
             $upstream,
         ];
@@ -437,7 +376,7 @@ class FeatureContext implements Context
     public function doGitMerge(string $branch, string $message)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'merge',
             $branch,
             '-m',
@@ -452,7 +391,7 @@ class FeatureContext implements Context
     public function doGitMergeSquash(string $branch, string $message)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'merge',
             $branch,
             '--ff',
@@ -464,11 +403,26 @@ class FeatureContext implements Context
     }
 
     /**
-     * @Given /^I run git config core.editor (?P<editor>true|false)$/
+     * @Given /^I run git config core.editor (?P<value>true|false)$/
      */
-    public function doGitConfigSetCoreEditor(string $editor)
+    public function doGitConfigSetCoreEditor(string $value)
     {
-        $this->doGitConfigSet('core.editor', $editor);
+        $this->doGitConfigSet('core.editor', $value);
+    }
+
+    /**
+     * @Given /^I run git config "(?P<name>[^"]+)" (?P<vale>.+)$/
+     */
+    public function doGitConfigSet(string $name, string $value)
+    {
+        $cmd = [
+            $this->gitExecutable,
+            'config',
+            $name,
+            $value,
+        ];
+
+        $this->process = $this->doExec($cmd);
     }
 
     /**
@@ -484,7 +438,7 @@ class FeatureContext implements Context
      */
     public function assertExitCodeEquals(string $exitCode)
     {
-        Assert::assertSame(
+        $this->assertSame(
             (int) $exitCode,
             $this->process->getExitCode(),
             "Exit codes don't match"
@@ -493,28 +447,24 @@ class FeatureContext implements Context
 
     /**
      * @Then /^the stdOut should contains the following text:$/
-     *
-     * @param \Behat\Gherkin\Node\PyStringNode $string
      */
-    public function assertStdOutContains(PyStringNode $string)
+    public function assertStdOutContains(string $string)
     {
         $output = $this->trimTrailingWhitespaces($this->process->getOutput());
         $output = $this->removeColorCodes($output);
 
-        Assert::assertStringContainsString($string->getRaw(), $output);
+        $this->assertStringContainsString($string, $output);
     }
 
     /**
      * @Then /^the stdErr should contains the following text:$/
-     *
-     * @param \Behat\Gherkin\Node\PyStringNode $string
      */
-    public function assertStdErrContains(PyStringNode $string)
+    public function assertStdErrContains(string $string)
     {
         $output = $this->trimTrailingWhitespaces($this->process->getErrorOutput());
         $output = $this->removeColorCodes($output);
 
-        Assert::assertStringContainsString($string->getRaw(), $output);
+        $this->assertStringContainsString($string, $output);
     }
 
     /**
@@ -527,7 +477,7 @@ class FeatureContext implements Context
             '-c',
             sprintf(
                 '%s log --format=%s | cat',
-                static::$gitExecutable,
+                $this->gitExecutable,
                 '%h'
             ),
         ];
@@ -538,7 +488,7 @@ class FeatureContext implements Context
             ]
         );
 
-        Assert::assertSame(
+        $this->assertSame(
             (int) $expected,
             substr_count($gitLog->getOutput(), "\n")
         );
@@ -550,13 +500,13 @@ class FeatureContext implements Context
     public function assertGitLogIsNotEmpty()
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'log',
             '-1',
         ];
 
         $gitLog = $this->doExec($cmd);
-        Assert::assertNotEquals('', $gitLog->getOutput());
+        $this->assertNotEquals('', $gitLog->getOutput());
     }
 
     /**
@@ -565,17 +515,17 @@ class FeatureContext implements Context
     public function assertGitLogIsEmpty()
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'log',
             '-1',
         ];
         $gitLog = $this->doExec($cmd);
-        Assert::assertEquals('', $gitLog->getOutput());
+        $this->assertEquals('', $gitLog->getOutput());
     }
 
     protected function getWorkspacePath(string $path): string
     {
-        $normalizedPath = static::normalizePath("{$this->cwd}/$path");
+        $normalizedPath = $this->normalizePath("{$this->cwd}/$path");
         $this->validateWorkspacePath($normalizedPath);
 
         return $normalizedPath;
@@ -591,21 +541,20 @@ class FeatureContext implements Context
     protected function doCreateProjectCache(string $projectType)
     {
         $projectCacheDir = $this->getProjectCacheDir($projectType);
-        if (static::$fs->exists($projectCacheDir)) {
+        if ($this->fs->exists($projectCacheDir)) {
             return;
         }
 
         $projectTemplate = implode('/', [
-            static::$projectRootDir,
-            'fixtures',
+            $this->fixturesDir,
             'project-template',
             $projectType,
         ]);
-        static::$fs->mirror($projectTemplate, $projectCacheDir);
+        $this->fs->mirror($projectTemplate, $projectCacheDir);
 
         $composerJson = json_decode(file_get_contents("$projectCacheDir/composer.json"), true);
-        $composerJson['repositories']['local']['url'] = static::$projectRootDir;
-        static::$fs->dumpFile(
+        $composerJson['repositories']['local']['url'] = $this->projectRootDir;
+        $this->fs->dumpFile(
             "$projectCacheDir/composer.json",
             json_encode($composerJson, JSON_PRETTY_PRINT)
         );
@@ -618,11 +567,11 @@ class FeatureContext implements Context
 
             $composerLock['packages'][$i]['dist'] = [
                 'type' => 'path',
-                'url' => static::$projectRootDir,
+                'url' => $this->projectRootDir,
                 'reference' => 'abcdefg',
             ];
 
-            static::$fs->dumpFile(
+            $this->fs->dumpFile(
                 "$projectCacheDir/composer.lock",
                 json_encode($composerLock, JSON_PRETTY_PRINT)
             );
@@ -632,8 +581,7 @@ class FeatureContext implements Context
 
         if ($projectType !== 'basic') {
             $master = implode('/', [
-                static::$projectRootDir,
-                'fixtures',
+                $this->fixturesDir,
                 'project-template',
                 'basic',
             ]);
@@ -643,7 +591,7 @@ class FeatureContext implements Context
                 'RoboFile.php',
             ];
             foreach ($files as $fileName) {
-                static::$fs->copy("$master/$fileName", "$projectCacheDir/$fileName");
+                $this->fs->copy("$master/$fileName", "$projectCacheDir/$fileName");
             }
         }
 
@@ -662,9 +610,9 @@ class FeatureContext implements Context
     protected function doGitInit(string $dir, string $tpl, bool $bare)
     {
         $cmd = [
-            static::$gitExecutable,
+            $this->gitExecutable,
             'init',
-            '--template=' . static::getGitTemplateDir($tpl),
+            '--template=' . $this->getGitTemplateDir($tpl),
         ];
         $this->doChangeWorkingDirectory($dir);
 
@@ -678,22 +626,10 @@ class FeatureContext implements Context
 
         $gitInit = $this->doExec($cmd);
         $cwdReal = realpath($this->cwd);
-        Assert::assertSame(
+        $this->assertSame(
             "Initialized empty Git repository in $cwdReal/$gitDir\n",
             $gitInit->getOutput()
         );
-    }
-
-    protected function doGitConfigSet(string $name, string $value)
-    {
-        $cmd = [
-            static::$gitExecutable,
-            'config',
-            $name,
-            $value,
-        ];
-
-        $this->process = $this->doExec($cmd);
     }
 
     protected function doExecCwd(string $wd, array $cmd, array $check = []): Process
@@ -720,7 +656,7 @@ class FeatureContext implements Context
         }
 
         if ($check['stdErr'] !== false) {
-            Assert::assertSame($check['stdErr'], $process->getErrorOutput());
+            $this->assertSame($check['stdErr'], $process->getErrorOutput());
         }
 
         return $process;
@@ -728,7 +664,7 @@ class FeatureContext implements Context
 
     protected function getProjectCacheDir(string $type): string
     {
-        return static::$suitRootDir . "/cache/project/$type";
+        return  "{$this->suitRootDir}/cache/project/$type";
     }
 
     protected function trimTrailingWhitespaces(string $string): string
@@ -739,5 +675,64 @@ class FeatureContext implements Context
     protected function removeColorCodes(string $string): string
     {
         return preg_replace('/\x1B\[[0-9;]*[JKmsu]/', '', $string);
+    }
+
+    protected function initComposer()
+    {
+        $fileName =  "{$this->projectRootDir}/composer.json";
+        $this->composer = json_decode(file_get_contents($fileName), true);
+        if ($this->composer === null) {
+            throw new InvalidArgumentException("Composer JSON file cannot be decoded. '$fileName'");
+        }
+    }
+
+    protected function initSuitRootDir()
+    {
+        $this->suitRootDir = implode('/', [
+            sys_get_temp_dir(),
+            $this->composer['name'],
+            'suit-' . $this->randomId(),
+        ]);
+    }
+
+    protected function initFilesystem()
+    {
+        $this->fs = new Filesystem();
+    }
+
+    protected function randomId(): string
+    {
+        return md5((string) (microtime(true) * rand(0, 10000)));
+    }
+
+    protected function normalizePath(string $path): string
+    {
+        // Remove any kind of funky unicode whitespace.
+        $normalized = preg_replace('#\p{C}+|^\./#u', '', $path);
+
+        // Remove self referring paths ("/./").
+        $normalized = preg_replace('#/\.(?=/)|^\./|\./$#', '', $normalized);
+
+        // Regex for resolving relative paths.
+        $pattern = '#\/*[^/\.]+/\.\.#Uu';
+
+        while (preg_match($pattern, $normalized)) {
+            $normalized = preg_replace($pattern, '', $normalized);
+        }
+
+        if (preg_match('#/\.{2}|\.{2}/#', $normalized)) {
+            throw new LogicException("Path is outside of the defined root, path: [$path], resolved: [$normalized]");
+        }
+
+        return rtrim($normalized, '/');
+    }
+
+    protected function getGitTemplateDir(string $type): string
+    {
+        return implode('/', [
+            $this->fixturesDir,
+            'git-template',
+            $type,
+        ]);
     }
 }
