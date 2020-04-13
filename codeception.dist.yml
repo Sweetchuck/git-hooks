@@ -2,7 +2,7 @@
 namespace: Sweetchuck\GitHooks\Test
 
 paths:
-    data: tests
+    data: tests/_data
     envs: tests/_envs
     output: tests/_output
     support: tests/_support

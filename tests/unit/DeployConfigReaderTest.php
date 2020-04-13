@@ -12,7 +12,6 @@ use Symfony\Component\Console\Input\InputInterface;
  */
 class DeployConfigReaderTest extends TestBase
 {
-
     public function casesGetConfig(): array
     {
         $selfRootDir = $this->selfProjectRoot();

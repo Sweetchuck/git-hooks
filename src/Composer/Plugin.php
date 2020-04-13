@@ -99,7 +99,10 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
     {
         $package = $event->getComposer()->getPackage();
         $extra = $package->getExtra();
-        $config = $this->deployConfigReader->getConfig(null, $extra[$package->getName()] ?? []);
+        $config = $this
+            ->deployConfigReader
+            ->getConfig(null, $extra[$package->getName()] ?? []);
+
         /** @var \Composer\IO\ConsoleIO $io */
         $io = $event->getIO();
         $this->deployer->setLogger($io);
