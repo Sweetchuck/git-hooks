@@ -45,21 +45,19 @@ commands:
                 restore_cache:
                     name: 'Composer - cache restore'
                     keys:
-                        - 'composer-{{ checksum "./composer.lock" }}-1'
+                        - 'composer-{{ checksum "./composer.lock" }}-2'
 
             -
                 run:
                     name: 'Composer - install'
                     command: >
-                        [[ -d "$(composer config vendor-dir)" ]] || composer install --no-progress
+                        composer install --no-progress --ansi
 
             -
                 save_cache:
                     name: 'Composer - cache save'
-                    key: 'composer-{{ checksum "./composer.lock" }}-1'
+                    key: 'composer-{{ checksum "./composer.lock" }}-2'
                     paths:
-                        - './bin/'
-                        - './vendor/'
                         - '~/.composer/cache/'
 
 
@@ -69,25 +67,27 @@ commands:
             -
                 run:
                     name: 'Run linters'
-                    command: 'bin/robo lint'
+                    command: 'bin/robo  --ansi lint'
 
     test:
         description: 'Run tests'
         steps:
             -
                 run:
-                    name: 'Git config user.name and user.email'
-                    command: |
-                        git config --global user.name 'Circle CI'
-                        git config --global user.email 'circle.ci@example.com'
-            -
-                run:
-                    name: 'Run Behat tests'
-                    command: 'bin/robo test'
-            -
-                store_test_results:
+                    name: 'Codeception - unit'
+                    command: 'bin/robo --ansi test unit'
+            -   codecov/upload:
+                    flags: 'unit'
+                    file: './tests/_output/machine/coverage/unit/coverage.xml'
+            -   run:
+                    name: 'Codeception - acceptance'
+                    command: 'bin/robo --ansi test acceptance'
+            -   codecov/upload:
+                    flags: 'acceptance'
+                    file: './tests/_output/machine/coverage/acceptance/coverage.xml'
+            -   store_test_results:
                     name: 'Store unit test results'
-                    path: './reports/machine/junit'
+                    path: './tests/_output/machine/junit'
 
 jobs:
     build:

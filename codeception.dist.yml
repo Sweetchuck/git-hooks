@@ -11,7 +11,7 @@ paths:
 settings:
     colors: true
     memory_limit: '1024M'
-    shuffle: true
+    shuffle: false
     lint: false
 
 extensions:

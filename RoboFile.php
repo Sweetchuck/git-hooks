@@ -295,6 +295,7 @@ class RoboFile extends Tasks implements LoggerAwareInterface
 
         $cmdPattern .= ' --ansi';
         $cmdPattern .= ' --verbose';
+        $cmdPattern .= ' --debug';
 
         $cb = $this->collectionBuilder();
         if ($withCoverageHtml) {

@@ -4,8 +4,6 @@
 /reports/
 
 /tests/_data/fixtures/project-template/*/vendor/
-/tests/_envs/*
-!/tests/_envs/example.yml
 /tests/_output/
 /tests/_support/_generated/
 /tests/*.suite.yml

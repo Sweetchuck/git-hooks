@@ -95,6 +95,7 @@ class Deployer implements LoggerAwareInterface
 
         $this
             ->initSelfPackage()
+            ->initLogger()
             ->initGitVersion();
 
         return $this;
@@ -123,9 +124,9 @@ class Deployer implements LoggerAwareInterface
     {
         $command = sprintf('%s --version', escapeshellcmd($this->gitExecutable));
         $output = null;
-        $exit_code = null;
-        exec($command, $output, $exit_code);
-        if ($exit_code) {
+        $exitCode = null;
+        exec($command, $output, $exitCode);
+        if ($exitCode) {
             throw new Exception('Failed to detect the version of Git.', static::EXIT_CODE_NO_GIT);
         }
 
@@ -150,6 +151,7 @@ class Deployer implements LoggerAwareInterface
         try {
             $gitDir = $this->getGitDir();
         } catch (Exception $e) {
+            // @todo Add exception message to the log entry.
             $this->logger->warning('Git hooks deployment skipped because of the absence of $GIT_DIR');
 
             return $this;
@@ -163,8 +165,6 @@ class Deployer implements LoggerAwareInterface
             } else {
                 $this->doMainCopy($gitDir);
             }
-
-            return $this;
         } catch (Exception $e) {
             $this->result['exitCode'] = 1;
             $this->logger->error($e->getMessage());

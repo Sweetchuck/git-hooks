@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Sweetchuck\GitHooks\Test\Helper;
 
-use Behat\Gherkin\Node\PyStringNode;
 use Codeception\Module;
 use Codeception\TestInterface;
 use InvalidArgumentException;
@@ -23,7 +22,7 @@ class Acceptance extends Module
     protected $projectRootDir;
 
     /**
-     * Relative to static::$projectRootDir.
+     * Absolute path to the fixtures directory.
      *
      * @var string
      */
@@ -103,9 +102,7 @@ class Acceptance extends Module
 
         $this->fixturesDir = codecept_data_dir('fixtures');
 
-        codecept_debug($this->fixturesDir);
-
-        $this->scenarioRootDir = $this->suitRootDir . '/scenario-' .  static::randomId();
+        $this->scenarioRootDir = "{$this->suitRootDir}/scenario-" .  $this->randomId();
         $this->fs->mkdir($this->scenarioRootDir);
         $this->cwd = "{$this->scenarioRootDir}/workspace";
     }
@@ -406,11 +403,26 @@ class Acceptance extends Module
     }
 
     /**
-     * @Given /^I run git config core.editor (?P<editor>true|false)$/
+     * @Given /^I run git config core.editor (?P<value>true|false)$/
      */
-    public function doGitConfigSetCoreEditor(string $editor)
+    public function doGitConfigSetCoreEditor(string $value)
     {
-        $this->doGitConfigSet('core.editor', $editor);
+        $this->doGitConfigSet('core.editor', $value);
+    }
+
+    /**
+     * @Given /^I run git config "(?P<name>[^"]+)" (?P<vale>.+)$/
+     */
+    public function doGitConfigSet(string $name, string $value)
+    {
+        $cmd = [
+            $this->gitExecutable,
+            'config',
+            $name,
+            $value,
+        ];
+
+        $this->process = $this->doExec($cmd);
     }
 
     /**
@@ -435,15 +447,13 @@ class Acceptance extends Module
 
     /**
      * @Then /^the stdOut should contains the following text:$/
-     *
-     * @param \Behat\Gherkin\Node\PyStringNode $string
      */
-    public function assertStdOutContains(PyStringNode $string)
+    public function assertStdOutContains(string $string)
     {
         $output = $this->trimTrailingWhitespaces($this->process->getOutput());
         $output = $this->removeColorCodes($output);
 
-        $this->assertStringContainsString($string->getRaw(), $output);
+        $this->assertStringContainsString($string, $output);
     }
 
     /**
@@ -622,18 +632,6 @@ class Acceptance extends Module
         );
     }
 
-    protected function doGitConfigSet(string $name, string $value)
-    {
-        $cmd = [
-            $this->gitExecutable,
-            'config',
-            $name,
-            $value,
-        ];
-
-        $this->process = $this->doExec($cmd);
-    }
-
     protected function doExecCwd(string $wd, array $cmd, array $check = []): Process
     {
         $cwdBackup = $this->cwd;
@@ -666,7 +664,7 @@ class Acceptance extends Module
 
     protected function getProjectCacheDir(string $type): string
     {
-        return $this->suitRootDir . "/cache/project/$type";
+        return  "{$this->suitRootDir}/cache/project/$type";
     }
 
     protected function trimTrailingWhitespaces(string $string): string
@@ -693,7 +691,7 @@ class Acceptance extends Module
         $this->suitRootDir = implode('/', [
             sys_get_temp_dir(),
             $this->composer['name'],
-            'suit-' . static::randomId(),
+            'suit-' . $this->randomId(),
         ]);
     }
 
