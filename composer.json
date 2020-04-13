@@ -42,5 +42,14 @@
         "sweetchuck/git-hooks": {
             "symlink": true
         }
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "@git-hooks:deploy"
+        ],
+        "post-update-cmd": [
+            "@git-hooks:deploy"
+        ],
+        "git-hooks:deploy": "git config core.hooksPath ./git-hooks"
     }
 }
