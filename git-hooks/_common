@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-sghHookName=$(basename "${0}")
+sghHookName="${0##*/}"
 
 if [ "$(git rev-parse --is-bare-repository)" = 'true' ]; then
     sghBridge='./.git-hooks'
