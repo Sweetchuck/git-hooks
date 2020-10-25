@@ -353,8 +353,12 @@ class RoboFile extends Tasks implements LoggerAwareInterface
             $cmdArgs[] = escapeshellarg($suite);
         }
 
-        $cmdPattern .= ' --env %s';
-        $cmdArgs[] = escapeshellarg('sandbox');
+        $envDir = $this->codeceptionInfo['paths']['envs'];
+        $envFileName = "{$this->environmentType}.{$this->environmentName}";
+        if (file_exists("$envDir/$envFileName.yml")) {
+            $cmdPattern .= ' --env %s';
+            $cmdArgs[] = escapeshellarg($envFileName);
+        }
 
         if ($this->environmentType === 'ci' && $this->environmentName === 'jenkins') {
             // Jenkins has to use a post-build action to mark the build "unstable".

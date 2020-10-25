@@ -4,15 +4,14 @@ namespace Sweetchuck\GitHooks\Composer;
 
 use Composer\Composer;
 use Composer\EventDispatcher\EventSubscriberInterface;
-use Composer\IO\ConsoleIO;
 use Composer\IO\IOInterface;
 use Composer\Plugin\Capability\CommandProvider as ComposerCommandProvider;
 use Composer\Plugin\Capable;
 use Composer\Plugin\PluginInterface;
 use Composer\Script\Event;
 use Composer\Script\ScriptEvents;
-use Sweetchuck\GitHooks\DeployConfigReader;
-use Sweetchuck\GitHooks\Deployer;
+use Sweetchuck\GitHooks\ConfigReader;
+use Sweetchuck\GitHooks\GitHookManager;
 
 class Plugin implements PluginInterface, EventSubscriberInterface, Capable
 {
@@ -33,17 +32,17 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
     protected $io;
 
     /**
-     * @var \Sweetchuck\GitHooks\DeployConfigReader
+     * @var \Sweetchuck\GitHooks\ConfigReader
      */
-    protected $deployConfigReader;
+    protected $configReader;
 
     /**
-     * @var \Sweetchuck\GitHooks\Deployer
+     * @var \Sweetchuck\GitHooks\GitHookManager
      */
-    protected $deployer;
+    protected $gitHookManager;
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public static function getSubscribedEvents()
     {
@@ -53,16 +52,26 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
         ];
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    public function getCapabilities()
+    {
+        return [
+            ComposerCommandProvider::class => CommandProvider::class,
+        ];
+    }
+
     public function __construct(
-        ?DeployConfigReader $deployConfigReader = null,
-        ?Deployer $deployer = null
+        ?ConfigReader $configReader = null,
+        ?GitHookManager $gitHookManager = null
     ) {
-        $this->deployConfigReader = $deployConfigReader ?: new DeployConfigReader();
-        $this->deployer = $deployer ?: new Deployer();
+        $this->configReader = $configReader ?: new ConfigReader();
+        $this->gitHookManager = $gitHookManager ?: new GitHookManager();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function activate(Composer $composer, IOInterface $io)
     {
@@ -72,41 +81,64 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
-    public function getCapabilities()
+    public function deactivate(Composer $composer, IOInterface $io)
     {
-        return [
-            ComposerCommandProvider::class => CommandProvider::class,
-        ];
+        // Nothing to do here, as all features are provided through event listeners.
+        $this->composer = $composer;
+        $this->io = $io;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function uninstall(Composer $composer, IOInterface $io)
+    {
+        $this->composer = $composer;
+        $this->io = $io;
+
+        $this->recall();
     }
 
     public function onPostInstallCmd(Event $event): bool
     {
-        $result = $this->deploy($event);
-
-        return $result['exitCode'] === 0;
+        return $this->onPostUpdateCmd($event);
     }
 
     public function onPostUpdateCmd(Event $event): bool
     {
-        $result = $this->deploy($event);
+        $this->composer = $event->getComposer();
+        $this->io = $event->getIO();
+
+        $result = $this->deploy();
 
         return $result['exitCode'] === 0;
     }
 
-    protected function deploy(Event $event): array
+    protected function deploy(): array
     {
-        $package = $event->getComposer()->getPackage();
+        $config = $this->getConfig();
+        $this->gitHookManager->setLogger($this->io);
+
+        return $this->gitHookManager->deploy($config);
+    }
+
+    protected function recall(): array
+    {
+        $config = $this->getConfig();
+        $this->gitHookManager->setLogger($this->io);
+
+        return $this->gitHookManager->recall($config);
+    }
+
+    protected function getConfig(): array
+    {
+        $package = $this->composer->getPackage();
         $extra = $package->getExtra();
-        $config = $this
-            ->deployConfigReader
+
+        return $this
+            ->configReader
             ->getConfig(null, $extra[$package->getName()] ?? []);
-
-        /** @var \Composer\IO\ConsoleIO $io */
-        $io = $event->getIO();
-        $this->deployer->setLogger($io);
-
-        return $this->deployer->deploy($config);
     }
 }

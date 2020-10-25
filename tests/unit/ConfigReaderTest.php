@@ -4,13 +4,13 @@ declare(strict_types = 1);
 
 namespace  Sweetchuck\GitHooks\Tests\Unit;
 
-use Sweetchuck\GitHooks\DeployConfigReader;
+use Sweetchuck\GitHooks\ConfigReader;
 use Symfony\Component\Console\Input\InputInterface;
 
 /**
- * @covers \Sweetchuck\GitHooks\DeployConfigReader
+ * @covers \Sweetchuck\GitHooks\ConfigReader
  */
-class DeployConfigReaderTest extends TestBase
+class ConfigReaderTest extends TestBase
 {
     public function casesGetConfig(): array
     {
@@ -88,7 +88,7 @@ class DeployConfigReaderTest extends TestBase
      */
     public function testGetConfig(array $expected, ?InputInterface $input, array $extra)
     {
-        $subject = new DeployConfigReader();
+        $subject = new ConfigReader();
         $this->tester->assertSame($expected, $subject->getConfig($input, $extra));
     }
 }

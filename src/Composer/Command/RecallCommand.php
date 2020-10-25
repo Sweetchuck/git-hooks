@@ -8,10 +8,9 @@ use Composer\Command\BaseCommand;
 use Sweetchuck\GitHooks\ConfigReader;
 use Sweetchuck\GitHooks\GitHookManager;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class DeployCommand extends BaseCommand
+class RecallCommand extends BaseCommand
 {
 
     /**
@@ -80,29 +79,10 @@ class DeployCommand extends BaseCommand
     {
         parent::configure();
         if (!$this->getName()) {
-            $this->setName('git-hooks:deploy');
+            $this->setName('git-hooks:recall');
         }
 
-        $this
-            ->setDescription('Deploys Git hooks scripts based on the configuration')
-            ->addOption(
-                'symlink',
-                's',
-                InputOption::VALUE_NONE,
-                'Symlink or copy'
-            )
-            ->addOption(
-                'no-symlink',
-                'S',
-                InputOption::VALUE_NONE,
-                'Symlink or copy'
-            )
-            ->addOption(
-                'core-hooks-path',
-                'p',
-                InputOption::VALUE_REQUIRED,
-                'Value for core.hooksPath Git config'
-            );
+        $this->setDescription('Recall the deployed Git hooks scripts');
     }
 
     /**
@@ -122,7 +102,7 @@ class DeployCommand extends BaseCommand
     {
         $this->result = $this
             ->getGitHookManager()
-            ->deploy($this->getConfig());
+            ->recall($this->getConfig());
 
         return $this;
     }

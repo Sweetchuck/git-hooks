@@ -63,12 +63,7 @@ class Acceptance extends Module
     protected $process = null;
 
     /**
-     * @var string
-     */
-    protected $gitExecutable = 'git';
-
-    /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function _beforeSuite($settings = [])
     {
@@ -82,7 +77,7 @@ class Acceptance extends Module
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function _afterSuite()
     {
@@ -90,11 +85,13 @@ class Acceptance extends Module
             $this->fs->remove($this->suitRootDir);
         }
 
+        chdir(dirname(__DIR__, 3));
+
         parent::_afterSuite();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function _before(TestInterface $test)
     {
@@ -108,7 +105,7 @@ class Acceptance extends Module
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function _after(TestInterface $test)
     {
@@ -125,7 +122,7 @@ class Acceptance extends Module
     public function doGitRemoteAdd(string $name, string $uri)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'remote',
             'add',
             $name,
@@ -150,7 +147,11 @@ class Acceptance extends Module
         $this->fs->mirror($projectCacheDir, $dirNormalized);
         $this->doGitInitLocal($dir);
 
-        $this->doExec(['composer', 'run', 'post-install-cmd']);
+        $this->doExec([
+            $this->config['composerExecutable'],
+            'run',
+            'post-install-cmd',
+        ]);
     }
 
     /**
@@ -208,19 +209,21 @@ class Acceptance extends Module
         $this->fs->mirror($projectCacheDir, $dirNormalized);
         $this->doGitInit($dir, $type, true);
 
-        $this->doExec(['composer', 'run', 'post-install-cmd']);
+        $this->doExec([
+            $this->config['composerExecutable'],
+            'run',
+            'post-install-cmd',
+        ]);
     }
 
     /**
      * @Given I run git add :files
-     *
-     * @todo NodeTable.
      */
     public function doGitAdd(string $files)
     {
         $cmd = array_merge(
             [
-                $this->gitExecutable,
+                $this->config['gitExecutable'],
                 'add',
                 '--',
             ],
@@ -237,7 +240,7 @@ class Acceptance extends Module
     public function doGitCommit(?string $message = null)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'commit',
         ];
 
@@ -261,7 +264,7 @@ class Acceptance extends Module
     {
         $this->process = $this->doExec(
             [
-                $this->gitExecutable,
+                $this->config['gitExecutable'],
                 'push',
                 $remote,
                 $branch,
@@ -292,7 +295,7 @@ class Acceptance extends Module
     public function doGitCheckoutNewBranch(string $branch)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'checkout',
             '-b',
             $branch,
@@ -306,7 +309,7 @@ class Acceptance extends Module
     public function doGitCheckoutFile(string $branch, string $file)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'checkout',
             $branch,
             '--',
@@ -321,7 +324,7 @@ class Acceptance extends Module
     public function doRunGitCheckout(string $branch)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'checkout',
             $branch
         ];
@@ -334,7 +337,7 @@ class Acceptance extends Module
     public function doGitBranchCreate(string $branch)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'branch',
             $branch
         ];
@@ -353,7 +356,7 @@ class Acceptance extends Module
     public function doRunGitRebase(string $upstream, ?string $branch = null)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'rebase',
             $upstream,
         ];
@@ -376,7 +379,7 @@ class Acceptance extends Module
     public function doGitMerge(string $branch, string $message)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'merge',
             $branch,
             '-m',
@@ -391,7 +394,7 @@ class Acceptance extends Module
     public function doGitMergeSquash(string $branch, string $message)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'merge',
             $branch,
             '--ff',
@@ -416,7 +419,7 @@ class Acceptance extends Module
     public function doGitConfigSet(string $name, string $value)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'config',
             $name,
             $value,
@@ -431,6 +434,13 @@ class Acceptance extends Module
     public function doWait(string $amount)
     {
         sleep(intval($amount));
+    }
+
+    public function doComposer(array $command)
+    {
+        array_unshift($command, $this->config['composerExecutable']);
+
+        $this->process = $this->doExec($command);
     }
 
     /**
@@ -477,7 +487,7 @@ class Acceptance extends Module
             '-c',
             sprintf(
                 '%s log --format=%s | cat',
-                $this->gitExecutable,
+                $this->config['gitExecutable'],
                 '%h'
             ),
         ];
@@ -500,7 +510,7 @@ class Acceptance extends Module
     public function assertGitLogIsNotEmpty()
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'log',
             '-1',
         ];
@@ -515,7 +525,7 @@ class Acceptance extends Module
     public function assertGitLogIsEmpty()
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'log',
             '-1',
         ];
@@ -596,7 +606,7 @@ class Acceptance extends Module
         }
 
         $cmd = [
-            'composer',
+            $this->config['composerExecutable'],
             'install',
             '--no-interaction',
         ];
@@ -610,7 +620,7 @@ class Acceptance extends Module
     protected function doGitInit(string $dir, string $tpl, bool $bare)
     {
         $cmd = [
-            $this->gitExecutable,
+            $this->config['gitExecutable'],
             'init',
             '--template=' . $this->getGitTemplateDir($tpl),
         ];
