@@ -5,5 +5,5 @@ modules:
     enabled:
         - 'Asserts'
         - 'Sweetchuck\GitHooks\Test\Helper\Acceptance':
-            baseUrl: 'https://example.com/foo/bar'
-            endpointNamePattern: 'a.b.{{ baseName }}'
+            composerExecutable: 'composer'
+            gitExecutable: 'git'

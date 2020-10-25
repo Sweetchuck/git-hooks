@@ -6,7 +6,7 @@ namespace Sweetchuck\GitHooks;
 
 use Symfony\Component\Console\Input\InputInterface;
 
-class DeployConfigReader
+class ConfigReader
 {
 
     /**
@@ -45,17 +45,23 @@ class DeployConfigReader
 
         $config = [];
 
-        if ($this->input->getOption('symlink') === true) {
+        if ($this->input->hasOption('symlink')
+            && $this->input->getOption('symlink') === true
+        ) {
             $config['symlink'] = true;
         }
 
-        if ($this->input->getOption('no-symlink') === true) {
+        if ($this->input->hasOption('no-symlink')
+            && $this->input->getOption('no-symlink') === true
+        ) {
             $config['symlink'] = false;
         }
 
-        $coreHooksPath = $this->input->getOption('core-hooks-path');
-        if ($coreHooksPath) {
-            $config['core.hooksPath'] = $coreHooksPath;
+        if ($this->input->hasOption('core-hooks-path')) {
+            $coreHooksPath = $this->input->getOption('core-hooks-path');
+            if ($coreHooksPath) {
+                $config['core.hooksPath'] = $coreHooksPath;
+            }
         }
 
         return $config;

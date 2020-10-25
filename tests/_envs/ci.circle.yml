@@ -1,0 +1,5 @@
+modules:
+    config:
+        'Sweetchuck\GitHooks\Test\Helper\Acceptance':
+            composerExecutable: '/home/circleci/.local/bin/composer'
+            gitExecutable: 'git'
