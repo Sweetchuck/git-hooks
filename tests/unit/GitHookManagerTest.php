@@ -6,13 +6,14 @@ namespace  Sweetchuck\GitHooks\Tests\Unit;
 
 use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
-use Sweetchuck\GitHooks\Deployer;
+use Sweetchuck\GitHooks\GitHookManager;
 use Symfony\Component\Filesystem\Filesystem;
+use Webmozart\PathUtil\Path;
 
 /**
- * @covers \Sweetchuck\GitHooks\Deployer
+ * @covers \Sweetchuck\GitHooks\GitHookManager
  */
-class DeployerTest extends TestBase
+class GitHookManagerTest extends TestBase
 {
 
     /**
@@ -45,7 +46,7 @@ class DeployerTest extends TestBase
 
     protected function _after()
     {
-        //$this->fs->remove($this->projectRoot);
+        $this->fs->remove($this->projectRoot);
         parent::_after();
     }
 
@@ -188,7 +189,7 @@ class DeployerTest extends TestBase
 
                 case 'symlink':
                     $this->tester->assertSymlink(
-                        $expected['core.hooksPath'],
+                        Path::makeRelative($expected['core.hooksPath'], "{$this->projectRoot}/.git/hooks"),
                         "{$this->projectRoot}/.git/hooks"
                     );
                     break;
@@ -216,15 +217,15 @@ class DeployerTest extends TestBase
         );
     }
 
-    protected function createDeployer(LoggerInterface $logger, array $mock): Deployer
+    protected function createDeployer(LoggerInterface $logger, array $mock): GitHookManager
     {
         $mock += [
             'getGitDir' => "{$this->projectRoot}/.git",
         ];
 
-        /** @var \PHPUnit\Framework\MockObject\MockObject|\Sweetchuck\GitHooks\Deployer $deployer */
+        /** @var \PHPUnit\Framework\MockObject\MockObject|\Sweetchuck\GitHooks\GitHookManager $deployer */
         $deployer = $this
-            ->getMockBuilder(Deployer::class)
+            ->getMockBuilder(GitHookManager::class)
             ->setConstructorArgs([$logger, null, $this->projectRoot])
             ->onlyMethods(array_keys($mock))
             ->getMock();

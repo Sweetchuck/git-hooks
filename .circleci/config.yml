@@ -1,6 +1,10 @@
 
 version: 2.1
 
+.env_app: &env_app
+    APP_COMPOSER_VERSION: '2.0.1'
+    APP_COMPOSER_HASH: 'c31c1e292ad7be5f49291169c0ac8f683499edddcfd4e42232982d0fd193004208a58ff6f353fde0012d35fdd72bc394'
+
 .env_composer: &env_composer
     COMPOSER_NO_INTERACTION: '1'
     COMPOSER_MEMORY_LIMIT: '-1'
@@ -12,6 +16,7 @@ orbs:
 executors:
     php704:
         environment:
+            <<: *env_app
             <<: *env_composer
 
         docker:
@@ -21,6 +26,7 @@ executors:
 
     php703:
         environment:
+            <<: *env_app
             <<: *env_composer
 
         docker:
@@ -30,6 +36,7 @@ executors:
 
     php702:
         environment:
+            <<: *env_app
             <<: *env_composer
 
         docker:
@@ -38,6 +45,26 @@ executors:
                 image: 'circleci/php:7.2'
 
 commands:
+    install_composer:
+        description: 'Install Composer CLI tool'
+        steps:
+            -
+                run:
+                    name: ''
+                    command: |4
+                        mkdir -p "${HOME}/.local/bin"
+                        php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+                        php -r "if (hash_file('sha384', 'composer-setup.php') === getenv('APP_COMPOSER_HASH')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+                        php composer-setup.php \
+                            --filename    'composer' \
+                            --install-dir "${HOME}/.local/bin" \
+                            --version     "${APP_COMPOSER_VERSION}"
+                        php -r "unlink('composer-setup.php');"
+                        whereis composer
+                        which composer
+                        type composer
+                        composer --version
+
     composer_install:
         description: 'Install Composer dependencies with cache restore and save'
         steps:

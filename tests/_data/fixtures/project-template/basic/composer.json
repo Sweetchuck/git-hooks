@@ -8,7 +8,7 @@
     "repositories": {
         "local": {
             "type": "path",
-            "url": "@see \\FeatureContext::doCreateProjectCache"
+            "url": "@see \\Sweetchuck\\GitHooks\\Test\\Helper\\Acceptance::doCreateProjectCache"
         }
     },
     "require": {

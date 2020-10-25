@@ -9,8 +9,9 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Filesystem\Filesystem;
+use Webmozart\PathUtil\Path;
 
-class Deployer implements LoggerAwareInterface
+class GitHookManager implements LoggerAwareInterface
 {
 
     use LoggerAwareTrait;
@@ -29,6 +30,11 @@ class Deployer implements LoggerAwareInterface
      * @var string
      */
     protected $gitExecutable = 'git';
+
+    /**
+     * @var string
+     */
+    protected $minGitVersionForCoreHookPaths = '2.9';
 
     /**
      * @var string
@@ -80,13 +86,29 @@ class Deployer implements LoggerAwareInterface
 
         $this
             ->init()
-            ->doPre()
-            ->doMain()
-            ->doPost();
+            ->doDeployPre()
+            ->doDeployMain()
+            ->doDeployPost();
 
         return $this->result;
     }
 
+    public function recall(array $config): array
+    {
+        $this->config = $config;
+
+        $this
+            ->init()
+            ->doRecallPre()
+            ->doRecallMain()
+            ->doRecallPost();
+
+        return $this->result;
+    }
+
+    /**
+     * @return $this
+     */
     protected function init()
     {
         $this->result = [
@@ -101,6 +123,9 @@ class Deployer implements LoggerAwareInterface
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     protected function initLogger()
     {
         if ($this->getLogger() === null) {
@@ -120,6 +145,9 @@ class Deployer implements LoggerAwareInterface
         return $this;
     }
 
+    /**
+     * @return $this
+     */
     protected function initGitVersion()
     {
         $command = sprintf('%s --version', escapeshellcmd($this->gitExecutable));
@@ -139,14 +167,20 @@ class Deployer implements LoggerAwareInterface
         return $this;
     }
 
-    protected function doPre()
+    /**
+     * @return $this
+     */
+    protected function doDeployPre()
     {
         $this->logger->debug('BEGIN Git hooks deploy');
 
         return $this;
     }
 
-    protected function doMain()
+    /**
+     * @return $this
+     */
+    protected function doDeployMain()
     {
         try {
             $gitDir = $this->getGitDir();
@@ -159,11 +193,11 @@ class Deployer implements LoggerAwareInterface
 
         try {
             if ($this->coreHooksPathSupported()) {
-                $this->doMainConfig();
+                $this->doDeployMainConfig();
             } elseif ($this->config['symlink']) {
-                $this->doMainSymlink($gitDir);
+                $this->doDeployMainSymlink($gitDir);
             } else {
-                $this->doMainCopy($gitDir);
+                $this->doDeployMainCopy($gitDir);
             }
         } catch (Exception $e) {
             $this->result['exitCode'] = 1;
@@ -173,7 +207,10 @@ class Deployer implements LoggerAwareInterface
         return $this;
     }
 
-    protected function doMainConfig()
+    /**
+     * @return $this
+     */
+    protected function doDeployMainConfig()
     {
         $this->gitConfigSet('core.hooksPath', $this->config['core.hooksPath']);
         $this->logger->debug('Git hooks have been deployed by the core.hooksPath configuration.');
@@ -181,7 +218,10 @@ class Deployer implements LoggerAwareInterface
         return $this;
     }
 
-    protected function doMainSymlink(string $gitDir)
+    /**
+     * @return $this
+     */
+    protected function doDeployMainSymlink(string $gitDir)
     {
         $this->symlinkHooksDir($this->config['core.hooksPath'], "$gitDir/hooks");
         $this->logger->debug('Git hooks have been symbolically linked.');
@@ -189,7 +229,10 @@ class Deployer implements LoggerAwareInterface
         return $this;
     }
 
-    protected function doMainCopy(string $gitDir)
+    /**
+     * @return $this
+     */
+    protected function doDeployMainCopy(string $gitDir)
     {
         $this->copyHooksDir($this->config['core.hooksPath'], "$gitDir/hooks");
         $this->logger->debug('Git hooks have been deployed by coping the script files.');
@@ -197,9 +240,67 @@ class Deployer implements LoggerAwareInterface
         return $this;
     }
 
-    protected function doPost()
+    /**
+     * @return $this
+     */
+    protected function doDeployPost()
     {
         $this->logger->debug('END   Git hooks deploy');
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    protected function doRecallPre()
+    {
+        $this->logger->debug('BEGIN Git hooks recall');
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    protected function doRecallMain()
+    {
+        try {
+            $gitDir = $this->getGitDir();
+        } catch (Exception $e) {
+            $this->logger->warning(
+                'Recall the deployed Git hooks scripts skipped because of the absence of $GIT_DIR - {message}',
+                [
+                    'message' => $e->getMessage(),
+                ]
+            );
+
+            return $this;
+        }
+
+        try {
+            $currentCoreHooksPath = $this->gitConfigGet('core.hooksPath');
+            if ($currentCoreHooksPath === $this->config['core.hooksPath']) {
+                $this->gitConfigDelete('core.hooksPath');
+            }
+        } catch (\Exception $e) {
+            //Nothing to do.
+        }
+
+        if ($this->fs->exists("$gitDir/hooks-original")) {
+            $this->fs->remove("$gitDir/hooks");
+            $this->fs->rename("$gitDir/hooks-original", "$gitDir/hooks");
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    protected function doRecallPost()
+    {
+        $this->logger->debug('END   Git hooks recall');
 
         return $this;
     }
@@ -209,9 +310,49 @@ class Deployer implements LoggerAwareInterface
      */
     protected function coreHooksPathSupported(): bool
     {
-        return version_compare($this->gitVersion, '2.9', '>=');
+        return version_compare(
+            $this->gitVersion,
+            $this->minGitVersionForCoreHookPaths,
+            '>='
+        );
     }
 
+    protected function gitConfigGet(string $name): ?string
+    {
+        $command = sprintf(
+            'cd %s && %s config %s',
+            escapeshellarg($this->projectRoot),
+            escapeshellcmd($this->gitExecutable),
+            escapeshellarg($name)
+        );
+
+        $this->logger->debug($command);
+        $output = [];
+        $exitCode = null;
+        exec($command, $output, $exitCode);
+        if ($exitCode === 1) {
+            // The given config name $name not exists.
+            return null;
+        }
+
+        if ($exitCode !== 0) {
+            $this->getLogger()->error(
+                'Failed to execute: "{command}" {output}',
+                [
+                    'command' => $command,
+                    'output' => implode(PHP_EOL, $output),
+                ]
+            );
+
+            throw new Exception("Failed to execute: '$command'", $exitCode);
+        }
+
+        return implode(PHP_EOL, $output);
+    }
+
+    /**
+     * @return $this
+     */
     protected function gitConfigSet(string $name, string $value)
     {
         $command = sprintf(
@@ -230,16 +371,57 @@ class Deployer implements LoggerAwareInterface
         }
 
         $this->logger->debug($command);
+
+        return $this;
     }
 
+    /**
+     * @return $this
+     */
+    protected function gitConfigDelete(string $name)
+    {
+        $command = sprintf(
+            'cd %s && %s config --unset %s ',
+            escapeshellarg($this->projectRoot),
+            escapeshellcmd($this->gitExecutable),
+            escapeshellarg($name)
+        );
+        $output = null;
+        $exitCode = null;
+        exec($command, $output, $exitCode);
+        if ($exitCode !== 0) {
+            // @todo Exit code.
+            throw new Exception("Failed to execute: '$command'", $exitCode);
+        }
+
+        $this->logger->debug($command);
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
     protected function symlinkHooksDir($srcDir, $dstDir)
     {
-        $this->fs->remove($dstDir);
-        $this->fs->symlink(realpath($srcDir), $dstDir, true);
+        if (is_link($dstDir)) {
+            $this->fs->remove($dstDir);
+        } else {
+            $this->fs->rename($dstDir, "{$dstDir}-original");
+        }
 
-        return;
+        $this->fs->symlink(
+            Path::makeRelative($srcDir, $dstDir),
+            $dstDir,
+            true
+        );
+
+        return $this;
     }
 
+    /**
+     * @return $this
+     */
     protected function copyHooksDir($srcDir, $dstDir)
     {
         $this->fs->mirror($srcDir, $dstDir, null, ['override' => true]);
@@ -252,12 +434,14 @@ class Deployer implements LoggerAwareInterface
 
             $file->next();
         }
+
+        return $this;
     }
 
     /**
      * @return bool|string
      */
-    protected function getGitDir()
+    protected function getGitDir(): ?string
     {
         $command = sprintf(
             'cd %s && %s rev-parse --git-dir',
@@ -273,6 +457,8 @@ class Deployer implements LoggerAwareInterface
             throw new Exception('The $GIT_DIR cannot be detected', 3);
         }
 
-        return realpath($this->projectRoot . '/' . rtrim(reset($output), "\n"));
+        $gitDir = realpath($this->projectRoot . '/' . rtrim(reset($output), "\n"));
+
+        return $gitDir !== false ? $gitDir : null;
     }
 }
