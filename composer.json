@@ -50,6 +50,6 @@
         "post-update-cmd": [
             "@git-hooks:deploy"
         ],
-        "git-hooks:deploy": "git config core.hooksPath ./git-hooks"
+        "git-hooks:deploy": "git config core.hooksPath \"./git-hooks/$(basename ${SHELL})\""
     }
 }

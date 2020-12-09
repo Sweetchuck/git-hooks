@@ -7,7 +7,7 @@ namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 use Codeception\Example;
 use Sweetchuck\GitHooks\Test\AcceptanceTester;
 
-class GitHookPreCommitCest
+class GitHookPreCommitCest extends GitHookCestBase
 {
 
     protected function triggerCases():array

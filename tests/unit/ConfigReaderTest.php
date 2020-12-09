@@ -15,7 +15,8 @@ class ConfigReaderTest extends TestBase
     public function casesGetConfig(): array
     {
         $selfRootDir = $this->selfProjectRoot();
-        $defaultCoreHooksPath = "$selfRootDir/git-hooks";
+        $shell = basename(getenv('SHELL'));
+        $defaultCoreHooksPath = "$selfRootDir/git-hooks/$shell";
 
         InputInterface::class;
 
@@ -24,6 +25,7 @@ class ConfigReaderTest extends TestBase
                 [
                     'symlink' => false,
                     'core.hooksPath' => $defaultCoreHooksPath,
+                    'SHELL' => $shell,
                 ],
                 null,
                 [],
@@ -32,6 +34,7 @@ class ConfigReaderTest extends TestBase
                 [
                     'symlink' => true,
                     'core.hooksPath' => $defaultCoreHooksPath,
+                    'SHELL' => $shell,
                 ],
                 $this->getInput([
                     '--symlink' => null,
@@ -42,6 +45,7 @@ class ConfigReaderTest extends TestBase
                 [
                     'symlink' => false,
                     'core.hooksPath' => $defaultCoreHooksPath,
+                    'SHELL' => $shell,
                 ],
                 $this->getInput([
                     '--no-symlink' => null,
@@ -52,6 +56,7 @@ class ConfigReaderTest extends TestBase
                 [
                     'symlink' => false,
                     'core.hooksPath' => 'my-dir',
+                    'SHELL' => $shell,
                 ],
                 $this->getInput([
                     '--core-hooks-path' => 'my-dir',
@@ -62,6 +67,7 @@ class ConfigReaderTest extends TestBase
                 [
                     'symlink' => true,
                     'core.hooksPath' => 'my-dir',
+                    'SHELL' => $shell,
                 ],
                 $this->getInput([
                     '--symlink' => null,
@@ -73,6 +79,7 @@ class ConfigReaderTest extends TestBase
                 [
                     'symlink' => true,
                     'core.hooksPath' => $defaultCoreHooksPath,
+                    'SHELL' => $shell,
                 ],
                 null,
                 [

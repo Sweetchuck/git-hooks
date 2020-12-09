@@ -4,6 +4,7 @@ version: 2.1
 .env_app: &env_app
     APP_COMPOSER_VERSION: '2.0.1'
     APP_COMPOSER_HASH: 'c31c1e292ad7be5f49291169c0ac8f683499edddcfd4e42232982d0fd193004208a58ff6f353fde0012d35fdd72bc394'
+    SHELL: '/bin/bash'
 
 .env_composer: &env_composer
     COMPOSER_NO_INTERACTION: '1'
@@ -33,16 +34,6 @@ executors:
             -
                 name: 'main'
                 image: 'circleci/php:7.3'
-
-    php702:
-        environment:
-            <<: *env_app
-            <<: *env_composer
-
-        docker:
-            -
-                name: 'main'
-                image: 'circleci/php:7.2'
 
 commands:
     install_composer:
@@ -118,13 +109,13 @@ commands:
 
 jobs:
     build:
-        executor: 'php702'
+        executor: 'php703'
         working_directory: '~/repo'
         steps:
             - 'checkout'
             - 'composer_install'
     lint:
-        executor: 'php702'
+        executor: 'php703'
         working_directory: '~/repo'
         steps:
             - 'checkout'
@@ -139,13 +130,6 @@ jobs:
             - 'test'
     test_php703:
         executor: 'php703'
-        working_directory: '~/repo'
-        steps:
-            - 'checkout'
-            - 'composer_install'
-            - 'test'
-    test_php702:
-        executor: 'php702'
         working_directory: '~/repo'
         steps:
             - 'checkout'
@@ -167,9 +151,5 @@ workflows:
                         - build
             -
                 test_php703:
-                    requires:
-                        - build
-            -
-                test_php702:
                     requires:
                         - build

@@ -7,7 +7,7 @@ namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 use Codeception\Example;
 use Sweetchuck\GitHooks\Test\AcceptanceTester;
 
-class GitHookPrepareCommitMsgCest
+class GitHookPrepareCommitMsgCest extends GitHookCestBase
 {
     protected function background(AcceptanceTester $I)
     {

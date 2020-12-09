@@ -7,7 +7,7 @@ namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 use Codeception\Example;
 use Sweetchuck\GitHooks\Test\AcceptanceTester;
 
-class GitHookPrePushCest
+class GitHookPrePushCest extends GitHookCestBase
 {
 
     protected function triggerCases():array
@@ -43,7 +43,7 @@ class GitHookPrePushCest
         $I->doCreateFile('README.md');
         $I->doGitAdd('README.md');
         $I->doGitCommit($example['commitMsg']);
-        $I->doGitPush('origin', 'master');
+        $I->doGitPush('origin', $this->defaultGitBranch);
         $I->assertExitCodeEquals($example['exitCode']);
         $I->assertStdOutContains($expectedStdOutput);
     }
