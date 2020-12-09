@@ -63,6 +63,11 @@ class Acceptance extends Module
     protected $process = null;
 
     /**
+     * @var string
+     */
+    protected $defaultGitBranch = '1.x';
+
+    /**
      * {@inheritDoc}
      */
     public function _beforeSuite($settings = [])
@@ -640,6 +645,14 @@ class Acceptance extends Module
             "Initialized empty Git repository in $cwdReal/$gitDir\n",
             $gitInit->getOutput()
         );
+
+        $result = $this->doExec([
+            $this->config['gitExecutable'],
+            'symbolic-ref',
+            'HEAD',
+            'refs/heads/' . $this->defaultGitBranch,
+        ]);
+        $this->assertSame(0, $result->getExitCode());
     }
 
     protected function doExecCwd(string $wd, array $cmd, array $check = []): Process

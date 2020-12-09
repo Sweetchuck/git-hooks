@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+##
+# @see https://git-scm.com/docs/githooks#_commit_msg
+##
+
+sghHookName="${0##*/}"
+sghHasInput='false'
+. "$(dirname $0)/_common"

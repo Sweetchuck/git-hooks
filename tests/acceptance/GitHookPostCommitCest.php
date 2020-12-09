@@ -6,7 +6,7 @@ namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 
 use Sweetchuck\GitHooks\Test\AcceptanceTester;
 
-class GitHookPostCommitCest
+class GitHookPostCommitCest extends GitHookCestBase
 {
 
     public function triggerPostCommitHook(AcceptanceTester $I)

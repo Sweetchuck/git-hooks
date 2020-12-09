@@ -6,7 +6,7 @@ namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 
 use Sweetchuck\GitHooks\Test\AcceptanceTester;
 
-class GitHookPostRewriteCest
+class GitHookPostRewriteCest extends GitHookCestBase
 {
     protected function background(AcceptanceTester $I)
     {
@@ -44,7 +44,7 @@ class GitHookPostRewriteCest
         ]);
 
         $this->background($I);
-        $I->doRunGitCheckout('master');
+        $I->doRunGitCheckout($this->defaultGitBranch);
         $I->doRunGitRebase('production', 'feature-01');
         $I->assertExitCodeEquals(0);
         $I->assertStdErrContains($expectedStdError);

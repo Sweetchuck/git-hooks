@@ -1,0 +1,8 @@
+#!/usr/bin/env zsh
+##
+# @see https://git-scm.com/docs/githooks#_post_rewrite
+##
+
+sghHookName="${0##*/}"
+sghHasInput='true'
+. "$(dirname $0)/_common"

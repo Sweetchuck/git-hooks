@@ -7,7 +7,7 @@ namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 use Codeception\Example;
 use Sweetchuck\GitHooks\Test\AcceptanceTester;
 
-class GitHookPreRebaseCest
+class GitHookPreRebaseCest extends GitHookCestBase
 {
     protected function background(AcceptanceTester $I)
     {
@@ -76,7 +76,7 @@ class GitHookPreRebaseCest
     {
         $expectedStdError = implode("\n", [
             '>  RoboFile::githookPreRebase is called',
-            '>  Current branch: "master"',
+            ">  Current branch: \"{$this->defaultGitBranch}\"",
             ">  Upstream: \"{$example['upstream']}\"",
             ">  Subject branch: \"{$example['subjectBranch']}\"",
         ]);
@@ -85,7 +85,7 @@ class GitHookPreRebaseCest
         $I->doGitCheckoutNewBranch($example['upstream']);
         $I->doGitBranchCreate($example['subjectBranch']);
         $I->doGitCommitNewFileWithMessageAndContent('foo.txt', 'Add foo.txt', '@todo');
-        $I->doRunGitCheckout('master');
+        $I->doRunGitCheckout($this->defaultGitBranch);
         $I->doRunGitRebase($example['upstream'], $example['subjectBranch']);
         $I->assertStdErrContains($expectedStdError);
         $I->assertExitCodeEquals($example['exitCode']);

@@ -6,7 +6,7 @@ namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 
 use Sweetchuck\GitHooks\Test\AcceptanceTester;
 
-class GitHookPostMergeCest
+class GitHookPostMergeCest extends GitHookCestBase
 {
     protected function background(AcceptanceTester $I)
     {
@@ -14,7 +14,7 @@ class GitHookPostMergeCest
         $I->doGitCommitNewFileWithMessageAndContent('README.md', 'Initial commit', '@todo');
         $I->doGitCheckoutNewBranch('feature-01');
         $I->doGitCommitNewFileWithMessageAndContent('robots.txt', 'Add robots.txt', 'foo');
-        $I->doRunGitCheckout('master');
+        $I->doRunGitCheckout($this->defaultGitBranch);
     }
 
     public function triggerNormalMerge(AcceptanceTester $I)
@@ -25,7 +25,7 @@ class GitHookPostMergeCest
         ]);
 
         $this->background($I);
-        $I->doGitMerge('feature-01', 'Merge feature-01 into master');
+        $I->doGitMerge('feature-01', "Merge feature-01 into {$this->defaultGitBranch}");
         $I->assertStdErrContains($expectedStdError);
     }
 
@@ -37,7 +37,7 @@ class GitHookPostMergeCest
         ]);
 
         $this->background($I);
-        $I->doGitMergeSquash('feature-01', 'Merge feature-01 into master');
+        $I->doGitMergeSquash('feature-01', "Merge feature-01 into {$this->defaultGitBranch}");
         $I->assertStdErrContains($expectedStdError);
     }
 }

@@ -6,7 +6,7 @@ namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 
 use Sweetchuck\GitHooks\Test\AcceptanceTester;
 
-class GitHookPostCheckoutCest
+class GitHookPostCheckoutCest extends GitHookCestBase
 {
     protected function background(AcceptanceTester $I)
     {
@@ -41,7 +41,7 @@ class GitHookPostCheckoutCest
         $this->background($I);
         $I->doGitCommitNewFileWithMessageAndContent('CONTRIBUTE.md', 'WIP', '@todo');
         $I->doRunGitCheckout('feature-1');
-        $I->doGitCheckoutFile('master', 'CONTRIBUTE.md');
+        $I->doGitCheckoutFile($this->defaultGitBranch, 'CONTRIBUTE.md');
         $I->assertStdErrContains($expectedStdError);
     }
 }

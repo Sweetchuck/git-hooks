@@ -24,17 +24,43 @@ class ConfigReader
      */
     protected $extra = [];
 
+    /**
+     * @var string
+     */
+    protected $defaultShell = 'bash';
+
     public function getConfig(?InputInterface $input = null, array $extra = []): array
     {
         $this->input = $input;
         $this->extra = $extra;
 
-        return array_replace_recursive(
+        $config = array_replace_recursive(
             $this->getConfigFromDefault(),
             $this->getConfigFromExtra(),
             $this->getConfigFromEnvVars(),
             $this->getConfigFromCli()
         );
+        $this->getConfigResolvePlaceholders($config);
+
+        return $config;
+    }
+
+    protected function getConfigResolvePlaceholders(array &$config)
+    {
+        $coreHooksPath = $config['core.hooksPath'] ?: '';
+        foreach ([$config['SHELL'], $this->defaultShell] as $shell) {
+            $replacementPairs = [
+                '{{ SHELL }}' => $shell,
+            ];
+            $config['core.hooksPath'] = strtr($coreHooksPath, $replacementPairs);
+            if (file_exists($config['core.hooksPath'])) {
+                break;
+            }
+
+            $config['core.hooksPath'] = $coreHooksPath;
+        }
+
+        return $this;
     }
 
     protected function getConfigFromCli(): array
@@ -111,7 +137,8 @@ class ConfigReader
 
         return [
             'symlink' => false,
-            'core.hooksPath' => "$root/git-hooks",
+            'core.hooksPath' => "$root/git-hooks/{{ SHELL }}",
+            'SHELL' => basename(getenv('SHELL')) ?: $this->defaultShell,
         ];
     }
 
