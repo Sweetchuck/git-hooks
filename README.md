@@ -21,8 +21,8 @@ teammates then this is the tool you are looking for.
    init && composer init`)
 2. Run `composer require --dev 'sweetchuck/git-hooks'`
 3. Then you have two option
-   1. Relay on Git hooks scripts which are shipped with this package and
-      implement the logic in your `./.git-hooks` file.
+   1. Rely on Git hook scripts which are shipped with this package and implement
+      the logic in your `./.git-hooks` file.
    2. Or create a `./git-hooks` directory and create Git hook files in it. (eg:
       `./git-hooks/pre-commit`)
 4. The deployment script will be automatically triggered by the
@@ -51,7 +51,7 @@ Type: string
 Default value: `vendor/sweetchuck/git-hooks/git-hooks` (dynamically detected)
 
 If the Git version is >= v2.9 then this value will be used to set `git config
-core.hooksPath <FOO>`. If Git is older than 2.9 then the content of this
+core.hooksPath <PATH>`. If Git is older than 2.9 then the content of this
 directory will be symbolically linked or copied to `./.git/hooks` directory.
 
 
@@ -114,12 +114,15 @@ sghExit 0
 /**
  * Git hook tasks have to be started with 'githook' prefix.
  * So the method name format is: githook<GitHookNameInCamelCaseFormat>
+ * Or use the @command annotation.
  */
 class RoboFile extends \Robo\Tasks
 {
 
     /**
      * Demo pre-commit callback.
+     *
+     * @command githook:pre-commit
      */
     public function githookPreCommit()
     {

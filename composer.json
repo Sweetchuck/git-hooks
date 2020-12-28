@@ -1,7 +1,22 @@
 {
     "type": "composer-plugin",
     "name": "sweetchuck/git-hooks",
-    "description": "Provide a bridge between Git hooks and scripts under VCS.",
+    "description": "Provides a bridge between Git hooks and scripts under VCS.",
+    "keywords": [
+        "git-hooks"
+    ],
+    "authors": [
+        {
+            "name": "Andor",
+            "role": "Maintainer",
+            "homepage": "https://github.com/Sweetchuck"
+        }
+    ],
+    "homepage": "https://github.com/Sweetchuck/git-hooks",
+    "support": {
+        "source": "https://github.com/Sweetchuck/git-hooks",
+        "issues": "https://github.com/Sweetchuck/git-hooks/issues"
+    },
     "license": "GPL-2.0-or-later",
     "config": {
         "bin-dir": "bin",
@@ -10,7 +25,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=7.2",
+        "php": ">=7.3",
         "ext-json": "*",
         "ext-mbstring": "*",
         "composer-plugin-api": "^2.0",
@@ -22,8 +37,8 @@
         "composer/composer": "^2.0",
         "consolidation/robo": "^2.0",
         "squizlabs/php_codesniffer": "^3.5",
-        "sweetchuck/robo-git": "^0.3",
-        "sweetchuck/robo-phpcs": "^0.2"
+        "sweetchuck/robo-git": "1.x-dev",
+        "sweetchuck/robo-phpcs": "1.x-dev"
     },
     "autoload": {
         "psr-4": {
