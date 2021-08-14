@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Sweetchuck\GitHooks;
 
 use DirectoryIterator;
@@ -24,49 +26,33 @@ class GitHookManager implements LoggerAwareInterface
     /**
      * @var string
      */
-    protected $projectRoot = '.';
+    protected string $projectRoot = '.';
 
     /**
      * @var string
      */
-    protected $gitExecutable = 'git';
+    protected string $gitExecutable = 'git';
 
     /**
      * @var string
      */
-    protected $minGitVersionForCoreHookPaths = '2.9';
+    protected string $minGitVersionForCoreHookPaths = '2.9';
 
     /**
      * @var string
      */
-    protected $gitVersion = '';
+    protected string $gitVersion = '';
 
     /**
      * Self composer.json, not the root one.
-     *
-     * @var array|null
      */
-    protected $selfPackage = null;
+    protected ?array $selfPackage = null;
 
-    /**
-     * @var array
-     */
-    protected $config = [];
+    protected array $config = [];
 
-    /**
-     * @var array
-     */
-    protected $result = [];
+    protected array $result = [];
 
-    /**
-     * @var \Psr\Log\LoggerInterface
-     */
-    protected $logger;
-
-    /**
-     * @var \Symfony\Component\Filesystem\Filesystem
-     */
-    protected $fs;
+    protected Filesystem $fs;
 
     public function __construct(?LoggerInterface $logger = null, ?Filesystem $fs = null, string $projectRoot = '.')
     {

@@ -16,7 +16,7 @@ class CommandCest
         $I->doCreateProjectInstance('basic', 'p-01');
         $I->doComposer(['-vvv', 'git-hooks:deploy']);
         $I->assertStdErrContains('Git hooks have been deployed by the core.hooksPath configuration.');
-        $I->assertExitCodeEquals(0);
+        $I->assertExitCodeEquals('0');
     }
 
     public function gitHooksRecall(AcceptanceTester $I)
@@ -24,6 +24,6 @@ class CommandCest
         $I->doCreateProjectInstance('basic', 'p-01');
         $I->doComposer(['-vvv', 'git-hooks:recall']);
         $I->assertStdErrContains("cd '.' && git config --unset 'core.hooksPath'");
-        $I->assertExitCodeEquals(0);
+        $I->assertExitCodeEquals('0');
     }
 }

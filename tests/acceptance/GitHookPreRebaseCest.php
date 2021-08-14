@@ -50,7 +50,7 @@ class GitHookPreRebaseCest extends GitHookCestBase
         $I->doRunGitCheckout($example['currentBranch']);
         $I->doRunGitRebase($example['upstream']);
         $I->assertStdErrContains($expectedStdError);
-        $I->assertExitCodeEquals($example['exitCode']);
+        $I->assertExitCodeEquals((string) $example['exitCode']);
     }
 
     protected function triggerOtherBranchCases(): array
@@ -88,6 +88,6 @@ class GitHookPreRebaseCest extends GitHookCestBase
         $I->doRunGitCheckout($this->defaultGitBranch);
         $I->doRunGitRebase($example['upstream'], $example['subjectBranch']);
         $I->assertStdErrContains($expectedStdError);
-        $I->assertExitCodeEquals($example['exitCode']);
+        $I->assertExitCodeEquals((string) $example['exitCode']);
     }
 }

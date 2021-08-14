@@ -44,7 +44,7 @@ class GitHookPrePushCest extends GitHookCestBase
         $I->doGitAdd('README.md');
         $I->doGitCommit($example['commitMsg']);
         $I->doGitPush('origin', $this->defaultGitBranch);
-        $I->assertExitCodeEquals($example['exitCode']);
+        $I->assertExitCodeEquals((string) $example['exitCode']);
         $I->assertStdOutContains($expectedStdOutput);
     }
 }

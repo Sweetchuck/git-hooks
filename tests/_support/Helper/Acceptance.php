@@ -16,56 +16,35 @@ use Symfony\Component\Process\Process;
 class Acceptance extends Module
 {
 
-    /**
-     * @var string
-     */
-    protected $projectRootDir;
+    protected string $projectRootDir;
 
     /**
      * Absolute path to the fixtures directory.
-     *
-     * @var string
      */
-    protected $fixturesDir = '';
+    protected string $fixturesDir = '';
+
+    protected array $composer = [];
 
     /**
-     * @var array
+     * @var
      */
-    protected $composer = [];
+    protected string $suitRootDir;
 
-    /**
-     * @var string
-     */
-    protected $suitRootDir;
-
-    /**
-     * @var \Symfony\Component\Filesystem\Filesystem
-     */
-    protected $fs;
+    protected Filesystem $fs;
 
     /**
      * Absolute directory name. This dir is under the static::$suitRootDir.
-     *
-     * @var string
      */
-    protected $scenarioRootDir = '';
+    protected string $scenarioRootDir = '';
 
     /**
      * Current working directory.
-     *
-     * @var string
      */
-    protected $cwd = '';
+    protected string $cwd = '';
 
-    /**
-     * @var \Symfony\Component\Process\Process
-     */
-    protected $process = null;
+    protected ?Process $process = null;
 
-    /**
-     * @var string
-     */
-    protected $defaultGitBranch = '1.x';
+    protected string $defaultGitBranch = '1.x';
 
     /**
      * {@inheritDoc}
@@ -87,7 +66,7 @@ class Acceptance extends Module
     public function _afterSuite()
     {
         if ($this->fs->exists($this->suitRootDir)) {
-            $this->fs->remove($this->suitRootDir);
+            //$this->fs->remove($this->suitRootDir);
         }
 
         chdir(dirname(__DIR__, 3));
@@ -117,7 +96,7 @@ class Acceptance extends Module
         parent::_after($test);
 
         if ($this->fs->exists($this->scenarioRootDir)) {
-            $this->fs->remove($this->scenarioRootDir);
+            //$this->fs->remove($this->scenarioRootDir);
         }
     }
 
@@ -198,7 +177,7 @@ class Acceptance extends Module
 
     /**
      * @Given I initialize a bare Git repo in directory :dir
-     * @Given I initialize a bare Git repo in directory :dir with :ttype git template
+     * @Given I initialize a bare Git repo in directory :dir with :type git template
      */
     public function doGitInitBare(string $dir, string $type = 'basic')
     {
@@ -571,7 +550,7 @@ class Acceptance extends Module
         $composerJson['repositories']['local']['url'] = $this->projectRootDir;
         $this->fs->dumpFile(
             "$projectCacheDir/composer.json",
-            json_encode($composerJson, JSON_PRETTY_PRINT)
+            json_encode($composerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
         );
 
         $composerLock = json_decode(file_get_contents("$projectCacheDir/composer.lock"), true);

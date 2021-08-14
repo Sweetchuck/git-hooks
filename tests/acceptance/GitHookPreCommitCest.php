@@ -10,7 +10,7 @@ use Sweetchuck\GitHooks\Test\AcceptanceTester;
 class GitHookPreCommitCest extends GitHookCestBase
 {
 
-    protected function triggerCases():array
+    protected function triggerCases(): array
     {
         return [
             'positive' => [
@@ -38,6 +38,6 @@ class GitHookPreCommitCest extends GitHookCestBase
         $I->doGitAdd($example['fileName']);
         $I->doGitCommit('Initial commit');
         $I->assertStdErrContains($expectedStdError);
-        $I->assertGitLogLength($example['commits']);
+        $I->assertGitLogLength((string) $example['commits']);
     }
 }

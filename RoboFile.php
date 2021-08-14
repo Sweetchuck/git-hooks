@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types = 1);
+
+use League\Container\Container as LeagueContainer;
+use League\Container\ContainerInterface;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Robo\Tasks;
-use Sweetchuck\LintReport\Reporter\BaseReporter;
-use League\Container\ContainerInterface;
 use Robo\Collection\CollectionBuilder;
+use Sweetchuck\LintReport\Reporter\BaseReporter;
 use Sweetchuck\Robo\Git\GitTaskLoader;
 use Sweetchuck\Robo\Phpcs\PhpcsTaskLoader;
 use Symfony\Component\Console\Output\ConsoleOutputInterface;
@@ -21,63 +24,35 @@ class RoboFile extends Tasks implements LoggerAwareInterface
     use GitTaskLoader;
     use PhpcsTaskLoader;
 
-    /**
-     * @var array
-     */
-    protected $composerInfo = [];
+    protected array $composerInfo = [];
 
-    /**
-     * @var array
-     */
-    protected $codeceptionInfo = [];
+    protected array $codeceptionInfo = [];
 
     /**
      * @var string[]
      */
-    protected $codeceptionSuiteNames = [];
+    protected array $codeceptionSuiteNames = [];
 
-    /**
-     * @var string
-     */
-    protected $packageVendor = '';
+    protected string $packageVendor = '';
 
-    /**
-     * @var string
-     */
-    protected $packageName = '';
+    protected string $packageName = '';
 
-    /**
-     * @var string
-     */
-    protected $binDir = 'vendor/bin';
+    protected string $binDir = 'vendor/bin';
 
-    /**
-     * @var string
-     */
-    protected $gitHook = '';
+    protected string $gitHook = '';
 
-    /**
-     * @var string
-     */
-    protected $envVarNamePrefix = '';
+    protected string $envVarNamePrefix = '';
 
     /**
      * Allowed values: dev, ci, prod.
-     *
-     * @var string
      */
-    protected $environmentType = '';
+    protected string $environmentType = '';
 
     /**
      * Allowed values: local, jenkins, travis.
-     *
-     * @var string
      */
-    protected $environmentName = '';
+    protected string $environmentName = '';
 
-    /**
-     * RoboFile constructor.
-     */
     public function __construct()
     {
         putenv('COMPOSER_DISABLE_XDEBUG_WARN=1');
@@ -88,17 +63,27 @@ class RoboFile extends Tasks implements LoggerAwareInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @hook pre-command @initLintReporters
      */
-    public function setContainer(ContainerInterface $container)
+    public function initLintReporters()
     {
-        BaseReporter::lintReportConfigureContainer($container);
+        $lintServices = BaseReporter::getServices();
+        $container = $this->getContainer();
+        foreach ($lintServices as $name => $class) {
+            if ($container->has($name)) {
+                continue;
+            }
 
-        return parent::setContainer($container);
+            if ($container instanceof LeagueContainer) {
+                $container->share($name, $class);
+            }
+        }
     }
 
     /**
      * Git "pre-commit" hook callback.
+     *
+     * @initLintReporters
      */
     public function githookPreCommit(): CollectionBuilder
     {
@@ -123,6 +108,8 @@ class RoboFile extends Tasks implements LoggerAwareInterface
 
     /**
      * Run code style checkers.
+     *
+     * @initLintReporters
      */
     public function lint(): CollectionBuilder
     {
@@ -154,8 +141,8 @@ class RoboFile extends Tasks implements LoggerAwareInterface
      */
     protected function initEnvironmentTypeAndName()
     {
-        $this->environmentType = getenv($this->getEnvVarName('environment_type'));
-        $this->environmentName = getenv($this->getEnvVarName('environment_name'));
+        $this->environmentType = getenv($this->getEnvVarName('environment_type')) ?: '';
+        $this->environmentName = getenv($this->getEnvVarName('environment_name')) ?: '';
 
         if (!$this->environmentType) {
             if (getenv('CI') === 'true') {

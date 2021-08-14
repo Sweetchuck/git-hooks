@@ -39,6 +39,6 @@ class GitHookCommitMsgCest extends GitHookCestBase
         $I->doGitAdd('README.md');
         $I->doGitCommit($example['message']);
         $I->assertStdErrContains($expectedStdError);
-        $I->assertExitCodeEquals($example['exitCode']);
+        $I->assertExitCodeEquals((string) $example['exitCode']);
     }
 }

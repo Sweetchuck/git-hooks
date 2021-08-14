@@ -9,25 +9,13 @@ use Symfony\Component\Console\Input\InputInterface;
 class ConfigReader
 {
 
-    /**
-     * @var string
-     */
-    protected $envVarNamePrefix = 'SGH_GIT_HOOKS';
+    protected string $envVarNamePrefix = 'SGH_GIT_HOOKS';
 
-    /**
-     * @var \Symfony\Component\Console\Input\InputInterface
-     */
-    protected $input;
+    protected ?InputInterface $input;
 
-    /**
-     * @var array
-     */
-    protected $extra = [];
+    protected array $extra = [];
 
-    /**
-     * @var string
-     */
-    protected $defaultShell = 'bash';
+    protected string $defaultShell = 'bash';
 
     public function getConfig(?InputInterface $input = null, array $extra = []): array
     {
@@ -135,10 +123,12 @@ class ConfigReader
             $root = './' . mb_substr($root, mb_strlen($cwd) + 1);
         }
 
+        $shell = getenv('SHELL');
+
         return [
             'symlink' => false,
             'core.hooksPath' => "$root/git-hooks/{{ SHELL }}",
-            'SHELL' => basename(getenv('SHELL')) ?: $this->defaultShell,
+            'SHELL' => $shell ? basename($shell) : $this->defaultShell,
         ];
     }
 

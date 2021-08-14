@@ -26,7 +26,7 @@ class GitHookPrepareCommitMsgCest extends GitHookCestBase
 
         $this->background($I);
         $I->doGitCommit('Initial commit');
-        $I->assertExitCodeEquals(0);
+        $I->assertExitCodeEquals('0');
         $I->assertStdErrContains($expectedStdError);
     }
 
