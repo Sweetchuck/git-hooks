@@ -30,7 +30,7 @@ class GitHookPostRewriteCest extends GitHookCestBase
 
         $this->background($I);
         $I->doRunGitRebase('production');
-        $I->assertExitCodeEquals(0);
+        $I->assertExitCodeEquals('0');
         $I->assertStdErrContains($expectedStdError);
     }
 
@@ -46,7 +46,7 @@ class GitHookPostRewriteCest extends GitHookCestBase
         $this->background($I);
         $I->doRunGitCheckout($this->defaultGitBranch);
         $I->doRunGitRebase('production', 'feature-01');
-        $I->assertExitCodeEquals(0);
+        $I->assertExitCodeEquals('0');
         $I->assertStdErrContains($expectedStdError);
     }
 }

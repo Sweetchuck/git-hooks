@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Sweetchuck\GitHooks\Composer;
 
 use Composer\Composer;
@@ -16,30 +18,15 @@ use Sweetchuck\GitHooks\GitHookManager;
 class Plugin implements PluginInterface, EventSubscriberInterface, Capable
 {
 
-    /**
-     * @var \Composer\Script\Event
-     */
-    protected $event;
+    protected Event $event;
 
-    /**
-     * @var \Composer\Composer
-     */
-    protected $composer;
+    protected Composer $composer;
 
-    /**
-     * @var \Composer\IO\IOInterface
-     */
-    protected $io;
+    protected IOInterface $io;
 
-    /**
-     * @var \Sweetchuck\GitHooks\ConfigReader
-     */
-    protected $configReader;
+    protected ConfigReader $configReader;
 
-    /**
-     * @var \Sweetchuck\GitHooks\GitHookManager
-     */
-    protected $gitHookManager;
+    protected GitHookManager $gitHookManager;
 
     /**
      * {@inheritDoc}
