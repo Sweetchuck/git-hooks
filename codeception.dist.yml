@@ -1,18 +1,18 @@
 
-namespace: Sweetchuck\GitHooks\Test
+namespace: 'Sweetchuck\GitHooks\Test'
+
+actor: 'Tester'
 
 paths:
-    data: tests/_data
-    envs: tests/_envs
-    output: tests/_output
-    support: tests/_support
-    tests: tests
+    data: 'tests/_data'
+    envs: 'tests/_envs'
+    log: 'tests/_log'
+    support: 'tests/_support'
+    tests: 'tests'
 
 settings:
     colors: true
     memory_limit: '1024M'
-    shuffle: false
-    lint: false
 
 extensions:
     enabled:
@@ -20,8 +20,6 @@ extensions:
 
 coverage:
     enabled: true
-    show_uncovered: true
-    low_limit: 60
-    high_limit: 90
-    include:
-        - 'src/*'
+    whitelist:
+        include:
+            - 'src/*'

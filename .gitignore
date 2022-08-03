@@ -1,11 +1,7 @@
 
-/bin/
-
-/reports/
-
 /tests/_data/fixtures/project-template/*/vendor/
 /tests/_envs/*.local.yml
-/tests/_output/
+/tests/_log/
 /tests/_support/_generated/
 /tests/*.suite.yml
 
@@ -14,5 +10,6 @@
 /.git-hooks-local
 /codeception.yml
 /phpcs.xml
+/robo.yml
 /sweetchuck-git-hooks-*.tar
 /sweetchuck-git-hooks-*.zip
