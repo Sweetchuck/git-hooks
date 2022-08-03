@@ -553,25 +553,13 @@ class Acceptance extends Module
             json_encode($composerJson, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
         );
 
-        $composerLock = json_decode(file_get_contents("$projectCacheDir/composer.lock"), true);
-        foreach ($composerLock['packages'] as $i => $package) {
-            if ($package['name'] !== 'sweetchuck/git-hooks') {
-                continue;
-            }
-
-            $composerLock['packages'][$i]['dist'] = [
-                'type' => 'path',
-                'url' => $this->projectRootDir,
-                'reference' => 'abcdefg',
-            ];
-
-            $this->fs->dumpFile(
-                "$projectCacheDir/composer.lock",
-                json_encode($composerLock, JSON_PRETTY_PRINT)
-            );
-
-            break;
-        }
+        $this->doExecCwd(
+            $projectCacheDir,
+            [
+                'composer',
+                'update',
+            ],
+        );
 
         if ($projectType !== 'basic') {
             $master = implode('/', [
