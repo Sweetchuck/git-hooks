@@ -66,7 +66,7 @@ class Acceptance extends Module
     public function _afterSuite()
     {
         if ($this->fs->exists($this->suitRootDir)) {
-            //$this->fs->remove($this->suitRootDir);
+            $this->fs->remove($this->suitRootDir);
         }
 
         chdir(dirname(__DIR__, 3));
@@ -96,7 +96,7 @@ class Acceptance extends Module
         parent::_after($test);
 
         if ($this->fs->exists($this->scenarioRootDir)) {
-            //$this->fs->remove($this->scenarioRootDir);
+            $this->fs->remove($this->scenarioRootDir);
         }
     }
 

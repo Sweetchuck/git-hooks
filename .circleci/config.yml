@@ -1,60 +1,191 @@
 
 version: 2.1
 
-.env_app: &env_app
-    APP_COMPOSER_VERSION: '2.1.5'
-    APP_COMPOSER_HASH: '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3'
+orbs:
+    codecov: 'codecov/codecov@3.0.0'
+
+.env_common: &env_common
     SHELL: '/bin/bash'
+
+.env_xdebug: &env_xdebug
+    XDEBUG_MODE: 'coverage'
 
 .env_composer: &env_composer
     COMPOSER_NO_INTERACTION: '1'
     COMPOSER_MEMORY_LIMIT: '-1'
     COMPOSER_DISABLE_XDEBUG_WARN: '1'
-
-orbs:
-    codecov: 'codecov/codecov@1.2.0'
+    COMPOSER_CACHE_DIR: '/home/circleci/.cache/composer'
 
 executors:
-    php800:
+    php_min:
+        resource_class: 'small'
         environment:
-            <<: *env_app
+            <<: *env_common
+            <<: *env_xdebug
             <<: *env_composer
 
         docker:
             -
                 name: 'main'
-                image: 'circleci/php:8.0'
+                image: 'cimg/php:7.4'
 
-    php704:
+    php_plus1:
+        resource_class: 'small'
         environment:
-            <<: *env_app
+            <<: *env_common
+            <<: *env_xdebug
             <<: *env_composer
 
         docker:
             -
                 name: 'main'
-                image: 'circleci/php:7.4'
+                image: 'cimg/php:8.0'
+
+    php_plus2:
+        resource_class: 'small'
+        environment:
+            <<: *env_common
+            <<: *env_xdebug
+            <<: *env_composer
+
+        docker:
+            -
+                name: 'main'
+                image: 'cimg/php:8.1'
 
 commands:
-    install_composer:
-        description: 'Install Composer CLI tool'
+    php_extension_pecl_install:
+        description: 'Install PHP extension with pecl'
+        parameters:
+            ext_name:
+                type: 'string'
+            is_zend:
+                type: 'string'
+                default: 'false'
+            package_names:
+                type: 'string'
+                default: ''
+        steps:
+            - run:
+                  name: 'Install PHP extension with pecl – <<parameters.ext_name>>'
+                  command: |
+                      if php -m | grep '<<parameters.ext_name>>' ; then
+                          echo 1>&2 'PHP extension <<parameters.ext_name>> is already enabled. No need to install'
+
+                          exit 0
+                      fi
+
+                      if compgen -G '/usr/local/lib/php/extensions/*/<<parameters.ext_name>>.so' 1>/dev/null ; then
+                          echo 1>&2 'PHP extension <<parameters.ext_name>> is already installed.'
+
+                          exit 0
+                      fi
+
+                      if [[ '<<parameters.package_names>>' != '' ]] ; then
+                          sudo apt-get update
+                          sudo apt-get install -y <<parameters.package_names>>
+                      fi
+
+                      sudo pecl install '<<parameters.ext_name>>'
+            - php_extension_enable:
+                  ext_name: '<<parameters.ext_name>>'
+                  is_zend: '<<parameters.is_zend>>'
+
+    php_extension_bundled_install:
+        parameters:
+            ext_name:
+                type: 'string'
+            is_zend:
+                type: 'string'
+                default: 'false'
+            package_names:
+                type: 'string'
+                default: ''
+        steps:
+            - run:
+                  name: 'Compile bundled PHP extension – <<parameters.ext_name>>'
+                  command: |
+                      if php -m | grep '<<parameters.ext_name>>' ; then
+                          echo 1>&2 'PHP extension <<parameters.ext_name>> is already enabled. No need to install'
+
+                          exit 0
+                      fi
+
+                      if compgen -G '/usr/local/lib/php/extensions/*/<<parameters.ext_name>>.so' 1>/dev/null ; then
+                          echo 1>&2 'PHP extension <<parameters.ext_name>> is already installed.'
+
+                          exit 0
+                      fi
+
+                      if [[ '<<parameters.package_names>>' != '' ]] ; then
+                          sudo apt-get update
+                          sudo apt-get install -y <<parameters.package_names>>
+                      fi
+
+                      if command -v docker-php-ext-install ; then
+                          sudo docker-php-ext-install '<<parameters.ext_name>>'
+
+                          exit $?
+                      fi
+
+                      srcRoot='/usr/local/src'
+                      phpVersion="$(php -r 'echo \PHP_VERSION;')"
+                      phpSrcDir="${srcRoot}/php-${phpVersion}"
+
+                      if [[ ! -d "${phpSrcDir}" ]] ; then
+                          wget "https://www.php.net/distributions/php-${phpVersion}.tar.gz"
+                          sudo tar xvzf "php-${phpVersion}.tar.gz" -C "${srcRoot}"
+                          rm "php-${phpVersion}.tar.gz"
+                      fi
+
+                      cd "${srcRoot}/php-${phpVersion}/ext/<<parameters.ext_name>>"
+                      sudo phpize
+                      sudo ./configure
+                      sudo make -j
+                      sudo make install
+            - php_extension_enable:
+                  ext_name: '<<parameters.ext_name>>'
+                  is_zend: '<<parameters.is_zend>>'
+
+    php_extension_enable:
+        parameters:
+            ext_name:
+                type: 'string'
+            is_zend:
+                type: 'string'
+                default: 'false'
+        steps:
+            - run:
+                  name: 'Enable PHP extension – <<parameters.ext_name>>'
+                  command: |
+                      if php -m | grep '<<parameters.ext_name>>' ; then
+                          exit 0
+                      fi
+
+                      scanDir="$(php -i | grep --color=never --only-matching --perl-regexp '(?<=^Scan this dir for additional \.ini files => ).+')"
+
+                      if [[ '<<parameters.is_zend>>' = 'true' ]] ; then
+                          content='zend_extension=<<parameters.ext_name>>'
+                      else
+                          content='extension=<<parameters.ext_name>>'
+                      fi
+
+                      echo "${content}" | sudo tee --append "${scanDir}/<<parameters.ext_name>>.ini"
+
+    php_extension_install_pcov:
+        description: 'Install PHP extension – pcov'
         steps:
             -
-                run:
-                    name: ''
-                    command: |4
-                        mkdir -p "${HOME}/.local/bin"
-                        php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-                        php -r "if (hash_file('sha384', 'composer-setup.php') === getenv('APP_COMPOSER_HASH')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
-                        php composer-setup.php \
-                            --filename    'composer' \
-                            --install-dir "${HOME}/.local/bin" \
-                            --version     "${APP_COMPOSER_VERSION}"
-                        php -r "unlink('composer-setup.php');"
-                        whereis composer
-                        which composer
-                        type composer
-                        composer --version
+                php_extension_pecl_install:
+                    ext_name: 'pcov'
+
+    php_extension_install_xdebug:
+        description: 'Install PHP extension – xdebug'
+        steps:
+            -
+                php_extension_pecl_install:
+                    ext_name: 'xdebug'
+                    is_zend: 'true'
 
     composer_install:
         description: 'Install Composer dependencies with cache restore and save'
@@ -69,14 +200,14 @@ commands:
                 run:
                     name: 'Composer - install'
                     command: >
-                        composer install --no-progress --ansi
+                        composer install --no-progress
 
             -
                 save_cache:
                     name: 'Composer - cache save'
                     key: 'composer-{{ checksum "./composer.lock" }}-2'
                     paths:
-                        - '~/.composer/cache/'
+                        - '~/.cache/composer/'
 
 
     lint:
@@ -85,7 +216,8 @@ commands:
             -
                 run:
                     name: 'Run linters'
-                    command: 'bin/robo  --ansi lint'
+                    command: |
+                        "$(composer config bin-dir)/robo" -vv lint
 
     test:
         description: 'Run tests'
@@ -93,45 +225,53 @@ commands:
             -
                 run:
                     name: 'Codeception - unit'
-                    command: 'bin/robo --ansi test unit'
-            -   codecov/upload:
+                    command: |
+                        "$(composer config bin-dir)/robo" test unit
+            -
+                codecov/upload:
                     flags: 'unit'
-                    file: './tests/_output/machine/coverage/unit/coverage.xml'
-            -   run:
+                    file: './tests/_log/machine/coverage/unit/coverage.xml'
+            -
+                run:
                     name: 'Codeception - acceptance'
-                    command: 'bin/robo --ansi test acceptance'
-            -   codecov/upload:
+                    command: |
+                        "$(composer config bin-dir)/robo" test acceptance
+            -
+                codecov/upload:
                     flags: 'acceptance'
-                    file: './tests/_output/machine/coverage/acceptance/coverage.xml'
-            -   store_test_results:
-                    name: 'Store unit test results'
-                    path: './tests/_output/machine/junit'
+                    file: './tests/_log/machine/coverage/acceptance/coverage.xml'
+            -
+                store_test_results:
+                    name: 'Store test results as test results for CircleCI UI'
+                    path: './tests/_log/machine/junit'
+            -
+                store_artifacts:
+                    name: 'Store test results as artifacts'
+                    path: './tests/_log/machine/junit'
 
 jobs:
     build:
-        executor: 'php704'
+        executor: 'php_min'
         working_directory: '~/repo'
         steps:
             - 'checkout'
             - 'composer_install'
     lint:
-        executor: 'php704'
+        executor: 'php_min'
         working_directory: '~/repo'
         steps:
             - 'checkout'
             - 'composer_install'
             - 'lint'
-    test_php800:
-        executor: 'php800'
+    test:
+        parameters:
+            executor:
+                type: 'string'
+        executor: '<<parameters.executor>>'
         working_directory: '~/repo'
         steps:
-            - 'checkout'
-            - 'composer_install'
-            - 'test'
-    test_php704:
-        executor: 'php704'
-        working_directory: '~/repo'
-        steps:
+            - 'php_extension_install_pcov'
+            - 'php_extension_install_xdebug'
             - 'checkout'
             - 'composer_install'
             - 'test'
@@ -144,12 +284,14 @@ workflows:
             -
                 lint:
                     requires:
-                        - build
+                        - 'build'
             -
-                test_php800:
+                test:
                     requires:
-                        - build
-            -
-                test_php704:
-                    requires:
-                        - build
+                        - 'build'
+                    matrix:
+                        parameters:
+                            executor:
+                                - 'php_min'
+                                - 'php_plus1'
+#                                - 'php_plus2'
