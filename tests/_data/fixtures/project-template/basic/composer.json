@@ -5,6 +5,11 @@
     "type": "project",
     "minimum-stability": "dev",
     "prefer-stable": true,
+    "config": {
+        "allow-plugins": {
+            "sweetchuck/git-hooks": true
+        }
+    },
     "repositories": {
         "local": {
             "type": "path",
@@ -15,6 +20,6 @@
         "sweetchuck/git-hooks": "*"
     },
     "require-dev": {
-        "consolidation/robo": "^2.0"
+        "consolidation/robo": "^3.0"
     }
 }

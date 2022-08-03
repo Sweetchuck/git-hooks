@@ -294,4 +294,4 @@ workflows:
                             executor:
                                 - 'php_min'
                                 - 'php_plus1'
-#                                - 'php_plus2'
+                                - 'php_plus2'
