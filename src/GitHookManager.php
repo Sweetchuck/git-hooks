@@ -11,7 +11,7 @@ use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\Filesystem\Filesystem;
-use Webmozart\PathUtil\Path;
+use Symfony\Component\Filesystem\Path;
 
 class GitHookManager implements LoggerAwareInterface
 {
@@ -137,8 +137,8 @@ class GitHookManager implements LoggerAwareInterface
     protected function initGitVersion()
     {
         $command = sprintf('%s --version', escapeshellcmd($this->gitExecutable));
-        $output = null;
-        $exitCode = null;
+        $output = [];
+        $exitCode = 0;
         exec($command, $output, $exitCode);
         if ($exitCode) {
             throw new Exception('Failed to detect the version of Git.', static::EXIT_CODE_NO_GIT);
