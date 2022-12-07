@@ -8,7 +8,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\Test\TestLogger;
 use Sweetchuck\GitHooks\GitHookManager;
 use Symfony\Component\Filesystem\Filesystem;
-use Webmozart\PathUtil\Path;
+use Symfony\Component\Filesystem\Path;
 
 /**
  * @covers \Sweetchuck\GitHooks\GitHookManager
