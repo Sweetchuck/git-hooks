@@ -4422,21 +4422,20 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Sweetchuck/lint-report.git",
-                "reference": "c43a76e0c7bf9c9ecaf523b4ef978edb0001d454"
+                "reference": "4191968ce2672ad40bf826c8a5adc0851c5b4f66"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Sweetchuck/lint-report/zipball/c43a76e0c7bf9c9ecaf523b4ef978edb0001d454",
-                "reference": "c43a76e0c7bf9c9ecaf523b4ef978edb0001d454",
+                "url": "https://api.github.com/repos/Sweetchuck/lint-report/zipball/4191968ce2672ad40bf826c8a5adc0851c5b4f66",
+                "reference": "4191968ce2672ad40bf826c8a5adc0851c5b4f66",
                 "shasum": ""
             },
             "require": {
                 "ext-dom": "*",
                 "ext-json": "*",
                 "php": ">=7.4",
-                "symfony/console": "^4.0 || ^5.0",
-                "symfony/filesystem": "^4.0 || ^5.0",
-                "webmozart/path-util": "^2.3"
+                "symfony/console": "^4.0 || ^5.0 || ^6.0",
+                "symfony/filesystem": "^4.0 || ^5.0 || ^6.0"
             },
             "require-dev": {
                 "codeception/codeception": "^4.1",
@@ -4444,12 +4443,13 @@
                 "codeception/module-filesystem": "^1.0",
                 "consolidation/robo": "^3.0",
                 "mikey179/vfsstream": "^1.6",
+                "nuvoleweb/robo-config": "^2.0",
                 "squizlabs/php_codesniffer": "^3.4",
                 "stecman/symfony-console-completion": "^0.11",
                 "sweetchuck/codeception-module-robo-task-runner": "2.x-dev",
                 "sweetchuck/git-hooks": "2.x-dev",
                 "sweetchuck/robo-git": "2.x-dev",
-                "symfony/yaml": "^4.0 || ^5.0"
+                "symfony/yaml": "^4.0 || ^5.0 || ^6.0"
             },
             "default-branch": true,
             "type": "library",
@@ -4478,7 +4478,7 @@
                 "issues": "https://github.com/Sweetchuck/lint-report/issues",
                 "source": "https://github.com/Sweetchuck/lint-report"
             },
-            "time": "2022-03-30T19:24:28+00:00"
+            "time": "2022-12-07T21:28:29+00:00"
         },
         {
             "name": "sweetchuck/robo-git",
@@ -4546,12 +4546,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/Sweetchuck/robo-phpcs.git",
-                "reference": "a3b0eb21f047e473765dc02e626b5715850a54d4"
+                "reference": "4c4f2a8f43af346d6f4a40a47b62aa5751428082"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/Sweetchuck/robo-phpcs/zipball/a3b0eb21f047e473765dc02e626b5715850a54d4",
-                "reference": "a3b0eb21f047e473765dc02e626b5715850a54d4",
+                "url": "https://api.github.com/repos/Sweetchuck/robo-phpcs/zipball/4c4f2a8f43af346d6f4a40a47b62aa5751428082",
+                "reference": "4c4f2a8f43af346d6f4a40a47b62aa5751428082",
                 "shasum": ""
             },
             "require": {
@@ -4560,19 +4560,21 @@
                 "ext-json": "*",
                 "php": ">=7.4",
                 "sweetchuck/lint-report": "1.x-dev",
-                "webmozart/path-util": "^2.3"
+                "symfony/filesystem": "^4.0 || ^5.0 || ^6.0"
             },
             "require-dev": {
                 "codeception/codeception": "^4.0",
                 "codeception/module-asserts": "^1.1",
                 "cweagans/composer-patches": "^1.6",
                 "mikey179/vfsstream": "^1.6",
+                "nuvoleweb/robo-config": "^2.0",
                 "phpunit/phpunit": "^8.0",
                 "squizlabs/php_codesniffer": "^3.0",
                 "sweetchuck/codeception-module-robo-task-runner": "2.x-dev",
                 "sweetchuck/git-hooks": "2.x-dev",
                 "sweetchuck/robo-git": "2.x-dev",
-                "symfony/yaml": "^4.0 || ^5.0"
+                "sweetchuck/utils": "1.x-dev",
+                "symfony/yaml": "^4.0 || ^5.0 || ^6.0"
             },
             "default-branch": true,
             "type": "robo-tasks",
@@ -4603,7 +4605,7 @@
                 "issues": "https://github.com/Sweetchuck/robo-phpcs/issues",
                 "source": "https://github.com/Sweetchuck/robo-phpcs"
             },
-            "time": "2022-03-30T19:26:28+00:00"
+            "time": "2022-12-07T22:09:55+00:00"
         },
         {
             "name": "sweetchuck/utils",
@@ -5730,115 +5732,6 @@
                 }
             ],
             "time": "2021-07-28T10:34:58+00:00"
-        },
-        {
-            "name": "webmozart/assert",
-            "version": "1.11.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/webmozarts/assert.git",
-                "reference": "11cb2199493b2f8a3b53e7f19068fc6aac760991"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/11cb2199493b2f8a3b53e7f19068fc6aac760991",
-                "reference": "11cb2199493b2f8a3b53e7f19068fc6aac760991",
-                "shasum": ""
-            },
-            "require": {
-                "ext-ctype": "*",
-                "php": "^7.2 || ^8.0"
-            },
-            "conflict": {
-                "phpstan/phpstan": "<0.12.20",
-                "vimeo/psalm": "<4.6.1 || 4.6.2"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^8.5.13"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.10-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Webmozart\\Assert\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Bernhard Schussek",
-                    "email": "bschussek@gmail.com"
-                }
-            ],
-            "description": "Assertions to validate method input/output with nice error messages.",
-            "keywords": [
-                "assert",
-                "check",
-                "validate"
-            ],
-            "support": {
-                "issues": "https://github.com/webmozarts/assert/issues",
-                "source": "https://github.com/webmozarts/assert/tree/1.11.0"
-            },
-            "time": "2022-06-03T18:03:27+00:00"
-        },
-        {
-            "name": "webmozart/path-util",
-            "version": "2.3.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/webmozart/path-util.git",
-                "reference": "d939f7edc24c9a1bb9c0dee5cb05d8e859490725"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/webmozart/path-util/zipball/d939f7edc24c9a1bb9c0dee5cb05d8e859490725",
-                "reference": "d939f7edc24c9a1bb9c0dee5cb05d8e859490725",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=5.3.3",
-                "webmozart/assert": "~1.0"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "^4.6",
-                "sebastian/version": "^1.0.1"
-            },
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "2.3-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Webmozart\\PathUtil\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Bernhard Schussek",
-                    "email": "bschussek@gmail.com"
-                }
-            ],
-            "description": "A robust cross-platform utility for normalizing, comparing and modifying file paths.",
-            "support": {
-                "issues": "https://github.com/webmozart/path-util/issues",
-                "source": "https://github.com/webmozart/path-util/tree/2.3.0"
-            },
-            "abandoned": "symfony/filesystem",
-            "time": "2015-12-17T08:42:14+00:00"
         }
     ],
     "aliases": [],
