@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 
 use Codeception\Example;
-use Sweetchuck\GitHooks\Test\AcceptanceTester;
+use Sweetchuck\GitHooks\Tests\AcceptanceTester;
 
 class GitHookPreCommitCest extends GitHookCestBase
 {

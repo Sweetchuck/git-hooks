@@ -1,7 +1,6 @@
-
-actor: UnitTester
+actor: 'UnitTester'
 
 modules:
     enabled:
         - 'Asserts'
-        - '\Sweetchuck\GitHooks\Test\Helper\Unit'
+        - '\Sweetchuck\GitHooks\Tests\Helper\Unit'

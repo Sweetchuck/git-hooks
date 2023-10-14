@@ -52,9 +52,9 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Sweetchuck\\GitHooks\\Test\\": "tests/_support/",
             "Sweetchuck\\GitHooks\\Tests\\Acceptance\\": "tests/acceptance/",
-            "Sweetchuck\\GitHooks\\Tests\\Unit\\": "tests/unit/"
+            "Sweetchuck\\GitHooks\\Tests\\Unit\\": "tests/unit/",
+            "Sweetchuck\\GitHooks\\Tests\\": "tests/_support/"
         }
     },
     "extra": {

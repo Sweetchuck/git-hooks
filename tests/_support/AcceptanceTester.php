@@ -1,6 +1,6 @@
 <?php
 
-namespace Sweetchuck\GitHooks\Test;
+namespace Sweetchuck\GitHooks\Tests;
 
 use Codeception\Actor;
 

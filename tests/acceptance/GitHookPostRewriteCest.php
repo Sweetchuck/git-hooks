@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace  Sweetchuck\GitHooks\Tests\Acceptance;
 
-use Sweetchuck\GitHooks\Test\AcceptanceTester;
+use Sweetchuck\GitHooks\Tests\AcceptanceTester;
 
 class GitHookPostRewriteCest extends GitHookCestBase
 {

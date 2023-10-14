@@ -7,13 +7,9 @@ orbs:
 .env_common: &env_common
     SHELL: '/bin/bash'
 
-.env_xdebug: &env_xdebug
-    XDEBUG_MODE: 'coverage'
-
 .env_composer: &env_composer
     COMPOSER_NO_INTERACTION: '1'
     COMPOSER_MEMORY_LIMIT: '-1'
-    COMPOSER_DISABLE_XDEBUG_WARN: '1'
     COMPOSER_CACHE_DIR: '/home/circleci/.cache/composer'
 
 executors:
@@ -21,7 +17,6 @@ executors:
         resource_class: 'small'
         environment:
             <<: *env_common
-            <<: *env_xdebug
             <<: *env_composer
 
         docker:
@@ -33,7 +28,6 @@ executors:
         resource_class: 'small'
         environment:
             <<: *env_common
-            <<: *env_xdebug
             <<: *env_composer
 
         docker:
@@ -45,7 +39,17 @@ executors:
         resource_class: 'small'
         environment:
             <<: *env_common
-            <<: *env_xdebug
+            <<: *env_composer
+
+        docker:
+            -
+                name: 'main'
+                image: 'cimg/php:8.1'
+
+    php_plus3:
+        resource_class: 'small'
+        environment:
+            <<: *env_common
             <<: *env_composer
 
         docker:
@@ -179,14 +183,6 @@ commands:
                 php_extension_pecl_install:
                     ext_name: 'pcov'
 
-    php_extension_install_xdebug:
-        description: 'Install PHP extension – xdebug'
-        steps:
-            -
-                php_extension_pecl_install:
-                    ext_name: 'xdebug'
-                    is_zend: 'true'
-
     composer_install:
         description: 'Install Composer dependencies with cache restore and save'
         steps:
@@ -252,13 +248,11 @@ commands:
 jobs:
     build:
         executor: 'php_min'
-        working_directory: '~/repo'
         steps:
             - 'checkout'
             - 'composer_install'
     lint:
         executor: 'php_min'
-        working_directory: '~/repo'
         steps:
             - 'checkout'
             - 'composer_install'
@@ -268,10 +262,8 @@ jobs:
             executor:
                 type: 'string'
         executor: '<<parameters.executor>>'
-        working_directory: '~/repo'
         steps:
             - 'php_extension_install_pcov'
-            - 'php_extension_install_xdebug'
             - 'checkout'
             - 'composer_install'
             - 'test'
@@ -295,3 +287,4 @@ workflows:
                                 - 'php_min'
                                 - 'php_plus1'
                                 - 'php_plus2'
+                                - 'php_plus3'
