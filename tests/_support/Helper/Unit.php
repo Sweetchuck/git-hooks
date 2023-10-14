@@ -2,7 +2,7 @@
 
 declare(strict_types = 1);
 
-namespace Sweetchuck\GitHooks\Test\Helper;
+namespace Sweetchuck\GitHooks\Tests\Helper;
 
 use Codeception\Module;
 

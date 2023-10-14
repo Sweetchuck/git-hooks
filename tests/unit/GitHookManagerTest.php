@@ -17,7 +17,7 @@ class GitHookManagerTest extends TestBase
 {
 
     /**
-     * @var \Sweetchuck\GitHooks\Test\UnitTester
+     * @var \Sweetchuck\GitHooks\Tests\UnitTester
      */
     protected $tester;
 

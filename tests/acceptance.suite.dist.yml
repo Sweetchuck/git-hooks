@@ -1,9 +1,8 @@
-
-actor: AcceptanceTester
+actor: 'AcceptanceTester'
 
 modules:
     enabled:
         - 'Asserts'
-        - 'Sweetchuck\GitHooks\Test\Helper\Acceptance':
+        - 'Sweetchuck\GitHooks\Tests\Helper\Acceptance':
             composerExecutable: 'composer'
             gitExecutable: 'git'
