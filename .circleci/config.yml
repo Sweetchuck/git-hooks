@@ -55,7 +55,7 @@ executors:
         docker:
             -
                 name: 'main'
-                image: 'cimg/php:8.1'
+                image: 'cimg/php:8.2'
 
 commands:
     php_extension_pecl_install:
