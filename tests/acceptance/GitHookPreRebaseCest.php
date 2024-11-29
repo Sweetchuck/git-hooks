@@ -9,14 +9,23 @@ use Sweetchuck\GitHooks\Tests\AcceptanceTester;
 
 class GitHookPreRebaseCest extends GitHookCestBase
 {
+    protected array $gitRebaseExitCodes = [
+        'old' => 128,
+        'new' => 1,
+    ];
+
     protected function background(AcceptanceTester $I)
     {
         $I->doCreateProjectInstance('basic', 'p-01');
-        $I->doGitCommitNewFileWithMessageAndContent('REDME.md', 'Initial commit', '@todo');
+        $I->doGitCommitNewFileWithMessageAndContent('README.md', 'Initial commit', '@todo');
     }
 
     protected function triggerCurrentBranchCases():array
     {
+        $gitAge = version_compare($this->getGitVersion(), '2.47.0', '<')
+            ? 'old'
+            : 'new';
+
         return [
             'positive' => [
                 'currentBranch' => 'feature-01',
@@ -26,7 +35,7 @@ class GitHookPreRebaseCest extends GitHookCestBase
             'negative' => [
                 'currentBranch' => 'protected',
                 'upstream' => 'feature-01',
-                'exitCode' => 128,
+                'exitCode' => $this->gitRebaseExitCodes[$gitAge],
             ],
         ];
     }
@@ -55,6 +64,9 @@ class GitHookPreRebaseCest extends GitHookCestBase
 
     protected function triggerOtherBranchCases(): array
     {
+        $gitAge = version_compare($this->getGitVersion(), '2.47.0', '<')
+            ? 'old'
+            : 'new';
         return [
             'positive' => [
                 'subjectBranch' => 'feature-01',
@@ -64,7 +76,7 @@ class GitHookPreRebaseCest extends GitHookCestBase
             'negative' => [
                 'subjectBranch' => 'protected',
                 'upstream' => 'feature-01',
-                'exitCode' => 128,
+                'exitCode' => $this->gitRebaseExitCodes[$gitAge],
             ],
         ];
     }
