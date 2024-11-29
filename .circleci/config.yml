@@ -63,9 +63,20 @@ executors:
                 name: 'main'
                 image: 'cimg/php:8.3'
 
+    php_plus5:
+        resource_class: 'small'
+        environment:
+            <<: *env_common
+            <<: *env_composer
+        docker:
+            -
+                name: 'main'
+                image: 'cimg/php:8.4'
+
 commands:
     php_extension_pecl_install:
         description: 'Install PHP extension with pecl'
+
         parameters:
             ext_name:
                 type: 'string'
@@ -76,30 +87,40 @@ commands:
                 type: 'string'
                 default: ''
         steps:
-            - run:
-                  name: 'Install PHP extension with pecl – <<parameters.ext_name>>'
-                  command: |
-                      if php -m | grep '<<parameters.ext_name>>' ; then
-                          echo 1>&2 'PHP extension <<parameters.ext_name>> is already enabled. No need to install'
+            -
+                run:
+                    name: 'Install PHP extension with pecl – <<parameters.ext_name>>'
+                    command: |
+                        phpVersionMajorMinor="$(php -r 'echo substr(\PHP_VERSION_ID, 0, 3);')"
+                        # PHP 8.4 and pcov aren't friends.
+                        if [[ '<<parameters.ext_name>>' = 'pcov' && "${phpVersionMajorMinor}" = '804' ]] ; then
+                            echo 'IGNORE pcov installation'
 
-                          exit 0
-                      fi
+                            exit 0
+                        fi
 
-                      if compgen -G '/usr/local/lib/php/extensions/*/<<parameters.ext_name>>.so' 1>/dev/null ; then
-                          echo 1>&2 'PHP extension <<parameters.ext_name>> is already installed.'
+                        if php -m | grep '<<parameters.ext_name>>' ; then
+                            echo 1>&2 'PHP extension <<parameters.ext_name>> is already enabled. No need to install'
 
-                          exit 0
-                      fi
+                            exit 0
+                        fi
 
-                      if [[ '<<parameters.package_names>>' != '' ]] ; then
-                          sudo apt-get update
-                          sudo apt-get install -y <<parameters.package_names>>
-                      fi
+                        if compgen -G '/usr/local/lib/php/extensions/*/<<parameters.ext_name>>.so' 1>/dev/null ; then
+                            echo 1>&2 'PHP extension <<parameters.ext_name>> is already installed.'
 
-                      sudo pecl install '<<parameters.ext_name>>'
-            - php_extension_enable:
-                  ext_name: '<<parameters.ext_name>>'
-                  is_zend: '<<parameters.is_zend>>'
+                            exit 0
+                        fi
+
+                        if [[ '<<parameters.package_names>>' != '' ]] ; then
+                            sudo apt-get update
+                            sudo apt-get install -y <<parameters.package_names>>
+                        fi
+
+                        sudo pecl install '<<parameters.ext_name>>'
+            -
+                php_extension_enable:
+                    ext_name: '<<parameters.ext_name>>'
+                    is_zend: '<<parameters.is_zend>>'
 
     php_extension_bundled_install:
         parameters:
@@ -189,6 +210,17 @@ commands:
                 php_extension_pecl_install:
                     ext_name: 'pcov'
 
+    runner_info:
+        description: 'Provides information about the runner/container'
+        steps:
+            -
+                run:
+                    name: 'Provides information about the runner/container'
+                    command: |-
+                        git --version
+                        php --version
+                        php -m
+
     composer_install:
         description: 'Install Composer dependencies with cache restore and save'
         steps:
@@ -256,6 +288,7 @@ jobs:
         executor: 'php_min'
         steps:
             - 'checkout'
+            - 'runner_info'
             - 'composer_install'
     lint:
         executor: 'php_min'
@@ -295,3 +328,5 @@ workflows:
                                 - 'php_plus2'
                                 - 'php_plus3'
                                 - 'php_plus4'
+                                # \E_STRICT problems in dependencies.
+                                #- 'php_plus5'

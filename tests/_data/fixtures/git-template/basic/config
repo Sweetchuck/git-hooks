@@ -1,7 +1,9 @@
-
 [user]
   name  = git-hooks
   email = git-hooks@example.com
 
 [init]
   defaultBranch = 1.x
+
+[core]
+  editor = false
