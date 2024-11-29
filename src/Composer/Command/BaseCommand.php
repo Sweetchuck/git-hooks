@@ -61,7 +61,7 @@ abstract class BaseCommand extends UpstreamBaseCommand
     /**
      * {@inheritDoc}
      */
-    public function __construct(string $name = null, ?ConfigReader $configReader = null)
+    public function __construct(?string $name = null, ?ConfigReader $configReader = null)
     {
         $this->configReader = $configReader ?: new ConfigReader();
         parent::__construct($name);
