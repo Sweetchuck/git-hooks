@@ -91,14 +91,6 @@ commands:
                 run:
                     name: 'Install PHP extension with pecl – <<parameters.ext_name>>'
                     command: |
-                        phpVersionMajorMinor="$(php -r 'echo substr(\PHP_VERSION_ID, 0, 3);')"
-                        # PHP 8.4 and pcov aren't friends.
-                        if [[ '<<parameters.ext_name>>' = 'pcov' && "${phpVersionMajorMinor}" = '804' ]] ; then
-                            echo 'IGNORE pcov installation'
-
-                            exit 0
-                        fi
-
                         if php -m | grep '<<parameters.ext_name>>' ; then
                             echo 1>&2 'PHP extension <<parameters.ext_name>> is already enabled. No need to install'
 
