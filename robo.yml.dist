@@ -2,4 +2,7 @@ php:
     executables:
         php_min:
             enabled: true
-            command: 'php'
+            command:
+                - 'php'
+                - '-d'
+                - 'assert.exception=1'

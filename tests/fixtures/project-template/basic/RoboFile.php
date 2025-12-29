@@ -1,5 +1,13 @@
 <?php
 
+/**
+ * @noinspection PhpUnused
+ * @noinspection PhpMultipleClassDeclarationsInspection
+ */
+
+declare(strict_types = 1);
+
+use Consolidation\AnnotatedCommand\Attributes\Command;
 use Robo\Contract\TaskInterface;
 use Robo\Result;
 use Robo\Task\BaseTask;
@@ -9,16 +17,13 @@ class RoboFile extends Tasks
 {
     use \PredestinedLoadTasks;
 
-    /**
-     * @var string
-     */
-    protected $sayPrefix = '>  ';
+    protected string $sayPrefix = '>  ';
 
-    /**
-     * @var string
-     */
-    protected $yellPrefix = '>  ';
+    protected string $yellPrefix = '>  ';
 
+    #[Command(
+        name: 'githook:pre-commit',
+    )]
     public function githookPreCommit(): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
@@ -30,12 +35,18 @@ class RoboFile extends Tasks
         return $this->taskPredestined(!$exitCode && !in_array('false.txt', $output));
     }
 
-    public function githookPostCommit()
+    #[Command(
+        name: 'githook:post-commit',
+    )]
+    public function githookPostCommit(): void
     {
         $this->say(__METHOD__ . ' is called');
     }
 
-    public function githookPostCheckout(string $refOld, string $refNew, string $isBranch)
+    #[Command(
+        name: 'githook:post-checkout',
+    )]
+    public function githookPostCheckout(string $refOld, string $refNew, string $isBranch): void
     {
         $pattern = '/^[a-z0-9]{40}$/i';
         $refOldLabel = (preg_match($pattern, $refOld) ? 'OLD_REF' : $refOld);
@@ -48,6 +59,9 @@ class RoboFile extends Tasks
         $this->say(sprintf('Branch checkout: "%s"', $isBranchLabel));
     }
 
+    #[Command(
+        name: 'githook:pre-rebase',
+    )]
     public function githookPreRebase(string $baseBranch, ?string $subjectBranch = null): TaskInterface
     {
         $currentBranch = $this->gitCurrentBranch();
@@ -63,6 +77,9 @@ class RoboFile extends Tasks
         return $this->taskPredestined(($subjectBranch !== 'protected'));
     }
 
+    #[Command(
+        name: 'githook:post-rewrite',
+    )]
     public function githookPostRewrite(string $trigger): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
@@ -101,6 +118,9 @@ class RoboFile extends Tasks
         return $this->taskPredestined(true);
     }
 
+    #[Command(
+        name: 'githook:pre-push',
+    )]
     public function githookPrePush(string $remote_name, string $remote_uri): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
@@ -141,6 +161,9 @@ class RoboFile extends Tasks
         return $this->taskPredestined($valid);
     }
 
+    #[Command(
+        name: 'githook:pre-receive',
+    )]
     public function githookPreReceive(): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
@@ -168,6 +191,9 @@ class RoboFile extends Tasks
         return $this->taskPredestined($valid);
     }
 
+    #[Command(
+        name: 'githook:post-receive',
+    )]
     public function githookPostReceive(): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
@@ -199,7 +225,10 @@ class RoboFile extends Tasks
         return $this->taskPredestined(true);
     }
 
-    public function githookPostMerge(string $isSquash)
+    #[Command(
+        name: 'githook:post-merge',
+    )]
+    public function githookPostMerge(string $isSquash): void
     {
         $this->say(__METHOD__ . ' is called');
         $this->say("Squash: $isSquash");
@@ -211,7 +240,10 @@ class RoboFile extends Tasks
      * @param string $description
      *   The description of the commit message's source.
      */
-    public function githookPrepareCommitMsg(string $fileName, ?string $description = null)
+    #[Command(
+        name: 'githook:prepare-commit-msg',
+    )]
+    public function githookPrepareCommitMsg(string $fileName, ?string $description = null): void
     {
         $this->say(__METHOD__ . ' is called');
         $this->say("File name: '$fileName'");
@@ -228,6 +260,9 @@ class RoboFile extends Tasks
      * @param string $fileName
      *   The name of the file that has the commit message.
      */
+    #[Command(
+        name: 'githook:commit-msg',
+    )]
     public function githookCommitMsg(string $fileName): TaskInterface
     {
         $this->say(__METHOD__ . ' is called');
@@ -244,7 +279,7 @@ class RoboFile extends Tasks
 
     protected function gitRefIsBranch(string $ref): bool
     {
-        return strpos($ref, 'refs/heads/') === 0;
+        return str_starts_with($ref, 'refs/heads/');
     }
 
     protected function gitCurrentBranch(): string
@@ -260,7 +295,7 @@ class RoboFile extends Tasks
     /**
      * {@inheritdoc}
      */
-    protected function say($text)
+    protected function say($text): void
     {
         $this->output()->writeln("{$this->sayPrefix}$text");
     }
@@ -268,7 +303,7 @@ class RoboFile extends Tasks
     /**
      * {@inheritdoc}
      */
-    protected function yell($text, $length = 40, $color = 'green')
+    protected function yell($text, $length = 40, $color = 'green'): void
     {
         $format = "%s<fg=white;bg=$color;options=bold> %s </fg=white;bg=$color;options=bold>";
         $delimiter = sprintf($format, $this->yellPrefix, str_repeat(' ', $length));
@@ -294,10 +329,7 @@ trait PredestinedLoadTasks
 class PredestinedTask extends BaseTask
 {
 
-    /**
-     * @var bool
-     */
-    protected $outcome = true;
+    protected bool $outcome = true;
 
     public function __construct(bool $outcome)
     {
@@ -309,8 +341,8 @@ class PredestinedTask extends BaseTask
      */
     public function run()
     {
-        return $this->outcome ?
-            Result::success($this, 'True as expected')
+        return $this->outcome
+            ? Result::success($this, 'True as expected')
             : Result::error($this, 'False as expected');
     }
 }

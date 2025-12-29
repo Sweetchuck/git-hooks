@@ -1,15 +1,34 @@
 #!/usr/bin/env zsh
 
-if [ "$(git rev-parse --is-bare-repository)" = 'true' ]; then
-    sghBridge='./.git-hooks'
+
+sghIsBare="$(git rev-parse --is-bare-repository)"
+if [[ "${sghIsBare}" = 'false' ]]; then
+	sghBridgeDir="$(git rev-parse --show-toplevel)"
 else
-    sghBridge="$(git rev-parse --show-toplevel)/.git-hooks"
+	sghBridgeDir='.'
 fi
 
-if [ -s "${sghBridge}" ]; then
-    . "${sghBridge}" || exit $?
-else
-    echo "Git hook bridge '${sghBridge}' not found."
+sghBridgeCandidates=(
+	"${sghBridgeDir}/.git-hooks.local.${SHELL##*/}"
+	"${sghBridgeDir}/.git-hooks.${SHELL##*/}"
+	"${sghBridgeDir}/.git-hooks.local.sh"
+	"${sghBridgeDir}/.git-hooks.sh"
+	"${sghBridgeDir}/.git-hooks.local"
+	"${sghBridgeDir}/.git-hooks"
+)
+
+sghBridge=''
+for sghBridge in "${sghBridgeCandidates[@]}"; do
+	if [[ -s "${sghBridge}" ]]; then
+		break;
+	fi
+done
+
+if [[ "${sghBridge}" = '' ]]; then
+	echo 1>&2 "Git hook bridge not found. Candidates: ${sghBridgeCandidates[*]}"
+
+	exit 0
 fi
 
-exit 0
+# shellcheck source=../../../.git-hooks.sh
+source "${sghBridge}"

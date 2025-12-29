@@ -13,10 +13,19 @@ class ConfigReader
 
     protected ?InputInterface $input;
 
+    /**
+     * @var array<string, mixed>
+     */
     protected array $extra = [];
 
     protected string $defaultShell = 'bash';
 
+    /**
+     * @param null|\Symfony\Component\Console\Input\InputInterface $input
+     * @param array<string, mixed> $extra
+     *
+     * @return array<string, string|bool>
+     */
     public function getConfig(?InputInterface $input = null, array $extra = []): array
     {
         $this->input = $input;
@@ -33,9 +42,12 @@ class ConfigReader
         return $config;
     }
 
-    protected function getConfigResolvePlaceholders(array &$config)
+    /**
+     * @param array<string, string|bool> $config
+     */
+    protected function getConfigResolvePlaceholders(array &$config): static
     {
-        $coreHooksPath = $config['core.hooksPath'] ?: '';
+        $coreHooksPath = (string) ($config['core.hooksPath'] ?: '');
         foreach ([$config['SHELL'], $this->defaultShell] as $shell) {
             $replacementPairs = [
                 '{{ SHELL }}' => $shell,
@@ -51,6 +63,9 @@ class ConfigReader
         return $this;
     }
 
+    /**
+     * @return array<string, string|bool>
+     */
     protected function getConfigFromCli(): array
     {
         if (!$this->input) {
@@ -81,6 +96,9 @@ class ConfigReader
         return $config;
     }
 
+    /**
+     * @return array<string, string|bool>
+     */
     protected function getConfigFromEnvVars(): array
     {
         $config = [];
@@ -110,11 +128,17 @@ class ConfigReader
         return $config;
     }
 
+    /**
+     * @return array<string, string|bool>
+     */
     protected function getConfigFromExtra(): array
     {
         return $this->extra;
     }
 
+    /**
+     * @return array<string, string|bool>
+     */
     protected function getConfigFromDefault(): array
     {
         $cwd = $this->getCwd();
@@ -134,7 +158,7 @@ class ConfigReader
 
     protected function getCwd(): string
     {
-        return getcwd();
+        return (string) getcwd();
     }
 
     protected function getSelfProjectRootDir(): string

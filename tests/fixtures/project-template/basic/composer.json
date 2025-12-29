@@ -13,13 +13,13 @@
     "repositories": {
         "local": {
             "type": "path",
-            "url": "@see \\Sweetchuck\\GitHooks\\Test\\Helper\\Acceptance::doCreateProjectCache"
+            "url": "@see \\Sweetchuck\\GitHooks\\Tests\\Acceptance\\TestBase::doCreateProjectCache"
         }
     },
     "require": {
         "sweetchuck/git-hooks": "*"
     },
     "require-dev": {
-        "consolidation/robo": "^3.0"
+        "consolidation/robo": "^5.0"
     }
 }

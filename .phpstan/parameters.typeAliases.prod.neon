@@ -1,0 +1,9 @@
+parameters:
+	typeAliases:
+		sweetchuck-git-hooks-config: '''
+			array{
+				symlink: bool,
+				core.hooksPath: string,
+				SHELL: string,
+			}
+		'''

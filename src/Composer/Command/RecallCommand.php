@@ -6,16 +6,10 @@ namespace Sweetchuck\GitHooks\Composer\Command;
 
 class RecallCommand extends BaseCommand
 {
-
     /**
-     * @var array
+     * {@inheritdoc}
      */
-    protected $result = [];
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
         if (!$this->getName()) {
@@ -25,10 +19,7 @@ class RecallCommand extends BaseCommand
         $this->setDescription('Recall the deployed Git hooks scripts');
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function doIt()
+    protected function doIt(): static
     {
         $this->result = $this
             ->getGitHookManager()

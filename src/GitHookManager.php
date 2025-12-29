@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Sweetchuck\GitHooks;
 
-use DirectoryIterator;
-use Exception;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
@@ -18,44 +16,40 @@ class GitHookManager implements LoggerAwareInterface
 
     use LoggerAwareTrait;
 
-    /**
-     * @var int
-     */
-    const EXIT_CODE_NO_GIT = 1;
+    public const int EXIT_CODE_NO_GIT = 1;
 
-    /**
-     * @var string
-     */
     protected string $projectRoot = '.';
 
-    /**
-     * @var string
-     */
     protected string $gitExecutable = 'git';
 
-    /**
-     * @var string
-     */
     protected string $minGitVersionForCoreHookPaths = '2.9';
 
-    /**
-     * @var string
-     */
     protected string $gitVersion = '';
 
     /**
      * Self composer.json, not the root one.
+     *
+     * @var array<string, mixed>|null
      */
     protected ?array $selfPackage = null;
 
+    /**
+     * @var array<string, mixed>
+     */
     protected array $config = [];
 
+    /**
+     * @var array<string, mixed>
+     */
     protected array $result = [];
 
     protected Filesystem $fs;
 
-    public function __construct(?LoggerInterface $logger = null, ?Filesystem $fs = null, string $projectRoot = '.')
-    {
+    public function __construct(
+        ?LoggerInterface $logger = null,
+        ?Filesystem $fs = null,
+        string $projectRoot = '.',
+    ) {
         $this->logger = $logger;
         $this->fs = $fs ?: new Filesystem();
         $this->projectRoot = $projectRoot;
@@ -66,6 +60,11 @@ class GitHookManager implements LoggerAwareInterface
         return $this->logger;
     }
 
+    /**
+     * @param array<string, mixed> $config
+     *
+     * @return array<string, mixed>
+     */
     public function deploy(array $config): array
     {
         $this->config = $config;
@@ -79,6 +78,13 @@ class GitHookManager implements LoggerAwareInterface
         return $this->result;
     }
 
+    /**
+     * @param array<string, mixed> $config
+     *
+     * @return array<string, mixed>
+     *
+     * @throws \Exception
+     */
     public function recall(array $config): array
     {
         $this->config = $config;
@@ -92,10 +98,7 @@ class GitHookManager implements LoggerAwareInterface
         return $this->result;
     }
 
-    /**
-     * @return $this
-     */
-    protected function init()
+    protected function init(): static
     {
         $this->result = [
             'exitCode' => 0,
@@ -109,10 +112,7 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function initLogger()
+    protected function initLogger(): static
     {
         if ($this->getLogger() === null) {
             $this->setLogger(new NullLogger());
@@ -121,58 +121,53 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function initSelfPackage()
+    protected function initSelfPackage(): static
     {
-        $this->selfPackage = json_decode(file_get_contents(__DIR__ . '/../composer.json'), true);
+        $this->selfPackage = json_decode(
+            file_get_contents(__DIR__ . '/../composer.json') ?: '{}',
+            true,
+        );
 
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function initGitVersion()
+    protected function initGitVersion(): static
     {
         $command = sprintf('%s --version', escapeshellcmd($this->gitExecutable));
         $output = [];
         $exitCode = 0;
         exec($command, $output, $exitCode);
         if ($exitCode) {
-            throw new Exception('Failed to detect the version of Git.', static::EXIT_CODE_NO_GIT);
+            throw new \Exception('Failed to detect the version of Git.', static::EXIT_CODE_NO_GIT);
         }
 
         // @todo Better regex.
         $matches = null;
-        preg_match('/^git version (?P<version>.+)$/', trim(reset($output)), $matches);
+        preg_match('/^git version (?P<version>.+)$/', trim((string) reset($output)), $matches);
 
-        $this->gitVersion = $matches['version'] ?? null;
+        $this->gitVersion = $matches['version'] ?? '1.0.0';
 
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function doDeployPre()
+    protected function doDeployPre(): static
     {
         $this->logger->debug('BEGIN Git hooks deploy');
 
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function doDeployMain()
+    protected function doDeployMain(): static
     {
         try {
             $gitDir = $this->getGitDir();
-        } catch (Exception $e) {
-            // @todo Add exception message to the log entry.
-            $this->logger->warning('Git hooks deployment skipped because of the absence of $GIT_DIR');
+        } catch (\Exception $exception) {
+            $this->logger->warning(
+                'Git hooks deployment skipped because of the absence of $GIT_DIR; {message}',
+                [
+                    'message' => $exception->getMessage(),
+                ],
+            );
 
             return $this;
         }
@@ -185,18 +180,15 @@ class GitHookManager implements LoggerAwareInterface
             } else {
                 $this->doDeployMainCopy($gitDir);
             }
-        } catch (Exception $e) {
+        } catch (\Exception $exception) {
             $this->result['exitCode'] = 1;
-            $this->logger->error($e->getMessage());
+            $this->logger->error($exception->getMessage());
         }
 
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function doDeployMainConfig()
+    protected function doDeployMainConfig(): static
     {
         $this->gitConfigSet('core.hooksPath', $this->config['core.hooksPath']);
         $this->logger->debug('Git hooks have been deployed by the core.hooksPath configuration.');
@@ -204,10 +196,7 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function doDeployMainSymlink(string $gitDir)
+    protected function doDeployMainSymlink(string $gitDir): static
     {
         $this->symlinkHooksDir($this->config['core.hooksPath'], "$gitDir/hooks");
         $this->logger->debug('Git hooks have been symbolically linked.');
@@ -215,10 +204,7 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function doDeployMainCopy(string $gitDir)
+    protected function doDeployMainCopy(string $gitDir): static
     {
         $this->copyHooksDir($this->config['core.hooksPath'], "$gitDir/hooks");
         $this->logger->debug('Git hooks have been deployed by coping the script files.');
@@ -226,39 +212,30 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function doDeployPost()
+    protected function doDeployPost(): static
     {
         $this->logger->debug('END   Git hooks deploy');
 
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function doRecallPre()
+    protected function doRecallPre(): static
     {
         $this->logger->debug('BEGIN Git hooks recall');
 
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function doRecallMain()
+    protected function doRecallMain(): static
     {
         try {
             $gitDir = $this->getGitDir();
-        } catch (Exception $e) {
+        } catch (\Exception $exception) {
             $this->logger->warning(
                 'Recall the deployed Git hooks scripts skipped because of the absence of $GIT_DIR - {message}',
                 [
-                    'message' => $e->getMessage(),
-                ]
+                    'message' => $exception->getMessage(),
+                ],
             );
 
             return $this;
@@ -269,7 +246,7 @@ class GitHookManager implements LoggerAwareInterface
             if ($currentCoreHooksPath === $this->config['core.hooksPath']) {
                 $this->gitConfigDelete('core.hooksPath');
             }
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             //Nothing to do.
         }
 
@@ -281,10 +258,7 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function doRecallPost()
+    protected function doRecallPost(): static
     {
         $this->logger->debug('END   Git hooks recall');
 
@@ -314,10 +288,10 @@ class GitHookManager implements LoggerAwareInterface
 
         $this->logger->debug($command);
         $output = [];
-        $exitCode = null;
+        $exitCode = 0;
         exec($command, $output, $exitCode);
         if ($exitCode === 1) {
-            // The given config name $name not exists.
+            // The given config name $name doesn't exist.
             return null;
         }
 
@@ -330,16 +304,13 @@ class GitHookManager implements LoggerAwareInterface
                 ]
             );
 
-            throw new Exception("Failed to execute: '$command'", $exitCode);
+            throw new \Exception("Failed to execute: '$command'", $exitCode);
         }
 
         return implode(PHP_EOL, $output);
     }
 
-    /**
-     * @return $this
-     */
-    protected function gitConfigSet(string $name, string $value)
+    protected function gitConfigSet(string $name, string $value): static
     {
         $command = sprintf(
             'cd %s && %s config %s %s',
@@ -349,11 +320,11 @@ class GitHookManager implements LoggerAwareInterface
             escapeshellarg($value)
         );
         $output = null;
-        $exitCode = null;
+        $exitCode = 0;
         exec($command, $output, $exitCode);
         if ($exitCode !== 0) {
             // @todo Exit code.
-            throw new Exception("Failed to execute: '$command'", $exitCode);
+            throw new \Exception("Failed to execute: '$command'", $exitCode);
         }
 
         $this->logger->debug($command);
@@ -361,10 +332,7 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function gitConfigDelete(string $name)
+    protected function gitConfigDelete(string $name): static
     {
         $command = sprintf(
             'cd %s && %s config --unset %s ',
@@ -373,11 +341,11 @@ class GitHookManager implements LoggerAwareInterface
             escapeshellarg($name)
         );
         $output = null;
-        $exitCode = null;
+        $exitCode = 0;
         exec($command, $output, $exitCode);
         if ($exitCode !== 0) {
             // @todo Exit code.
-            throw new Exception("Failed to execute: '$command'", $exitCode);
+            throw new \Exception("Failed to execute: '$command'", $exitCode);
         }
 
         $this->logger->debug($command);
@@ -385,10 +353,7 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function symlinkHooksDir($srcDir, $dstDir)
+    protected function symlinkHooksDir(string $srcDir, string $dstDir): static
     {
         if (is_link($dstDir)) {
             $this->fs->remove($dstDir);
@@ -405,13 +370,10 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return $this
-     */
-    protected function copyHooksDir($srcDir, $dstDir)
+    protected function copyHooksDir(string $srcDir, string $dstDir): static
     {
         $this->fs->mirror($srcDir, $dstDir, null, ['override' => true]);
-        $file = new DirectoryIterator($srcDir);
+        $file = new \DirectoryIterator($srcDir);
         $mask = umask();
         while ($file->valid()) {
             if ($file->isFile() && is_executable($file->getPathname())) {
@@ -424,9 +386,6 @@ class GitHookManager implements LoggerAwareInterface
         return $this;
     }
 
-    /**
-     * @return bool|string
-     */
     protected function getGitDir(): ?string
     {
         $command = sprintf(
@@ -435,16 +394,18 @@ class GitHookManager implements LoggerAwareInterface
             escapeshellcmd($this->gitExecutable)
         );
 
-        $output = null;
+        $output = [];
         $exitCode = null;
         exec($command, $output, $exitCode);
         if ($exitCode !== 0) {
             // @todo Error code.
-            throw new Exception('The $GIT_DIR cannot be detected', 3);
+            throw new \Exception('The $GIT_DIR cannot be detected', 3);
         }
 
-        $gitDir = realpath($this->projectRoot . '/' . rtrim(reset($output), "\n"));
+        $gitDir = realpath($this->projectRoot . '/' . rtrim((string) reset($output), "\n"));
 
-        return $gitDir !== false ? $gitDir : null;
+        return $gitDir !== false
+            ? $gitDir
+            : null;
     }
 }

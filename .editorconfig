@@ -1,4 +1,3 @@
-
 root = true
 
 [*]
@@ -8,3 +7,18 @@ indent_size = 4
 charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
+
+[{.phpstan/,phpstan}*.neon]
+indent_style = tab
+
+[*.{sh,bash,dash,zsh}]
+indent_style = tab
+
+[git-hooks/*/*]
+indent_style = tab
+
+[tests/fixtures/*]
+indent_style = unset
+indent_size = unset
+trim_trailing_whitespace = unset
+insert_final_newline = unset

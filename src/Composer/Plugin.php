@@ -29,9 +29,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
     protected GitHookManager $gitHookManager;
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return [
             ScriptEvents::POST_INSTALL_CMD => 'onPostInstallCmd',
@@ -40,9 +40,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function getCapabilities()
+    public function getCapabilities(): array
     {
         return [
             ComposerCommandProvider::class => CommandProvider::class,
@@ -51,16 +51,16 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
 
     public function __construct(
         ?ConfigReader $configReader = null,
-        ?GitHookManager $deployer = null
+        ?GitHookManager $deployer = null,
     ) {
         $this->configReader = $configReader ?: new ConfigReader();
         $this->gitHookManager = $deployer ?: new GitHookManager();
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function activate(Composer $composer, IOInterface $io)
+    public function activate(Composer $composer, IOInterface $io): void
     {
         // Nothing to do here, as all features are provided through event listeners.
         $this->composer = $composer;
@@ -68,9 +68,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function deactivate(Composer $composer, IOInterface $io)
+    public function deactivate(Composer $composer, IOInterface $io): void
     {
         // Nothing to do here, as all features are provided through event listeners.
         $this->composer = $composer;
@@ -78,9 +78,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function uninstall(Composer $composer, IOInterface $io)
+    public function uninstall(Composer $composer, IOInterface $io): void
     {
         $this->composer = $composer;
         $this->io = $io;
@@ -103,6 +103,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
         return $result['exitCode'] === 0;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function deploy(): array
     {
         $config = $this->getConfig();
@@ -111,6 +114,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
         return $this->gitHookManager->deploy($config);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function recall(): array
     {
         $config = $this->getConfig();
@@ -119,6 +125,9 @@ class Plugin implements PluginInterface, EventSubscriberInterface, Capable
         return $this->gitHookManager->recall($config);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getConfig(): array
     {
         $package = $this->composer->getPackage();

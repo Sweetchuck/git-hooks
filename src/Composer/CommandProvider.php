@@ -11,9 +11,9 @@ use Sweetchuck\GitHooks\Composer\Command\RecallCommand;
 class CommandProvider implements ComposerCommandProvider
 {
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    public function getCommands()
+    public function getCommands(): array
     {
         return [
             new DeployCommand(),

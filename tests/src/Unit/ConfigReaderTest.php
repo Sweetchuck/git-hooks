@@ -2,23 +2,25 @@
 
 declare(strict_types = 1);
 
-namespace  Sweetchuck\GitHooks\Tests\Unit;
+namespace Sweetchuck\GitHooks\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Sweetchuck\GitHooks\ConfigReader;
 use Symfony\Component\Console\Input\InputInterface;
 
-/**
- * @covers \Sweetchuck\GitHooks\ConfigReader
- */
+#[CoversClass(ConfigReader::class)]
 class ConfigReaderTest extends TestBase
 {
-    public function casesGetConfig(): array
+    /**
+     * @return array<string, mixed>
+     */
+    public static function casesGetConfig(): array
     {
-        $selfRootDir = $this->selfProjectRoot();
-        $shell = basename(getenv('SHELL'));
+        $selfRootDir = static::selfProjectRoot();
+        $shell = basename(getenv('SHELL') ?: '/bin/bash');
         $defaultCoreHooksPath = "$selfRootDir/git-hooks/$shell";
-
-        InputInterface::class;
 
         return [
             'basic' => [
@@ -36,7 +38,7 @@ class ConfigReaderTest extends TestBase
                     'core.hooksPath' => $defaultCoreHooksPath,
                     'SHELL' => $shell,
                 ],
-                $this->getInput([
+                static::getInput([
                     '--symlink' => null,
                 ]),
                 [],
@@ -47,7 +49,7 @@ class ConfigReaderTest extends TestBase
                     'core.hooksPath' => $defaultCoreHooksPath,
                     'SHELL' => $shell,
                 ],
-                $this->getInput([
+                static::getInput([
                     '--no-symlink' => null,
                 ]),
                 [],
@@ -58,7 +60,7 @@ class ConfigReaderTest extends TestBase
                     'core.hooksPath' => 'my-dir',
                     'SHELL' => $shell,
                 ],
-                $this->getInput([
+                static::getInput([
                     '--core-hooks-path' => 'my-dir',
                 ]),
                 [],
@@ -69,7 +71,7 @@ class ConfigReaderTest extends TestBase
                     'core.hooksPath' => 'my-dir',
                     'SHELL' => $shell,
                 ],
-                $this->getInput([
+                static::getInput([
                     '--symlink' => null,
                     '--core-hooks-path' => 'my-dir',
                 ]),
@@ -91,11 +93,14 @@ class ConfigReaderTest extends TestBase
     }
 
     /**
-     * @dataProvider casesGetConfig
-     */
-    public function testGetConfig(array $expected, ?InputInterface $input, array $extra)
+     * @param array<string, mixed> $expected
+     * @param array<string, mixed> $extra
+     * */
+    #[Test]
+    #[DataProvider('casesGetConfig')]
+    public function testGetConfig(array $expected, ?InputInterface $input, array $extra): void
     {
         $subject = new ConfigReader();
-        $this->tester->assertSame($expected, $subject->getConfig($input, $extra));
+        static::assertSame($expected, $subject->getConfig($input, $extra));
     }
 }

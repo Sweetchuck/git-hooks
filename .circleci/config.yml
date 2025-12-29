@@ -21,7 +21,7 @@ executors:
         docker:
             -
                 name: 'main'
-                image: 'cimg/php:7.4'
+                image: 'cimg/php:8.4'
 
     php_plus1:
         resource_class: 'small'
@@ -31,47 +31,7 @@ executors:
         docker:
             -
                 name: 'main'
-                image: 'cimg/php:8.0'
-
-    php_plus2:
-        resource_class: 'small'
-        environment:
-            <<: *env_common
-            <<: *env_composer
-        docker:
-            -
-                name: 'main'
-                image: 'cimg/php:8.1'
-
-    php_plus3:
-        resource_class: 'small'
-        environment:
-            <<: *env_common
-            <<: *env_composer
-        docker:
-            -
-                name: 'main'
-                image: 'cimg/php:8.2'
-
-    php_plus4:
-        resource_class: 'small'
-        environment:
-            <<: *env_common
-            <<: *env_composer
-        docker:
-            -
-                name: 'main'
-                image: 'cimg/php:8.3'
-
-    php_plus5:
-        resource_class: 'small'
-        environment:
-            <<: *env_common
-            <<: *env_composer
-        docker:
-            -
-                name: 'main'
-                image: 'cimg/php:8.4'
+                image: 'cimg/php:8.5'
 
 commands:
     php_extension_pecl_install:
@@ -224,8 +184,41 @@ commands:
 
             -
                 run:
+                    name: 'Composer - self-upgrade'
+                    command: |-
+                        composerVersion="$( \
+                            composer \
+                                --version \
+                                --no-ansi \
+                                2>/dev/null \
+                            | grep \
+                                --color=never \
+                                --only-matching \
+                                --perl-regexp \
+                                '(?<=^Composer version )[^\s]+' \
+                        )"
+                        if php -r 'exit(version_compare($argv[1], "2.8.12", ">=") ? 0 : 1);' "${composerVersion}"
+                        then
+                            echo 1>&2 'Composer is already PHP 8.5 compatible. No need to upgrade.'
+
+                            exit 0
+                        fi
+
+                        phpVersion="$(php -r 'echo \PHP_VERSION;')"
+                        if php -r 'exit(version_compare($argv[1], "8.5.0", "<") ? 0 : 1);' "${phpVersion}"
+                        then
+                            echo 1>&2 'No need to upgrade Composer to PHP 8.5 compatible version.'
+
+                            exit 0
+                        fi
+
+                        sudo composer self-update
+                        composer --version
+
+            -
+                run:
                     name: 'Composer - install'
-                    command: >
+                    command: |-
                         composer install --no-progress
 
             -
@@ -250,30 +243,30 @@ commands:
         steps:
             -
                 run:
-                    name: 'Codeception - unit'
+                    name: 'Test - unit'
                     command: |
                         "$(composer config bin-dir)/robo" test unit
             -
                 codecov/upload:
                     flags: 'unit'
-                    file: './tests/_log/machine/coverage/unit/coverage.xml'
+                    file: './reports/machine/coverage/unit/coverage.xml'
             -
                 run:
-                    name: 'Codeception - acceptance'
+                    name: 'Test - acceptance'
                     command: |
                         "$(composer config bin-dir)/robo" test acceptance
             -
                 codecov/upload:
                     flags: 'acceptance'
-                    file: './tests/_log/machine/coverage/acceptance/coverage.xml'
+                    file: './reports/machine/coverage/acceptance/coverage.xml'
             -
                 store_test_results:
                     name: 'Store test results as test results for CircleCI UI'
-                    path: './tests/_log/machine/junit'
+                    path: './reports/machine/junit'
             -
                 store_artifacts:
                     name: 'Store test results as artifacts'
-                    path: './tests/_log/machine/junit'
+                    path: './reports/machine/junit'
 
 jobs:
     build:
@@ -317,8 +310,3 @@ workflows:
                             executor:
                                 - 'php_min'
                                 - 'php_plus1'
-                                - 'php_plus2'
-                                - 'php_plus3'
-                                - 'php_plus4'
-                                # \E_STRICT problems in dependencies.
-                                #- 'php_plus5'

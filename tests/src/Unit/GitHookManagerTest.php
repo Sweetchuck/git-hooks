@@ -2,38 +2,33 @@
 
 declare(strict_types = 1);
 
-namespace  Sweetchuck\GitHooks\Tests\Unit;
+namespace Sweetchuck\GitHooks\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use Psr\Log\LoggerInterface;
-use Psr\Log\Test\TestLogger;
 use Sweetchuck\GitHooks\GitHookManager;
+use Symfony\Component\ErrorHandler\BufferingLogger;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Filesystem\Path;
 
-/**
- * @covers \Sweetchuck\GitHooks\GitHookManager
- */
+#[CoversClass(GitHookManager::class)]
 class GitHookManagerTest extends TestBase
 {
 
-    /**
-     * @var \Sweetchuck\GitHooks\Tests\UnitTester
-     */
-    protected $tester;
+    protected Filesystem $fs;
+
+    protected string $projectRoot;
 
     /**
-     * @var \Symfony\Component\Filesystem\Filesystem
+     * {@inheritdoc}
      */
-    protected $fs;
-
-    /**
-     * @var string
-     */
-    protected $projectRoot;
-
-    protected function _before()
+    #[\Override]
+    protected function setUp(): void
     {
-        parent::_before();
+        parent::setUp();
+
         $this->fs = new FileSystem();
         $this->projectRoot = $this->createTempDir();
         exec(
@@ -44,56 +39,63 @@ class GitHookManagerTest extends TestBase
         );
     }
 
-    protected function _after()
+    /**
+     * {@inheritdoc}
+     */
+    #[\Override]
+    protected function tearDown(): void
     {
         $this->fs->remove($this->projectRoot);
-        parent::_after();
+        parent::tearDown();
     }
 
-    public function casesDeploySuccess(): array
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    public static function casesDeploySuccess(): array
     {
-        $selfRootDir = $this->selfProjectRoot();
+        $selfRootDir = static::selfProjectRoot();
         $defaultCoreHooksPath = "$selfRootDir/git-hooks";
 
         $logEntryBegin = [
-            'level' => 'debug',
-            'message' => 'BEGIN Git hooks deploy',
-            'context' => [],
+            'debug',
+            'BEGIN Git hooks deploy',
+            [],
         ];
 
         $logEntryEnd= [
-            'level' => 'debug',
-            'message' => 'END   Git hooks deploy',
-            'context' => [],
+            'debug',
+            'END   Git hooks deploy',
+            [],
         ];
 
         $logEntryGitConfigCmd = [
-            'level' => 'debug',
-            'message' => "cd '{{ projectRoot }}' && git config 'core.hooksPath' '{{ selfProjectRoot }}/git-hooks'",
-            'context' => [],
+            'debug',
+            "cd '{{ projectRoot }}' && git config 'core.hooksPath' '{{ selfProjectRoot }}/git-hooks'",
+            [],
         ];
 
         $logEntryGitConfigSuccess = [
-            'level' => 'debug',
-            'message' => 'Git hooks have been deployed by the core.hooksPath configuration.',
-            'context' => [],
+            'debug',
+            'Git hooks have been deployed by the core.hooksPath configuration.',
+            [],
         ];
 
         $logEntryGitSymlinkSuccess = [
-            'level' => 'debug',
-            'message' => 'Git hooks have been symbolically linked.',
-            'context' => [],
+            'debug',
+            'Git hooks have been symbolically linked.',
+            [],
         ];
 
         $logEntryCopySuccess = [
-            'level' => 'debug',
-            'message' => 'Git hooks have been deployed by coping the script files.',
-            'context' => [],
+            'debug',
+            'Git hooks have been deployed by coping the script files.',
+            [],
         ];
 
         return [
             'core.hooksPath' => [
-                [
+                'expected' => [
                     'result' => [
                         'exitCode' => 0,
                     ],
@@ -106,13 +108,13 @@ class GitHookManagerTest extends TestBase
                     'deployType' => 'core.hooksPath',
                     'core.hooksPath' => $defaultCoreHooksPath,
                 ],
-                [
+                'config' => [
                     'symlink' => false,
                     'core.hooksPath' => $defaultCoreHooksPath,
                 ],
             ],
             'symlink' => [
-                [
+                'expected' => [
                     'result' => [
                         'exitCode' => 0,
                     ],
@@ -124,16 +126,16 @@ class GitHookManagerTest extends TestBase
                     'deployType' => 'symlink',
                     'core.hooksPath' => $defaultCoreHooksPath,
                 ],
-                [
+                'config' => [
                     'symlink' => true,
                     'core.hooksPath' => $defaultCoreHooksPath,
                 ],
-                [
+                'mock' => [
                     'coreHooksPathSupported' => false,
                 ],
             ],
             'copy' => [
-                [
+                'expected' => [
                     'result' => [
                         'exitCode' => 0,
                     ],
@@ -145,11 +147,11 @@ class GitHookManagerTest extends TestBase
                     'deployType' => 'copy',
                     'core.hooksPath' => $defaultCoreHooksPath,
                 ],
-                [
+                'config' => [
                     'symlink' => false,
                     'core.hooksPath' => $defaultCoreHooksPath,
                 ],
-                [
+                'mock' => [
                     'coreHooksPathSupported' => false,
                 ],
             ],
@@ -157,23 +159,27 @@ class GitHookManagerTest extends TestBase
     }
 
     /**
-     * @dataProvider casesDeploySuccess
+     * @param array<string, mixed> $expected
+     * @param array<string, mixed> $config
+     * @param array<non-empty-string, mixed> $mock
      */
-    public function testDeploySuccess(array $expected, array $config, array $mock = [])
+    #[Test]
+    #[DataProvider('casesDeploySuccess')]
+    public function testDeploySuccess(array $expected, array $config, array $mock = []): void
     {
-        $logger = new TestLogger();
+        $logger = new BufferingLogger();
         $result = $this
             ->createDeployer($logger, $mock)
             ->deploy($config);
 
         if (array_key_exists('result', $expected)) {
-            $this->tester->assertSame($expected['result'], $result);
+            static::assertSame($expected['result'], $result);
         }
 
         if (array_key_exists('logEntries', $expected)) {
-            $this->tester->assertLogEntries(
+            static::assertLogEntries(
                 $expected['logEntries'],
-                $logger->records,
+                $logger->cleanLogs(),
                 [
                     '{{ projectRoot }}' => $this->projectRoot,
                     '{{ selfProjectRoot }}' => $this->selfProjectRoot(),
@@ -184,18 +190,18 @@ class GitHookManagerTest extends TestBase
         if (array_key_exists('deployType', $expected)) {
             switch ($expected['deployType']) {
                 case 'core.hooksPath':
-                    $this->assertGitHooksGitConfig($expected['core.hooksPath'], $this->projectRoot);
+                    static::assertGitHooksGitConfig($expected['core.hooksPath'], $this->projectRoot);
                     break;
 
                 case 'symlink':
-                    $this->tester->assertSymlink(
+                    static::assertSymlink(
                         Path::makeRelative($expected['core.hooksPath'], "{$this->projectRoot}/.git/hooks"),
                         "{$this->projectRoot}/.git/hooks"
                     );
                     break;
 
                 case 'copy':
-                    $this->tester->assertDirContainsAllTheFiles(
+                    static::assertDirContainsAllTheFiles(
                         $expected['core.hooksPath'],
                         "{$this->projectRoot}/.git/hooks"
                     );
@@ -204,19 +210,23 @@ class GitHookManagerTest extends TestBase
         }
     }
 
-    protected function assertGitHooksGitConfig(string $expected, string $projectRootDir)
+    protected static function assertGitHooksGitConfig(string $expected, string $projectRootDir): void
     {
-        $this->tester->assertFileExists("$projectRootDir/.git/config");
+        static::assertFileExists("$projectRootDir/.git/config");
         $gitConfig = parse_ini_file("$projectRootDir/.git/config", true);
-        $this->tester->assertArrayHasKey('core', $gitConfig);
-        $this->tester->assertArrayHasKey('hooksPath', $gitConfig['core']);
-        $this->tester->assertSame(
+        // @phpstan-ignore-next-line
+        static::assertArrayHasKey('core', $gitConfig);
+        static::assertArrayHasKey('hooksPath', $gitConfig['core']);
+        static::assertSame(
             $expected,
             $gitConfig['core']['hooksPath'],
-            'git config core.hooksPath'
+            'git config core.hooksPath',
         );
     }
 
+    /**
+     * @param array<non-empty-string, mixed> $mock
+     */
     protected function createDeployer(LoggerInterface $logger, array $mock): GitHookManager
     {
         $mock += [
@@ -231,7 +241,7 @@ class GitHookManagerTest extends TestBase
             ->getMock();
         foreach ($mock as $mockMethod => $mockReturn) {
             $deployer
-                ->expects($this->any())
+                ->expects(static::once())
                 ->method($mockMethod)
                 ->willReturn($mockReturn);
         }

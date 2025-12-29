@@ -10,14 +10,9 @@ class DeployCommand extends BaseCommand
 {
 
     /**
-     * @var array
+     * {@inheritdoc}
      */
-    protected $result = [];
-
-    /**
-     * {@inheritDoc}
-     */
-    protected function configure()
+    protected function configure(): void
     {
         parent::configure();
         if (!$this->getName()) {
@@ -46,10 +41,7 @@ class DeployCommand extends BaseCommand
             );
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    protected function doIt()
+    protected function doIt(): static
     {
         $this->result = $this
             ->getGitHookManager()

@@ -13,45 +13,35 @@ use Symfony\Component\Console\Output\OutputInterface;
 abstract class BaseCommand extends UpstreamBaseCommand
 {
 
-    /**
-     * @var \Sweetchuck\GitHooks\ConfigReader
-     */
-    protected $configReader;
+    protected ConfigReader $configReader;
+
+    protected InputInterface $input;
 
     /**
-     * @var \Symfony\Component\Console\Input\InputInterface
+     * @var array<string, mixed>
      */
-    protected $input;
+    protected array $result = [];
 
     public function getInput(): InputInterface
     {
         return $this->input;
     }
 
-    /**
-     * @return $this
-     */
-    public function setInput(InputInterface $input)
+    public function setInput(InputInterface $input): static
     {
         $this->input = $input;
 
         return $this;
     }
 
-    /**
-     * @var \Symfony\Component\Console\Output\OutputInterface
-     */
-    protected $output;
+    protected OutputInterface $output;
 
     public function getOutput(): OutputInterface
     {
         return $this->output;
     }
 
-    /**
-     * @return $this
-     */
-    public function setOutput(OutputInterface $output)
+    public function setOutput(OutputInterface $output): static
     {
         $this->output = $output;
 
@@ -59,7 +49,7 @@ abstract class BaseCommand extends UpstreamBaseCommand
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
     public function __construct(?string $name = null, ?ConfigReader $configReader = null)
     {
@@ -68,9 +58,9 @@ abstract class BaseCommand extends UpstreamBaseCommand
     }
 
     /**
-     * {@inheritDoc}
+     * {@inheritdoc}
      */
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $this
             ->setInput($input)
@@ -80,22 +70,22 @@ abstract class BaseCommand extends UpstreamBaseCommand
         return $this->result['exitCode'];
     }
 
-    /**
-     * @return $this
-     */
-    abstract protected function doIt();
+    abstract protected function doIt(): static;
 
     protected function getGitHookManager(): GitHookManager
     {
         return new GitHookManager($this->getIO());
     }
 
+    /**
+     * @return array<string, string|bool>
+     */
     protected function getConfig(): array
     {
         $namespace = $this->getSelfName();
-        $composer = $this->getComposer();
-        $extra = $composer ?
-            $composer->getPackage()->getExtra()
+        $composer = $this->tryComposer();
+        $extra = $composer
+            ? $composer->getPackage()->getExtra()
             : [];
 
         return $this

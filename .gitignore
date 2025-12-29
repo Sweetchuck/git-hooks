@@ -1,15 +1,30 @@
+### Common.
+/.cache/
+/reports/
 
-/tests/_data/fixtures/project-template/*/vendor/
-/tests/_envs/*.local.yml
-/tests/_log/
-/tests/_support/_generated/
-/tests/*.suite.yml
 
+### Composer.
 /vendor/
-
-/.git-hooks-local
-/codeception.yml
-/phpcs.xml
-/robo.yml
 /sweetchuck-git-hooks-*.tar
+/sweetchuck-git-hooks-*.tar.bz2
+/sweetchuck-git-hooks-*.tar.gz
 /sweetchuck-git-hooks-*.zip
+
+
+### PHPUnit.
+/phpunit.xml
+/tests/fixtures/project-template/*/vendor/
+
+
+### PHP Code Sniffer.
+/phpcs.xml
+
+
+### PHPStan.
+/tests/src/Phpstan.php
+/phpstan.neon
+
+
+### Robo.
+/robo.yml
+

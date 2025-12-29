@@ -1,0 +1,26 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Call to an undefined method Robo\\\\Collection\\\\CollectionBuilder\\:\\:setAssetNamePrefix\\(\\)\\.$#"
+			count: 1
+			path: ../RoboFile.php
+
+		-
+			message: "#^Call to an undefined method Robo\\\\Collection\\\\CollectionBuilder\\|Sweetchuck\\\\Robo\\\\Git\\\\Task\\\\GitListStagedFilesTask\\:\\:setPaths\\(\\)\\.$#"
+			count: 1
+			path: ../RoboFile.php
+
+		-
+			message: "#^Call to an undefined method Robo\\\\Collection\\\\CollectionBuilder\\|Sweetchuck\\\\Robo\\\\Git\\\\Task\\\\GitReadStagedFilesTask\\:\\:setCommandOnly\\(\\)\\.$#"
+			count: 1
+			path: ../RoboFile.php
+
+		-
+			message: "#^Call to an undefined method Robo\\\\Collection\\\\CollectionBuilder\\|Sweetchuck\\\\Robo\\\\Phpstan\\\\Task\\\\AnalyzeTask\\:\\:setNoProgress\\(\\)\\.$#"
+			count: 1
+			path: ../RoboFile.php
+
+		-
+			message: "#^Call to an undefined method Sweetchuck\\\\Robo\\\\Git\\\\Task\\\\GitReadStagedFilesTask\\:\\:deferTaskConfiguration\\(\\)\\.$#"
+			count: 1
+			path: ../RoboFile.php
