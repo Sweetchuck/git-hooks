@@ -16,14 +16,20 @@ then this is the tool you are looking for.
 
 ## How to use
 
-1. Step into you existing package's directory (or create a new one with `git init && composer init`)
+1. Step into your existing package's directory (or create a new one with `git init && composer init`)
 2. Run `composer require --dev 'sweetchuck/git-hooks'`
 3. Then you have two options
    1. Rely on Git hook scripts which are shipped with this package and implement
       the logic in your `./.git-hooks.sh` file.
    2. Or create a `./git-hooks` directory and create Git hook files in it. (eg: `./git-hooks/pre-commit`)
 4. The deployment script will be automatically triggered by the
-   `post-install-cmd` Composer event.
+   `post-install-cmd` and `post-update-cmd` Composer event.
+
+
+## How it works
+
+This package is a **Composer plugin** that automatically manages your Git hooks scripts on
+`composer install` and `composer update` command events based on the configuration.
 
 
 ## Configuration
